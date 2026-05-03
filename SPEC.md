@@ -342,7 +342,7 @@ protocol governance rules
 
 ## 9. Extraction map
 
-Detailed extraction sequencing lives in `EXTRACTION_MAP.md`.
+Detailed extraction sequencing lives in `EXTRACTION_MAP.md`, including the exact 73-source-path AgentFolio inventory with source path, target SATP disposition, remaining AgentFolio consumer path, owner, and notes.
 
 High-level order:
 
