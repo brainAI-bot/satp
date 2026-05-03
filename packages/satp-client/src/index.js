@@ -778,21 +778,20 @@ const v3sdk = require('./v3-sdk');
 const v3pda = require('./v3-pda');
 const v3Borsh = require('./borsh-reader');
 
-// Legacy V3 SDK wrapper — maps old createSATPClient/SATPV3SDK to new SDK
-class SATPV3SDK {
+// Legacy V3 SDK wrapper — keeps string constructor compatibility while using
+// the local extracted SATPV3SDK implementation so offline tests and consumers
+// see the expected programIds, rpcUrl, and SDK methods.
+class SATPV3SDK extends v3sdk.SATPV3SDK {
   constructor(opts = {}) {
-    const rpcUrl = typeof opts === 'string'
-      ? opts
-      : (opts.rpcUrl || opts.url || opts.endpoint || 'https://api.mainnet-beta.solana.com');
-    this.rpcUrl = rpcUrl;
-    this.network = typeof opts === 'object' && opts.network
-      ? opts.network
-      : (rpcUrl.includes('mainnet') ? 'mainnet' : 'devnet');
-    this.client = v3sdk.createSATPClient({ rpcUrl, network: this.network });
+    if (typeof opts === 'string') {
+      super({
+        rpcUrl: opts,
+        network: opts.includes('mainnet') ? 'mainnet' : 'devnet',
+      });
+    } else {
+      super(opts);
+    }
   }
-  async getGenesis(agentId) { return this.client.getGenesis ? this.client.getGenesis(agentId) : null; }
-  async getAttestation(pda) { return this.client.getAttestation ? this.client.getAttestation(pda) : null; }
-  async getReview(pda) { return this.client.getReview ? this.client.getReview(pda) : null; }
 }
 
 function createSATPClient(opts = {}) {

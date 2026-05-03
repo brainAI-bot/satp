@@ -1760,7 +1760,7 @@ function createSATPClient(opts = {}) {
     try {
       const agentIdHash = hashAgentId(agentId);
       const [genesisPDA] = getGenesisPDA(agentIdHash, sdk.network);
-      const identityProgramId = sdk.programIds.identity;
+      const identityProgramId = sdk.programIds.IDENTITY;
       const accounts = await sdk.connection.getProgramAccounts(identityProgramId, {
         filters: [
           { memcmp: { offset: 8, bytes: genesisPDA.toBase58() } },
