@@ -1,8 +1,8 @@
 # SATP Extraction Map
 
-**Status:** Draft v1 for SATP-SPEC-001  
-**Source inspected:** `github.com/brainAI-bot/agentfolio` clone at `main`  
-**Target:** `github.com/brainAI-bot/satp`  
+**Status:** Draft v1 for SATP-SPEC-001
+**Source inspected:** `github.com/brainAI-bot/agentfolio` clone at `main`
+**Target:** `github.com/brainAI-bot/satp`
 **Last updated:** 2026-05-03
 
 > This map defines what moves from AgentFolio into SATP and what remains AgentFolio consumer-only code. It is a planning/extraction document only: no deploys, no keypair changes, no npm publish, and no AgentFolio product changes are performed by this doc.

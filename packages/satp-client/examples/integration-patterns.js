@@ -2,16 +2,16 @@
 
 /**
  * SATP V3 SDK — Integration Patterns & Real-World Examples
- * 
+ *
  * Practical patterns for integrating SATP V3 into applications.
  * Each example is self-contained and can be run against devnet.
- * 
+ *
  * Usage:
  *   node examples/integration-patterns.js [example-name]
- *   
- *   Examples: lookup, register, review-flow, reputation-flow, 
+ *
+ *   Examples: lookup, register, review-flow, reputation-flow,
  *             attestation-flow, migration, multi-wallet, batch-lookup
- * 
+ *
  * @author brainChain — brainAI
  * @version 3.0.0
  */
@@ -44,7 +44,7 @@ async function lookupAgent(agentId = 'brainChain') {
 
   // Full profile read (1 RPC call)
   const record = await sdk.getGenesisRecord(agentId);
-  
+
   console.log('=== Agent Profile ===');
   console.log(`Name:         ${record.agentName}`);
   console.log(`Category:     ${record.category}`);
@@ -73,7 +73,7 @@ async function lookupAgent(agentId = 'brainChain') {
 
 async function registerAgent(keypairPath) {
   const sdk = new SATPV3SDK({ network: 'devnet' });
-  
+
   // In production, load from wallet adapter or server keypair
   // const wallet = Keypair.fromSecretKey(Buffer.from(JSON.parse(fs.readFileSync(keypairPath))));
   // For demo, generate ephemeral
@@ -126,7 +126,7 @@ async function registerAgent(keypairPath) {
 
   console.log('\n✅ Full registration flow built (4 transactions)');
   console.log('Uncomment sendAndConfirmTransaction calls to execute on-chain.');
-  
+
   return { agentId, genesisPDA };
 }
 
@@ -162,7 +162,7 @@ async function reviewAndReputationFlow() {
   // Step 3: Trigger reputation recompute (permissionless — anyone can call)
   const caller = Keypair.generate();
   const mockReviewAccounts = [reviewPDA]; // Would be real review PDAs
-  
+
   const { transaction: repTx } = await sdk.buildRecomputeReputation(
     caller.publicKey,
     agentId,
@@ -188,7 +188,7 @@ async function reviewAndReputationFlow() {
 
 async function attestationAndValidationFlow() {
   const sdk = new SATPV3SDK({ network: 'devnet' });
-  
+
   const issuer = Keypair.generate();  // Verification authority
   const agentId = 'brainChain';
 
@@ -271,7 +271,7 @@ async function migrationFlow() {
   // 2. Creates a new V3 Genesis Record with provided metadata
   // 3. Sets the V2 authority as the V3 authority
   // 4. Does NOT modify the V2 account (non-destructive)
-  
+
   const { transaction: migrateTx, genesisPDA } = await sdk.buildMigrateV2ToV3(
     v2Authority.publicKey,
     agentId,
@@ -295,7 +295,7 @@ async function migrationFlow() {
   console.log('  + Multi-wallet linking');
   console.log('  + CPI-based reputation/validation');
   console.log('  + Mint tracking (cap: 3)');
-  
+
   console.log('\n✅ Migration flow demonstrated');
 }
 
@@ -321,7 +321,7 @@ async function batchLookup(agentIds = ['brainChain', 'brainForge', 'brainGrowth'
   // Derive all PDAs first (no RPC needed), then batch fetch:
   const pdas = agentIds.map(id => getGenesisPDA(id, 'devnet')[0]);
   const accounts = await sdk.connection.getMultipleAccountsInfo(pdas);
-  
+
   console.log('Results:');
   for (let i = 0; i < agentIds.length; i++) {
     const record = results[i].record;
@@ -336,7 +336,7 @@ async function batchLookup(agentIds = ['brainChain', 'brainForge', 'brainGrowth'
   const sorted = results
     .filter(r => r.record && !r.record.error)
     .sort((a, b) => b.record.reputationScore - a.record.reputationScore);
-  
+
   console.log('\nLeaderboard (by reputation):');
   sorted.forEach((r, i) => {
     console.log(`  ${i + 1}. ${r.record.agentName} — ${r.record.reputationScore}`);
@@ -442,7 +442,7 @@ async function nameAvailability() {
   console.log('=== Name Availability Check ===\n');
 
   const names = ['brainChain', 'available-name-12345', 'BrainChain']; // Note: case-insensitive
-  
+
   for (const name of names) {
     const available = await sdk.isNameAvailable(name);
     const [pda] = getNameRegistryPDA(name, 'devnet');
@@ -451,7 +451,7 @@ async function nameAvailability() {
 
   console.log('\nNote: Names are case-insensitive.');
   console.log('"brainChain" and "BrainChain" hash to the same PDA.');
-  
+
   console.log('\n✅ Name check demonstrated');
 }
 
@@ -474,7 +474,7 @@ const examples = {
 
 async function main() {
   const example = process.argv[2];
-  
+
   if (!example || !examples[example]) {
     console.log('SATP V3 SDK — Integration Patterns\n');
     console.log('Usage: node integration-patterns.js <example>\n');

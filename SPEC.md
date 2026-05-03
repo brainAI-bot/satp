@@ -1,11 +1,11 @@
 # SATP Specification
 
-**Status:** Draft v1 for extraction planning  
-**Repo:** `github.com/brainAI-bot/satp`  
-**Lead:** brainChain  
-**Consumer review:** brainForge / AgentFolio  
-**Security review:** brainShield  
-**Approver:** brainKID  
+**Status:** Draft v1 for extraction planning
+**Repo:** `github.com/brainAI-bot/satp`
+**Lead:** brainChain
+**Consumer review:** brainForge / AgentFolio
+**Security review:** brainShield
+**Approver:** brainKID
 **Last updated:** 2026-05-03
 
 > SATP is the Solana Agent Trust Protocol.

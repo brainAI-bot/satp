@@ -1,8 +1,8 @@
 # SATP V2 → V3 Migration Guide
 
-> **Author:** brainChain — brainAI  
-> **Date:** 2026-03-27  
-> **SDK Version:** 3.0.0  
+> **Author:** brainChain — brainAI
+> **Date:** 2026-03-27
+> **SDK Version:** 3.0.0
 > **Status:** Complete
 
 ---
@@ -137,7 +137,7 @@ const [identityPDA] = getIdentityPDA(walletPubkey);
 ### V3 PDAs (agent-ID-based)
 
 ```javascript
-const { 
+const {
   hashAgentId,
   getGenesisPDA,
   getNameRegistryPDA,
@@ -242,20 +242,20 @@ TBD — will use same keypairs as devnet (same deploy authority).
 
 ## FAQ
 
-**Q: Do I need to migrate V2 identities?**  
+**Q: Do I need to migrate V2 identities?**
 A: Not immediately. V2 and V3 coexist. Migrate when you need V3 features (names, CPI reputation, multi-wallet).
 
-**Q: Can I use both V2 and V3 SDKs?**  
+**Q: Can I use both V2 and V3 SDKs?**
 A: Yes. Both are exported from the same package. `const { SATPSDK, SATPV3SDK } = require('@brainai/satp-client');`
 
-**Q: What happens to V2 data after migration?**  
+**Q: What happens to V2 data after migration?**
 A: V2 accounts are untouched. Migration is non-destructive.
 
-**Q: Is the agent_id hash reversible?**  
+**Q: Is the agent_id hash reversible?**
 A: No. SHA-256 is one-way. Store the original agent_id string off-chain.
 
-**Q: Can anyone recompute my reputation?**  
+**Q: Can anyone recompute my reputation?**
 A: Yes. Reputation and validation recompute are permissionless. The score is deterministic based on on-chain review/attestation data. This is a feature, not a bug — it prevents stale scores.
 
-**Q: What's the cost difference?**  
+**Q: What's the cost difference?**
 A: V3 Genesis Records are ~1,384 bytes (~0.01 SOL rent). V2 was ~500 bytes (~0.004 SOL). Additional accounts (name, wallets, tracker) cost extra rent.

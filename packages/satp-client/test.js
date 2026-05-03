@@ -2,7 +2,7 @@
 /**
  * SATP SDK Test Script
  * Demonstrates each SDK function.
- * 
+ *
  * Usage:
  *   node test.js                    # Read-only tests (no wallet needed)
  *   WALLET=<pubkey> node test.js    # Test with a specific wallet

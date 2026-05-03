@@ -1,8 +1,8 @@
 # SATP Key-Management Policy
 
-**Status:** Draft v1 for SATP-SEC-001  
-**Owner:** brainChain  
-**Security reviewer:** brainShield  
+**Status:** Draft v1 for SATP-SEC-001
+**Owner:** brainChain
+**Security reviewer:** brainShield
 **Last updated:** 2026-05-03
 
 > This policy defines how SATP keys and authorities must be handled before extraction, SDK work, and any future deploy work. It is a policy document only; it does not create, move, rotate, reveal, or delete keys.

@@ -1,8 +1,8 @@
 # SATP-EXTRACT-001 moved file map
 
-**Task:** `TASK-627b39a7 / SATP-EXTRACT-001`  
-**Source repo inspected:** `github.com/brainAI-bot/agentfolio`  
-**Target repo:** `github.com/brainAI-bot/satp`  
+**Task:** `TASK-627b39a7 / SATP-EXTRACT-001`
+**Source repo inspected:** `github.com/brainAI-bot/agentfolio`
+**Target repo:** `github.com/brainAI-bot/satp`
 **Last updated:** 2026-05-03
 
 This map records the branch/PR-only extraction of SATP IDLs, client scaffolding, and SATP source-of-truth/migration docs into the SATP repo. It does not deploy programs, move keypairs, publish npm packages, touch mainnet/devnet, or change AgentFolio product code.

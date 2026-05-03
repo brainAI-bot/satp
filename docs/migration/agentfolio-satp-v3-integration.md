@@ -69,7 +69,7 @@
 
 ## Testing Checklist
 - [ ] Register new agent -> GenesisRecord created on-chain
-- [ ] Verify wallet -> Wallet linked on-chain  
+- [ ] Verify wallet -> Wallet linked on-chain
 - [ ] Burn-to-become -> Face set permanently on-chain
 - [ ] Profile page shows on-chain data correctly
 - [ ] SATP API returns V3 data

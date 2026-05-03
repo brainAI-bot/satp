@@ -1,10 +1,10 @@
 # SATP Security Policy
 
-**Status:** Draft v1 for SATP-SEC-001  
-**Repo:** `github.com/brainAI-bot/satp`  
-**Owner:** brainChain  
-**Security reviewer:** brainShield  
-**Approver:** brainKID  
+**Status:** Draft v1 for SATP-SEC-001
+**Repo:** `github.com/brainAI-bot/satp`
+**Owner:** brainChain
+**Security reviewer:** brainShield
+**Approver:** brainKID
 **Last updated:** 2026-05-03
 
 > SATP is the Solana Agent Trust Protocol. This policy defines the minimum security guardrails required before SATP extraction, SDK work, or any future network deployment work.
