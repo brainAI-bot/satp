@@ -44,7 +44,7 @@ This map records the branch/PR-only extraction of SATP IDLs, client scaffolding,
 | `agentfolio/src/satp-client/src/v3-pda.js` | `satp/packages/satp-client/src/v3-pda.js` | SATP v3 client scaffold copied; package metadata adjusted to private extraction scaffold. |
 | `agentfolio/src/satp-client/src/v3-sdk.d.ts` | `satp/packages/satp-client/src/v3-sdk.d.ts` | SATP v3 client scaffold copied; package metadata adjusted to private extraction scaffold. |
 | `agentfolio/src/satp-client/src/v3-sdk.js` | `satp/packages/satp-client/src/v3-sdk.js` | SATP v3 client scaffold copied; package metadata adjusted to private extraction scaffold. |
-| `agentfolio/src/satp-client/sync-v3.js` | `satp/packages/satp-client/sync-v3.js` | SATP v3 client scaffold copied; package metadata adjusted to private extraction scaffold. |
+| `agentfolio/src/satp-client/sync-v3.js` | Not copied | Excluded from PR #5 because it was an executable sync script containing hardcoded mainnet RPC/keypair path/sign-send/score mutation behavior. |
 | `agentfolio/src/satp-client/test-borsh-reader.js` | `satp/packages/satp-client/test-borsh-reader.js` | SATP v3 client scaffold copied; package metadata adjusted to private extraction scaffold. |
 | `agentfolio/src/satp-client/test-devnet-integration.js` | `satp/packages/satp-client/test-devnet-integration.js` | SATP v3 client scaffold copied; package metadata adjusted to private extraction scaffold. |
 | `agentfolio/src/satp-client/test-v3-devnet.js` | `satp/packages/satp-client/test-v3-devnet.js` | SATP v3 client scaffold copied; package metadata adjusted to private extraction scaffold. |
