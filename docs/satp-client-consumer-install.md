@@ -1,43 +1,54 @@
 # SATP Client consumer install path
 
-`@brainai/satp-client` is currently delivered from this SATP branch/PR without
-publishing to npm. Consumers should install the package tarball generated from
-`packages/satp-client`; do not install the SATP repo root as the dependency,
-because the root package is the private extraction workspace
-`@brainai/satp-monorepo`.
+`@brainai/satp-client` is delivered from the SATP repository without publishing
+to npm. The durable/merge-safe path is a commit-addressed Git dependency on the
+SATP repository root. The root package is intentionally named
+`@brainai/satp-client` and its `main` points at the extracted client package
+entrypoint in `packages/satp-client/src/index.js`.
 
-## Dependency path for AgentFolio
+## Durable dependency path for AgentFolio
 
-From a checkout of this SATP branch:
-
-```bash
-git fetch origin brainchain/satp-extract-001
-git switch brainchain/satp-extract-001
-npm run pack:satp-client
-```
-
-This creates:
-
-```text
-dist/brainai-satp-client-0.0.0-extraction.tgz
-```
-
-In the external consumer, use the generated tarball as the dependency path:
+Use a commit-addressed Git dependency:
 
 ```json
 {
   "dependencies": {
-    "@brainai/satp-client": "file:../satp/dist/brainai-satp-client-0.0.0-extraction.tgz"
+    "@brainai/satp-client": "git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>"
   }
 }
 ```
 
-Adjust `../satp/` to the relative path from the consumer repo to the SATP
-checkout. Equivalent one-off install command:
+For this branch update, replace `<SATP_COMMIT>` with the reviewed SATP commit
+hash from PR #5. Example after this task is pushed:
 
-```bash
-npm install --ignore-scripts --no-audit --no-fund ../satp/dist/brainai-satp-client-0.0.0-extraction.tgz
+```json
+{
+  "dependencies": {
+    "@brainai/satp-client": "git+https://github.com/brainAI-bot/satp.git#<task-2dfc2845-commit>"
+  }
+}
 ```
+
+The branch form below is acceptable for active PR coordination, but the final
+merge-safe dependency should pin a commit hash:
+
+```json
+{
+  "dependencies": {
+    "@brainai/satp-client": "git+https://github.com/brainAI-bot/satp.git#brainchain/satp-extract-001"
+  }
+}
+```
+
+## Why this is durable and merge-safe
+
+- It does not depend on a sibling checkout or local tarball path.
+- It does not require npm publish.
+- npm can install it from a clean external consumer using only GitHub access.
+- Pinning a commit makes the dependency immutable and reviewable in the consumer
+  lockfile.
+- The SATP repo root remains `private: true`, so the package is installable from
+  Git for branch/PR use but not accidentally publishable to npm.
 
 ## Verification from a clean consumer
 
@@ -57,9 +68,20 @@ Expected result: `require.resolve('@brainai/satp-client')` resolves under the
 consumer `node_modules/@brainai/satp-client`, and the package exposes
 `SATPSDK`, `SATPV3SDK`, and `createSATPClient`.
 
+## Tarball fallback for local debugging only
+
+A local tarball can still be produced for isolated debugging:
+
+```bash
+npm run pack:satp-client
+npm install --ignore-scripts --no-audit --no-fund ../satp/dist/brainai-satp-client-0.0.0-extraction.tgz
+```
+
+Do not use the local tarball path as the merge dependency in AgentFolio.
+
 ## Rollback notes
 
-Remove the tarball dependency from the consumer package manifest and reinstall:
+Remove the Git dependency from the consumer package manifest and reinstall:
 
 ```bash
 npm uninstall @brainai/satp-client
