@@ -772,8 +772,11 @@ class SATPSDK {
   }
 }
 
-// V3 SDK — now delegated to @brainai/satp-v3 (migrated 2026-03-29)
-const v3sdk = require('@brainai/satp-v3');
+// V3 SDK — local extracted SATP v3 scaffold.
+// Do not require the legacy external v3 package here; SATP-EXTRACT-001 must be self-contained.
+const v3sdk = require('./v3-sdk');
+const v3pda = require('./v3-pda');
+const v3Borsh = require('./borsh-reader');
 
 // Legacy V3 SDK wrapper — maps old createSATPClient/SATPV3SDK to new SDK
 class SATPV3SDK {
@@ -785,7 +788,7 @@ class SATPV3SDK {
     this.network = typeof opts === 'object' && opts.network
       ? opts.network
       : (rpcUrl.includes('mainnet') ? 'mainnet' : 'devnet');
-    this.client = new v3sdk.SatpV3Client(rpcUrl);
+    this.client = v3sdk.createSATPClient({ rpcUrl, network: this.network });
   }
   async getGenesis(agentId) { return this.client.getGenesis ? this.client.getGenesis(agentId) : null; }
   async getAttestation(pda) { return this.client.getAttestation ? this.client.getAttestation(pda) : null; }
@@ -796,7 +799,7 @@ function createSATPClient(opts = {}) {
   const rpcUrl = typeof opts === 'string'
     ? opts
     : (opts.rpcUrl || opts.url || opts.endpoint || 'https://api.mainnet-beta.solana.com');
-  const client = new v3sdk.SatpV3Client(rpcUrl);
+  const client = v3sdk.createSATPClient({ rpcUrl, network: typeof opts === 'object' && opts.network ? opts.network : (rpcUrl.includes('mainnet') ? 'mainnet' : 'devnet') });
   client.rpcUrl = rpcUrl;
   client.network = typeof opts === 'object' && opts.network
     ? opts.network
@@ -889,65 +892,65 @@ module.exports = {
   getReviewV3PDA,
   anchorDiscriminator,
 
-  // V3 SDK (now proxied through @brainai/satp-v3)
+  // V3 SDK (local extracted scaffold)
   SATPV3SDK,
   createSATPClient,
-  SatpV3Client: v3sdk.SatpV3Client,
-  SatpV3Builders: v3sdk.SatpV3Builders,
+  SatpV3Client: v3sdk.SATPV3SDK,
+  SatpV3Builders: v3sdk,
 
-  // V3 PDA derivation (from @brainai/satp-v3)
-  PROGRAM_IDS: v3sdk.PROGRAM_IDS,
-  getV3ProgramIds: () => v3sdk.PROGRAM_IDS,
-  hashAgentId: v3sdk.agentIdHash,
-  agentIdHash: v3sdk.agentIdHash,
-  hashName: v3sdk.descriptionHash || ((name) => require('crypto').createHash('sha256').update(name).digest()),
-  getGenesisPDA: v3sdk.deriveGenesisPda,
-  deriveGenesisPda: v3sdk.deriveGenesisPda,
-  getV3ReputationAuthorityPDA: v3sdk.deriveReputationAuthorityPda,
-  deriveReputationAuthorityPda: v3sdk.deriveReputationAuthorityPda,
-  getV3ValidationAuthorityPDA: v3sdk.deriveValidationAuthorityPda,
-  deriveValidationAuthorityPda: v3sdk.deriveValidationAuthorityPda,
-  getV3MintTrackerPDA: v3sdk.deriveMintTrackerPda,
-  deriveMintTrackerPda: v3sdk.deriveMintTrackerPda,
-  getNameRegistryPDA: v3sdk.deriveNameRegistryPda,
-  deriveNameRegistryPda: v3sdk.deriveNameRegistryPda,
-  getLinkedWalletPDA: v3sdk.deriveLinkedWalletPda,
-  deriveLinkedWalletPda: v3sdk.deriveLinkedWalletPda,
-  getV3ReviewPDA: v3sdk.deriveReviewPda,
-  deriveReviewPda: v3sdk.deriveReviewPda,
-  getV3ReviewCounterPDA: v3sdk.deriveReviewCounterPda,
-  deriveReviewCounterPda: v3sdk.deriveReviewCounterPda,
-  getV3AttestationPDA: v3sdk.deriveAttestationPda,
-  deriveAttestationPda: v3sdk.deriveAttestationPda,
-  getV3EscrowPDA: v3sdk.deriveEscrowPda,
-  deriveEscrowPda: v3sdk.deriveEscrowPda,
-  deriveReviewAttestationPda: v3sdk.deriveReviewAttestationPda,
+  // V3 PDA derivation (local extracted scaffold)
+  PROGRAM_IDS: v3pda.getV3ProgramIds('devnet'),
+  getV3ProgramIds: v3pda.getV3ProgramIds,
+  hashAgentId: v3pda.hashAgentId,
+  agentIdHash: v3pda.hashAgentId,
+  hashName: v3pda.hashName,
+  getGenesisPDA: v3pda.getGenesisPDA,
+  deriveGenesisPda: v3pda.getGenesisPDA,
+  getV3ReputationAuthorityPDA: v3pda.getV3ReputationAuthorityPDA,
+  deriveReputationAuthorityPda: v3pda.getV3ReputationAuthorityPDA,
+  getV3ValidationAuthorityPDA: v3pda.getV3ValidationAuthorityPDA,
+  deriveValidationAuthorityPda: v3pda.getV3ValidationAuthorityPDA,
+  getV3MintTrackerPDA: v3pda.getV3MintTrackerPDA,
+  deriveMintTrackerPda: v3pda.getV3MintTrackerPDA,
+  getNameRegistryPDA: v3pda.getNameRegistryPDA,
+  deriveNameRegistryPda: v3pda.getNameRegistryPDA,
+  getLinkedWalletPDA: v3pda.getLinkedWalletPDA,
+  deriveLinkedWalletPda: v3pda.getLinkedWalletPDA,
+  getV3ReviewPDA: v3pda.getV3ReviewPDA,
+  deriveReviewPda: v3pda.getV3ReviewPDA,
+  getV3ReviewCounterPDA: v3pda.getV3ReviewCounterPDA,
+  deriveReviewCounterPda: v3pda.getV3ReviewCounterPDA,
+  getV3AttestationPDA: v3pda.getV3AttestationPDA,
+  deriveAttestationPda: v3pda.getV3AttestationPDA,
+  getV3EscrowPDA: v3pda.getV3EscrowPDA,
+  deriveEscrowPda: v3pda.getV3EscrowPDA,
+  deriveReviewAttestationPda: getReviewAttestationPDA,
 
-  // V3 Deserialization (from @brainai/satp-v3)
+  // V3 Deserialization (local extracted scaffold)
   // NOTE: v3sdk.deserializeGenesis has isActive field mismatch with deployed program
   // Using corrected manual parser until SDK v3.6+ fixes struct alignment
   deserializeGenesis: _deserializeGenesisFixed,
   deserializeGenesisRecord: _deserializeGenesisFixed, // alias for old name
-  deserializeLinkedWallet: v3sdk.deserializeLinkedWallet,
-  deserializeMintTracker: v3sdk.deserializeMintTracker,
-  deserializeNameRegistry: v3sdk.deserializeNameRegistry,
-  deserializeReview: v3sdk.deserializeReview,
-  deserializeReviewCounter: v3sdk.deserializeReviewCounter,
-  deserializeAttestation: v3sdk.deserializeAttestation,
-  deserializeEscrowV3: v3sdk.deserializeEscrow,
-  tryDeserialize: v3sdk.tryDeserialize,
+  deserializeLinkedWallet: v3Borsh.deserializeLinkedWallet,
+  deserializeMintTracker: v3Borsh.deserializeMintTracker,
+  deserializeNameRegistry: v3Borsh.deserializeNameRegistry,
+  deserializeReview: v3Borsh.deserializeReview,
+  deserializeReviewCounter: v3Borsh.deserializeReviewCounter,
+  deserializeAttestation: v3Borsh.deserializeAttestation,
+  deserializeEscrowV3: v3Borsh.deserializeEscrowV3,
+  tryDeserialize: v3Borsh.deserializeAccount,
 
   // V3 Utilities
   isBorn: v3sdk.isBorn,
-  trustTier: v3sdk.trustTier,
-  reputationPct: v3sdk.reputationPct,
-  resolveAgent: v3sdk.resolveAgent,
-  verificationLabel: v3sdk.verificationLabel,
-  attestationTypeLabel: v3sdk.attestationTypeLabel,
-  escrowStatusLabel: v3sdk.escrowStatusLabel,
-  isAttestationValid: v3sdk.isAttestationValid,
-  isEscrowExpired: v3sdk.isEscrowExpired,
-  escrowRemaining: v3sdk.escrowRemaining,
+  trustTier: (score) => score >= 400 ? 'Sovereign' : score >= 200 ? 'Trusted' : score >= 100 ? 'Established' : score >= 50 ? 'Verified' : 'Unverified',
+  reputationPct: (score) => (Number(score || 0) / 10000).toFixed(2),
+  resolveAgent: (agentId, network = 'devnet') => v3pda.getGenesisPDA(agentId, network)[0],
+  verificationLabel: (level) => ['Unverified','Registered','Verified','Established','Trusted','Sovereign'][Number(level)] || 'Unknown',
+  attestationTypeLabel: (type) => String(type || '').replace(/_/g, ' '),
+  escrowStatusLabel: (status) => String(status || '').replace(/_/g, ' '),
+  isAttestationValid: (att) => !!att && !att.revoked && (!att.expiresAt || Number(att.expiresAt) > Math.floor(Date.now() / 1000)),
+  isEscrowExpired: (escrow) => !!escrow && !!escrow.expiresAt && Number(escrow.expiresAt) <= Math.floor(Date.now() / 1000),
+  escrowRemaining: (escrow) => escrow && escrow.expiresAt ? Math.max(0, Number(escrow.expiresAt) - Math.floor(Date.now() / 1000)) : null,
   EscrowStatus: v3sdk.EscrowStatus,
 
   // Legacy borsh (V2 compat only — prefer V3 deserializers above)
