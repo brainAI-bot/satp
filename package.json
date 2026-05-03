@@ -10,6 +10,7 @@
     "packages/satp"
   ],
   "scripts": {
-    "validate:idls": "python3 scripts/validate-idls.py"
+    "validate:idls": "python3 scripts/validate-idls.py",
+    "pack:satp-client": "mkdir -p dist && npm pack ./packages/satp-client --pack-destination dist"
   }
 }
