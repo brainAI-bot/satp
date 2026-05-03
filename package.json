@@ -10,6 +10,8 @@
     "packages/satp"
   ],
   "scripts": {
-    "validate:idls": "python3 scripts/validate-idls.py"
+    "validate:idls": "python3 scripts/validate-idls.py",
+    "build": "node scripts/verify-satp-build.js",
+    "test": "npm run validate:idls && npm run build && npm test --prefix packages/satp-client"
   }
 }
