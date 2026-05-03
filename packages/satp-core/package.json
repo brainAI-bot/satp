@@ -1,0 +1,7 @@
+{
+  "name": "@brainai/satp-core",
+  "version": "0.0.0-extraction",
+  "private": true,
+  "description": "SATP core schema/type scaffold extracted from AgentFolio planning docs. Not published by SATP-EXTRACT-001.",
+  "main": "README.md"
+}

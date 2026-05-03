@@ -1,0 +1,15 @@
+{
+  "name": "@brainai/satp-monorepo",
+  "private": true,
+  "version": "0.0.0-extraction",
+  "description": "SATP extraction workspace. Branch/PR-only scaffold; not published from this task.",
+  "workspaces": [
+    "packages/satp-client",
+    "packages/satp-core",
+    "packages/satp-solana",
+    "packages/satp"
+  ],
+  "scripts": {
+    "validate:idls": "python3 scripts/validate-idls.py"
+  }
+}

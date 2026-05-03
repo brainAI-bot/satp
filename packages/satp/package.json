@@ -1,0 +1,7 @@
+{
+  "name": "@brainai/satp",
+  "version": "0.0.0-extraction",
+  "private": true,
+  "description": "SATP umbrella package scaffold. Not published by SATP-EXTRACT-001.",
+  "main": "README.md"
+}
