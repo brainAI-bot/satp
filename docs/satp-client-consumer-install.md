@@ -18,13 +18,12 @@ Use a commit-addressed Git dependency:
 }
 ```
 
-For this branch update, replace `<SATP_COMMIT>` with the reviewed SATP commit
-hash from PR #5. Example after this task is pushed:
+Verified TASK-2dfc2845 dependency string:
 
 ```json
 {
   "dependencies": {
-    "@brainai/satp-client": "git+https://github.com/brainAI-bot/satp.git#<task-2dfc2845-commit>"
+    "@brainai/satp-client": "git+https://github.com/brainAI-bot/satp.git#dc1ee3cf50b082367a7e897c60e405f33416c1a0"
   }
 }
 ```
