@@ -1,0 +1,7 @@
+{
+  "name": "@brainai/satp-solana",
+  "version": "0.0.0-extraction",
+  "private": true,
+  "description": "SATP Solana helper scaffold for program IDs, IDLs, PDA helpers, account decoders, and transaction builders. Not published by SATP-EXTRACT-001.",
+  "main": "README.md"
+}

@@ -1,0 +1,36 @@
+{
+  "name": "@brainai/satp-client",
+  "version": "0.0.0-extraction",
+  "description": "SATP v3 client SDK scaffold extracted from AgentFolio. Not published by SATP-EXTRACT-001.",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "files": [
+    "src/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [
+    "solana",
+    "satp",
+    "agent",
+    "identity",
+    "reputation",
+    "blockchain",
+    "web3"
+  ],
+  "author": "brainAI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brainAI-bot/satp"
+  },
+  "homepage": "https://github.com/brainAI-bot/satp",
+  "dependencies": {
+    "@solana/web3.js": "^1.98.4",
+    "borsh": "^2.0.0",
+    "bs58": "^6.0.0"
+  },
+  "private": true
+}

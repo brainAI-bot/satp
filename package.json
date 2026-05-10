@@ -1,0 +1,23 @@
+{
+  "name": "@brainai/satp-client",
+  "private": true,
+  "version": "0.0.0-extraction",
+  "description": "SATP client Git-installable package root for branch/PR-only consumption; not published from this task.",
+  "workspaces": [
+    "packages/satp-client",
+    "packages/satp-core",
+    "packages/satp-solana",
+    "packages/satp"
+  ],
+  "scripts": {
+    "validate:idls": "python3 scripts/validate-idls.py",
+    "pack:satp-client": "mkdir -p dist && npm pack ./packages/satp-client --pack-destination dist"
+  },
+  "main": "packages/satp-client/src/index.js",
+  "types": "packages/satp-client/src/index.d.ts",
+  "dependencies": {
+    "@solana/web3.js": "^1.98.4",
+    "borsh": "^2.0.0",
+    "bs58": "^6.0.0"
+  }
+}
