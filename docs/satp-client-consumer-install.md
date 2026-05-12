@@ -78,6 +78,11 @@ npm install --ignore-scripts --no-audit --no-fund ../satp/dist/brainai-satp-clie
 
 Do not use the local tarball path as the merge dependency in AgentFolio.
 
+
+## Package-boundary hardening reference
+
+For the current package-name/version audit, CI gate, export-surface requirements, and security guardrails, see [`docs/package-boundary.md`](./package-boundary.md).
+
 ## Rollback notes
 
 Remove the Git dependency from the consumer package manifest and reinstall:
