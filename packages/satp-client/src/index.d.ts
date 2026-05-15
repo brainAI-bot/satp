@@ -2,17 +2,19 @@ import { PublicKey, Transaction, Connection } from '@solana/web3.js';
 
 export type Network = 'mainnet' | 'devnet';
 
-export interface IdentityAttestationRequestOptions {
+export type IdentityAttestationTypeOption =
+  | { claimType: string; attestationType?: string }
+  | { claimType?: string; attestationType: string };
+
+export type IdentityAttestationRequestOptions = {
   subjectWallet: PublicKey | string;
   agentId?: string;
-  claimType?: string;
-  attestationType?: string;
   metadataHash: string;
   attester?: PublicKey | string;
   issuer?: PublicKey | string;
   network?: Network;
   expiresAt?: number | null;
-}
+} & IdentityAttestationTypeOption;
 
 export interface IdentityAttestationRequest {
   schemaVersion: 'satp.identityAttestationRequest.v1';
