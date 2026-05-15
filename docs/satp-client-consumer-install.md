@@ -67,6 +67,37 @@ Expected result: `require.resolve('@brainai/satp-client')` resolves under the
 consumer `node_modules/@brainai/satp-client`, and the package exposes
 `SATPSDK`, `SATPV3SDK`, and `createSATPClient`.
 
+## Offline identity attestation request helper
+
+Consumers can prepare deterministic identity-attestation request metadata
+without RPC, signing, credential access, or a transaction build:
+
+```js
+const { prepareIdentityAttestationRequest } = require('@brainai/satp-client');
+
+const request = prepareIdentityAttestationRequest({
+  subjectWallet: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG',
+  agentId: 'brainChain',
+  claimType: 'github_verified',
+  metadataHash: '4d9678a7869c25f26a2e38e43f70fc7d0c4142d20b1743a43e50cd8fd012f3d7',
+  attester: 'Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc',
+  network: 'devnet',
+});
+
+console.log(request.signingRequired); // false
+console.log(request.instructions);    // []
+console.log(request.genesisPda);
+console.log(request.attestationPda);
+console.log(request.requestHash);
+```
+
+The helper returns plain JSON-safe data including normalized public keys, the
+agent ID hash, Genesis and Attestation PDA fields, program IDs, and a stable
+`requestHash`. It intentionally returns `signingRequired: false`,
+`instructions: []`, `signers: []`, and `transaction: null`; callers that decide
+to submit a write transaction must build, review, and sign that transaction in a
+separate flow.
+
 ## Tarball fallback for local debugging only
 
 A local tarball can still be produced for isolated debugging:
