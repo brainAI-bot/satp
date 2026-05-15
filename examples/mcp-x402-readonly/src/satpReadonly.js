@@ -1,15 +1,12 @@
 'use strict';
 
-const crypto = require('crypto');
 const { PublicKey } = require('@solana/web3.js');
 const programsFixture = require('../fixtures/programs.json');
 const identitiesFixture = require('../fixtures/identities.json');
 const {
   getV3ProgramIds,
-  getGenesisPDA,
-  getV3AttestationPDA,
-  hashAgentId,
-} = require('../../../packages/satp-client/src/v3-pda');
+  prepareIdentityAttestationRequest,
+} = require('../../../packages/satp-client/src');
 
 const DEFAULT_NETWORK = 'devnet';
 const EXAMPLE_ATTESTER = '11111111111111111111111111111111';
@@ -34,13 +31,6 @@ function validateWallet(wallet, field = 'wallet') {
   } catch (err) {
     throw new Error(`Invalid ${field}: expected a Solana public key`);
   }
-}
-
-function validateMetadataHash(metadataHash) {
-  if (typeof metadataHash !== 'string' || !/^[a-fA-F0-9]{64}$/.test(metadataHash)) {
-    throw new Error('Invalid metadataHash: expected a 32-byte hex string');
-  }
-  return metadataHash.toLowerCase();
 }
 
 function programMapToStrings(programMap) {
@@ -102,36 +92,22 @@ function prepareAttestationRequest({
   attester = EXAMPLE_ATTESTER,
 } = {}) {
   const selectedNetwork = normalizeNetwork(network);
-  const selectedWallet = validateWallet(subjectWallet, 'subjectWallet');
-  const selectedAttester = validateWallet(attester, 'attester');
-  const selectedMetadataHash = validateMetadataHash(metadataHash);
 
   if (!ALLOWED_CLAIM_TYPES.has(claimType)) {
     throw new Error(`Unsupported claimType: ${claimType}`);
   }
 
-  const agentSeed = crypto.createHash('sha256').update(selectedWallet, 'utf8').digest('hex');
-  const [genesisPda, genesisBump] = getGenesisPDA(hashAgentId(selectedWallet), selectedNetwork);
-  const [attestationPda, attestationBump] = getV3AttestationPDA(
-    hashAgentId(selectedWallet),
-    selectedAttester,
+  const request = prepareIdentityAttestationRequest({
+    subjectWallet,
     claimType,
-    selectedNetwork
-  );
+    metadataHash,
+    network: selectedNetwork,
+    attester,
+  });
 
   return {
-    network: selectedNetwork,
-    mode: 'unsigned-readonly-request',
-    subjectWallet: selectedWallet,
-    claimType,
-    metadataHash: selectedMetadataHash,
-    agentSeed,
-    genesisPda: genesisPda.toBase58(),
-    genesisBump,
-    attestationPda: attestationPda.toBase58(),
-    attestationBump,
-    attester: selectedAttester,
-    instructions: [],
+    ...request,
+    agentSeed: request.agentIdHash,
     note: 'Example output only; callers must build, review, and sign any write transaction outside this read-only runtime.',
   };
 }

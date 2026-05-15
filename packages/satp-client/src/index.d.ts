@@ -2,6 +2,50 @@ import { PublicKey, Transaction, Connection } from '@solana/web3.js';
 
 export type Network = 'mainnet' | 'devnet';
 
+export type IdentityAttestationTypeOption =
+  | { claimType: string; attestationType?: string }
+  | { claimType?: string; attestationType: string };
+
+export type IdentityAttestationRequestOptions = {
+  subjectWallet: PublicKey | string;
+  agentId?: string;
+  metadataHash: string;
+  attester?: PublicKey | string;
+  issuer?: PublicKey | string;
+  network?: Network;
+  expiresAt?: number | null;
+} & IdentityAttestationTypeOption;
+
+export interface IdentityAttestationRequest {
+  schemaVersion: 'satp.identityAttestationRequest.v1';
+  requestType: 'identity-attestation';
+  mode: 'unsigned-readonly-request';
+  network: Network;
+  signingRequired: false;
+  unsigned: true;
+  subjectWallet: string;
+  agentId: string;
+  attester: string;
+  claimType: string;
+  attestationType: string;
+  metadataHash: string;
+  proofData: string;
+  expiresAt: number | null;
+  agentIdHash: string;
+  genesisPda: string;
+  genesisBump: number;
+  attestationPda: string;
+  attestationBump: number;
+  programs: {
+    identity: string;
+    attestations: string;
+  };
+  instructions: [];
+  signers: [];
+  transaction: null;
+  requestHash: string;
+}
+
 // ─── V2 SDK ──────────────────────────────────────────────
 
 export interface V2ProgramIds {
@@ -133,6 +177,10 @@ export function anchorDiscriminator(ixName: string): Buffer;
 // ─── V3 PDA Helpers ─────────────────────────────────────
 
 export { getV3ProgramIds, hashAgentId, hashName, getGenesisPDA, getV3ReputationAuthorityPDA, getV3ValidationAuthorityPDA, getV3MintTrackerPDA, getNameRegistryPDA, getLinkedWalletPDA, getV3ReviewPDA, getV3ReviewCounterPDA, getV3AttestationPDA, getV3EscrowPDA } from './v3-pda';
+
+export function prepareIdentityAttestationRequest(
+  opts: IdentityAttestationRequestOptions
+): IdentityAttestationRequest;
 
 // ─── Borsh Deserialization Helpers ──────────────────────
 

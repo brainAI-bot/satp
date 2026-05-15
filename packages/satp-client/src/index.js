@@ -777,6 +777,7 @@ class SATPSDK {
 const v3sdk = require('./v3-sdk');
 const v3pda = require('./v3-pda');
 const v3Borsh = require('./borsh-reader');
+const { prepareIdentityAttestationRequest } = require('./attestation-request');
 
 // Legacy V3 SDK wrapper — keeps string constructor compatibility while using
 // the local extracted SATPV3SDK implementation so offline tests and consumers
@@ -924,6 +925,7 @@ module.exports = {
   getV3EscrowPDA: v3pda.getV3EscrowPDA,
   deriveEscrowPda: v3pda.getV3EscrowPDA,
   deriveReviewAttestationPda: getReviewAttestationPDA,
+  prepareIdentityAttestationRequest,
 
   // V3 Deserialization (local extracted scaffold)
   // NOTE: v3sdk.deserializeGenesis has isActive field mismatch with deployed program
