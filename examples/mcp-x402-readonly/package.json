@@ -1,0 +1,11 @@
+{
+  "name": "@brainai/satp-mcp-x402-readonly-example",
+  "version": "0.0.0-example",
+  "private": true,
+  "description": "Offline fixture-first SATP MCP/x402 read-only runtime example.",
+  "type": "commonjs",
+  "scripts": {
+    "check": "node --check src/server.js src/satpReadonly.js src/x402Gate.js tests/*.test.js",
+    "test": "node --test tests/*.test.js"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "devnet": {
+    "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG": {
+      "wallet": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG",
+      "agentId": "fixture-agent-devnet-001",
+      "displayName": "Fixture SATP Agent",
+      "validationLevel": 3,
+      "metadataHash": "4d9678a7869c25f26a2e38e43f70fc7d0c4142d20b1743a43e50cd8fd012f3d7",
+      "source": "fixture"
+    }
+  },
+  "mainnet": {}
+}

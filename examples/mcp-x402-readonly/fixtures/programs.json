@@ -1,0 +1,18 @@
+{
+  "devnet": {
+    "identity": "GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG",
+    "reviews": "r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4",
+    "reputation": "2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ",
+    "attestations": "6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD",
+    "validation": "6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV",
+    "escrow": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C"
+  },
+  "mainnet": {
+    "identity": "GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG",
+    "reviews": "r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4",
+    "reputation": "2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ",
+    "attestations": "6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD",
+    "validation": "6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV",
+    "escrow": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C"
+  }
+}
