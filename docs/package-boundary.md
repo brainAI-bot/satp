@@ -59,6 +59,20 @@ npm run ci
 
 This CI standard intentionally excludes deploy, publish, mainnet/devnet write, keypair, and production actions.
 
+Run the expanded offline example conformance gate before changing consumer-facing runtime examples:
+
+```bash
+npm install --ignore-scripts --no-audit --no-fund
+npm run ci:offline-with-examples
+```
+
+`npm run ci:offline-with-examples` performs the root `npm run ci` checks, then runs `npm run check:examples` and `npm run test:examples` for both read-only runtime examples:
+
+1. `examples/mcp-x402-readonly` - MCP/x402 SATP read-only runtime example.
+2. `examples/agentfolio-consumer-readonly` - AgentFolio consumer read-only SATP record example.
+
+The example conformance gate is fixture-first and offline. It must not publish packages, deploy programs, read or change keypairs, write to Solana devnet/mainnet, mutate production, perform client work, or change AgentFolio product code.
+
 ## Security and key-management guardrails
 
 - No npm publish in this phase.
@@ -73,5 +87,6 @@ This CI standard intentionally excludes deploy, publish, mainnet/devnet write, k
 - [ ] Root and client package names/versions are intentional for the current phase.
 - [ ] Install docs use commit-addressed Git dependencies and no local tarball/sibling path for mergeable PRs.
 - [ ] `npm run ci` passes from a clean checkout.
+- [ ] `npm run ci:offline-with-examples` passes when consumer-facing runtime examples change.
 - [ ] Required exports remain available from the Git-installed root package.
 - [ ] Security docs still forbid deploys, keypair movement, secret printing, and npm publish without explicit HQ approval.
