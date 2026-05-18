@@ -44,6 +44,10 @@ function sha256Hex(value) {
   return crypto.createHash('sha256').update(value, 'utf8').digest('hex');
 }
 
+function sameJsonValue(left, right) {
+  return canonicalStringify(left) === canonicalStringify(right);
+}
+
 function buildTrustMetadata(profile, signal) {
   return {
     kind: EXAMPLE_KIND,
@@ -141,19 +145,40 @@ function verifyAgentFolioSatpConsumerRecord(record) {
       if (input.metadataHash !== expectedHash) {
         errors.push('trustInputs[' + index + '].metadataHash does not match metadata');
       }
-      if (input.request?.metadataHash !== input.metadataHash) {
-        errors.push('trustInputs[' + index + '].request.metadataHash does not match input metadataHash');
+
+      if (!input.request || typeof input.request !== 'object') {
+        errors.push('trustInputs[' + index + '].request must be an object');
+        continue;
       }
-      if (input.request?.subjectWallet !== record.satp.subjectWallet) {
-        errors.push('trustInputs[' + index + '].request.subjectWallet does not match record subjectWallet');
+
+      const expectedRequest = prepareIdentityAttestationRequest({
+        subjectWallet: record.satp.subjectWallet,
+        agentId: record.satp.agentId,
+        claimType: input.claimType,
+        metadataHash: input.metadataHash,
+        network: record.network,
+        attester: input.request.attester,
+        expiresAt: input.request.expiresAt,
+      });
+
+      const expectedFields = [
+        'requestHash',
+        'attestationPda',
+        'programs',
+        'subjectWallet',
+        'agentId',
+        'metadataHash',
+        'signingRequired',
+        'unsigned',
+      ];
+
+      for (const field of expectedFields) {
+        if (!sameJsonValue(input.request[field], expectedRequest[field])) {
+          errors.push('trustInputs[' + index + '].request.' + field + ' does not match derived request');
+        }
       }
-      if (input.request?.agentId !== record.satp.agentId) {
-        errors.push('trustInputs[' + index + '].request.agentId does not match record agentId');
-      }
-      if (input.request?.signingRequired !== false || input.request?.unsigned !== true) {
-        errors.push('trustInputs[' + index + '].request must be unsigned');
-      }
-      if (input.request?.transaction !== null || !Array.isArray(input.request?.instructions) || input.request.instructions.length !== 0) {
+
+      if (input.request.transaction !== null || !Array.isArray(input.request.instructions) || input.request.instructions.length !== 0) {
         errors.push('trustInputs[' + index + '].request must not include a transaction or instructions');
       }
     }

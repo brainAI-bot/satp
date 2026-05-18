@@ -8,6 +8,10 @@ const {
   verifyAgentFolioSatpConsumerRecord,
 } = require('../src/consumerRecord');
 
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 test('builds offline SATP trust inputs for an AgentFolio-style consumer', () => {
   const record = buildAgentFolioSatpConsumerRecord({ profile });
 
@@ -41,6 +45,36 @@ test('detects changed trust metadata before an app treats the record as valid', 
   const result = verifyAgentFolioSatpConsumerRecord(record);
   assert.equal(result.ok, false);
   assert.match(result.errors.join('\n'), /metadataHash does not match metadata/);
+});
+
+test('detects tampered derived request attestation PDA', () => {
+  const record = buildAgentFolioSatpConsumerRecord({ profile });
+  const tampered = clone(record);
+  tampered.satp.trustInputs[0].request.attestationPda = tampered.satp.trustInputs[1].request.attestationPda;
+
+  const result = verifyAgentFolioSatpConsumerRecord(tampered);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /request\.attestationPda does not match derived request/);
+});
+
+test('detects tampered derived request program IDs', () => {
+  const record = buildAgentFolioSatpConsumerRecord({ profile });
+  const tampered = clone(record);
+  tampered.satp.trustInputs[0].request.programs.identity = tampered.satp.trustInputs[0].request.programs.attestations;
+
+  const result = verifyAgentFolioSatpConsumerRecord(tampered);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /request\.programs does not match derived request/);
+});
+
+test('detects tampered derived request hash', () => {
+  const record = buildAgentFolioSatpConsumerRecord({ profile });
+  const tampered = clone(record);
+  tampered.satp.trustInputs[0].request.requestHash = '0'.repeat(64);
+
+  const result = verifyAgentFolioSatpConsumerRecord(tampered);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /request\.requestHash does not match derived request/);
 });
 
 test('rejects invalid profile wallets before preparing requests', () => {
