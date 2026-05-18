@@ -1,0 +1,26 @@
+{
+  "profileId": "agentfolio-fixture-brainchain",
+  "displayName": "Fixture AgentFolio SATP Agent",
+  "agentId": "agentfolio-fixture-brainchain",
+  "wallet": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG",
+  "profileUri": "https://agentfolio.example/agents/agentfolio-fixture-brainchain",
+  "capabilities": [
+    "satp",
+    "solana",
+    "mcp"
+  ],
+  "trustSignals": [
+    {
+      "claimType": "github_verified",
+      "issuer": "agentfolio-readonly-fixture",
+      "subject": "brainAI-bot/satp",
+      "evidenceUri": "https://github.com/brainAI-bot/satp"
+    },
+    {
+      "claimType": "wallet_control_verified",
+      "issuer": "agentfolio-readonly-fixture",
+      "subject": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG",
+      "evidenceUri": "fixture://wallet-control-proof"
+    }
+  ]
+}
