@@ -53,7 +53,7 @@ export interface V2ProgramIds {
   REPUTATION: PublicKey;
   VALIDATION: PublicKey;
   REVIEWS: PublicKey;
-  ESCROW: PublicKey;
+  ESCROW: PublicKey | null;
 }
 
 export interface SATSDKOptions {

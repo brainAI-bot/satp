@@ -16,7 +16,7 @@ const TEST_WALLET = process.env.WALLET || Keypair.generate().publicKey.toBase58(
 async function main() {
   console.log('=== SATP SDK Test ===\n');
 
-  const sdk = new SATPSDK(); // defaults to mainnet
+  const sdk = new SATPSDK(); // defaults to devnet
 
   // 1. Derive PDAs (offline)
   console.log('1. Deriving PDAs for:', TEST_WALLET);

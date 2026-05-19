@@ -6,6 +6,8 @@ export type AgentIdOrHash = string | Buffer;
 export interface SATPV3SDKOptions {
   network?: Network;
   rpcUrl?: string;
+  url?: string;
+  endpoint?: string;
   commitment?: 'processed' | 'confirmed' | 'finalized';
 }
 

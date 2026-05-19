@@ -86,15 +86,23 @@ const aliasRequest = prepareIdentityAttestationRequest({
   attestationType: 'wallet_control_verified',
   metadataHash: METADATA_HASH.toLowerCase(),
   issuer: ATTESTER,
-  network: 'mainnet',
+  network: 'devnet',
   expiresAt: 1893456000,
 });
 
 assert.equal(aliasRequest.agentId, SUBJECT_WALLET);
 assert.equal(aliasRequest.claimType, 'wallet_control_verified');
 assert.equal(aliasRequest.attester, ATTESTER);
-assert.equal(aliasRequest.network, 'mainnet');
+assert.equal(aliasRequest.network, 'devnet');
 assert.equal(aliasRequest.expiresAt, 1893456000);
+
+assertThrows(/SATP V3 mainnet program IDs are not configured/, () => prepareIdentityAttestationRequest({
+  subjectWallet: SUBJECT_WALLET,
+  attestationType: 'wallet_control_verified',
+  metadataHash: METADATA_HASH.toLowerCase(),
+  issuer: ATTESTER,
+  network: 'mainnet',
+}));
 
 assertThrows(/Invalid subjectWallet/, () => prepareIdentityAttestationRequest({
   subjectWallet: 'not-a-wallet',

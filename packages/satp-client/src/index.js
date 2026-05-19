@@ -787,7 +787,6 @@ class SATPV3SDK extends v3sdk.SATPV3SDK {
     if (typeof opts === 'string') {
       super({
         rpcUrl: opts,
-        network: opts.includes('mainnet') ? 'mainnet' : 'devnet',
       });
     } else {
       super(opts);
@@ -796,15 +795,14 @@ class SATPV3SDK extends v3sdk.SATPV3SDK {
 }
 
 function createSATPClient(opts = {}) {
-  const rpcUrl = typeof opts === 'string'
-    ? opts
-    : (opts.rpcUrl || opts.url || opts.endpoint || 'https://api.mainnet-beta.solana.com');
-  const client = v3sdk.createSATPClient({ rpcUrl, network: typeof opts === 'object' && opts.network ? opts.network : (rpcUrl.includes('mainnet') ? 'mainnet' : 'devnet') });
-  client.rpcUrl = rpcUrl;
-  client.network = typeof opts === 'object' && opts.network
-    ? opts.network
-    : (rpcUrl.includes('mainnet') ? 'mainnet' : 'devnet');
-  return client;
+  if (typeof opts === 'string') {
+    return v3sdk.createSATPClient(opts);
+  }
+  return v3sdk.createSATPClient({
+    rpcUrl: opts.rpcUrl || opts.url || opts.endpoint,
+    network: opts.network,
+    commitment: opts.commitment,
+  });
 }
 
 // Legacy borsh reader — keep for any V2 code paths
