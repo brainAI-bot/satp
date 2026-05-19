@@ -25,6 +25,21 @@ const {
 const DEVNET_RPC = 'https://api.devnet.solana.com';
 const MAINNET_RPC = 'https://api.mainnet-beta.solana.com';
 
+function normalizeSDKOptions(opts = {}) {
+  if (typeof opts !== 'string') {
+    return opts;
+  }
+
+  if (opts === 'devnet' || opts === 'mainnet') {
+    return { network: opts };
+  }
+
+  return {
+    rpcUrl: opts,
+    network: opts.includes('mainnet') ? 'mainnet' : 'devnet',
+  };
+}
+
 /**
  * Compute Anchor instruction discriminator.
  * @param {string} ixName - e.g. "create_identity"
@@ -65,9 +80,11 @@ class SATPV3SDK {
    * @param {string} [opts.commitment='confirmed']
    */
   constructor(opts = {}) {
-    this.network = opts.network || 'devnet';
-    this.rpcUrl = opts.rpcUrl || (this.network === 'mainnet' ? MAINNET_RPC : DEVNET_RPC);
-    this.commitment = opts.commitment || 'confirmed';
+    const normalized = normalizeSDKOptions(opts);
+
+    this.network = normalized.network || 'devnet';
+    this.rpcUrl = normalized.rpcUrl || (this.network === 'mainnet' ? MAINNET_RPC : DEVNET_RPC);
+    this.commitment = normalized.commitment || 'confirmed';
     this.connection = new Connection(this.rpcUrl, this.commitment);
     this.programIds = getV3ProgramIds(this.network);
   }
