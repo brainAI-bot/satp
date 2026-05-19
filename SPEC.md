@@ -12,6 +12,9 @@
 >
 > This specification defines protocol semantics and package boundaries for extracting SATP from AgentFolio into this repo. It is a docs-only extraction planning artifact: it does not deploy programs, rotate keys, publish npm packages, or change AgentFolio product code.
 
+For the versioned public self-serve standard intended for third-party consumers,
+see [`docs/standards/satp-standard-v1.0.0.md`](docs/standards/satp-standard-v1.0.0.md).
+
 ---
 
 ## 1. Scope
