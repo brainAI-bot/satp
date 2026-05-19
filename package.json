@@ -2,7 +2,7 @@
   "name": "@brainai/satp-client",
   "private": true,
   "version": "0.0.0-extraction",
-  "description": "SATP client Git-installable package root for branch/PR-only consumption; not published from this task.",
+  "description": "SATP client SDK package root for commit-pinned Git consumption; npm publish remains blocked until the release packet passes.",
   "workspaces": [
     "packages/satp-client",
     "packages/satp-core",
@@ -14,15 +14,37 @@
     "pack:satp-client": "mkdir -p dist && npm pack ./packages/satp-client --pack-destination dist",
     "check:js": "find packages/satp-client/src -name '*.js' -type f -print0 | xargs -0 -n1 node --check",
     "check:exports": "node scripts/check-exports.js",
+    "smoke:consumer-install": "node scripts/smoke-clean-consumer-install.js",
     "check:examples": "npm --prefix examples/mcp-x402-readonly run check && npm --prefix examples/agentfolio-consumer-readonly run check",
     "test:v3": "node packages/satp-client/test-v3.js",
     "test:borsh": "node packages/satp-client/test-borsh-reader.js",
     "test:examples": "npm --prefix examples/mcp-x402-readonly test && npm --prefix examples/agentfolio-consumer-readonly test",
     "ci:offline-with-examples": "npm run ci && npm run check:examples && npm run test:examples",
-    "ci": "npm run validate:idls && npm run check:js && npm run check:exports && npm run test:v3 && npm run test:borsh"
+    "ci": "npm run validate:idls && npm run check:js && npm run check:exports && npm run smoke:consumer-install && npm run test:v3 && npm run test:borsh"
   },
   "main": "packages/satp-client/src/index.js",
   "types": "packages/satp-client/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./packages/satp-client/src/index.d.ts",
+      "default": "./packages/satp-client/src/index.js"
+    },
+    "./src/*": "./packages/satp-client/src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "README.md",
+    "docs/package-boundary.md",
+    "docs/satp-client-consumer-install.md",
+    "idls/",
+    "packages/satp-client/README.md",
+    "packages/satp-client/index.js",
+    "packages/satp-client/package.json",
+    "packages/satp-client/src/"
+  ],
+  "engines": {
+    "node": ">=20.18"
+  },
   "dependencies": {
     "@solana/web3.js": "^1.98.4",
     "borsh": "^2.0.0",

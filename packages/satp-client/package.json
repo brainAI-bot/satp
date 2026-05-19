@@ -1,9 +1,17 @@
 {
   "name": "@brainai/satp-client",
   "version": "0.0.0-extraction",
-  "description": "SATP v3 client SDK scaffold extracted from AgentFolio. Not published by SATP-EXTRACT-001.",
+  "description": "SATP client SDK surface prepared for release review; not published until the release packet passes.",
   "main": "src/index.js",
   "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
   "files": [
     "src/",
     "README.md"
@@ -27,6 +35,9 @@
     "url": "https://github.com/brainAI-bot/satp"
   },
   "homepage": "https://github.com/brainAI-bot/satp",
+  "engines": {
+    "node": ">=20.18"
+  },
   "dependencies": {
     "@solana/web3.js": "^1.98.4",
     "borsh": "^2.0.0",

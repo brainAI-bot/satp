@@ -7,12 +7,14 @@ Version: **3.3.0** | Tests: **101 unit + 16 devnet integration** | Programs: **6
 ## Installation
 
 ```bash
-npm install @brainai/satp-client
-# or
-yarn add @brainai/satp-client
+npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>
 ```
 
-**Peer dependency:** `@solana/web3.js ^1.87.0`
+The current review package is `@brainai/satp-client@0.0.0-extraction` and
+remains unpublished. Pin a reviewed commit for consumers. Do not publish to npm
+until the release packet passes.
+
+**Runtime dependency:** `@solana/web3.js ^1.98.4`
 
 ## Quick Start
 
