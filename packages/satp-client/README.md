@@ -1,18 +1,24 @@
 # SATP V3 SDK — `@brainai/satp-client`
 
-**Solana Agent Token Protocol** — JavaScript/TypeScript SDK for interacting with all 6 SATP V3 on-chain programs.
+**Solana Agent Token Protocol** — JavaScript/TypeScript SDK for interacting with the SATP V3 devnet programs.
 
 Version: **3.3.0** | Tests: **101 unit + 16 devnet integration** | Programs: **6**
 
 ## Installation
 
 ```bash
-npm install @brainai/satp-client
-# or
-yarn add @brainai/satp-client
+npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>
 ```
 
-**Peer dependency:** `@solana/web3.js ^1.87.0`
+The current review package is `@brainai/satp-client@0.0.0-extraction` and
+remains unpublished. Pin a reviewed commit for consumers. Do not publish to npm
+until the release packet passes.
+
+Mainnet program IDs are intentionally not enabled in this release candidate.
+Constructors and helpers fail closed for `network: 'mainnet'` until an approved
+mainnet decision packet provides production program IDs.
+
+**Runtime dependency:** `@solana/web3.js ^1.98.4`
 
 ## Quick Start
 
@@ -20,7 +26,7 @@ yarn add @brainai/satp-client
 const { SATPV3SDK } = require('@brainai/satp-client');
 
 // Initialize (devnet by default)
-const sdk = new SATPV3SDK('devnet');
+const sdk = new SATPV3SDK({ network: 'devnet' });
 
 // Check if an agent has an identity
 const exists = await sdk.hasIdentity('brainChain');
@@ -73,8 +79,8 @@ const tx = await sdk.buildCreateIdentity(creatorPubkey, 'myAgent', {
 ### Constructor
 
 ```javascript
-const sdk = new SATPV3SDK(network, rpcUrl);
-// network: 'devnet' | 'mainnet' (default: 'devnet')
+const sdk = new SATPV3SDK({ network, rpcUrl });
+// network: 'devnet' (default). 'mainnet' fails closed until approved IDs exist.
 // rpcUrl: optional custom RPC endpoint
 ```
 
@@ -311,21 +317,24 @@ node test-v3-devnet.js
 # CPI integration tests (35)
 cd .. && node tests/devnet-cpi-integration.js
 
-# Mainnet smoke test (17)
-NETWORK=devnet node scripts/mainnet-smoke-test.js
+# Release-safety defaults and mainnet fail-closed checks
+node test-release-safety.js
 ```
 
 ## Network Configuration
 
 ```javascript
 // Devnet (default)
-const sdk = new SATPV3SDK('devnet');
+const sdk = new SATPV3SDK();
 
-// Mainnet
-const sdk = new SATPV3SDK('mainnet');
+// Explicit devnet
+const sdk = new SATPV3SDK({ network: 'devnet' });
 
 // Custom RPC
-const sdk = new SATPV3SDK('mainnet', 'https://my-rpc.example.com');
+const sdk = new SATPV3SDK({ rpcUrl: 'https://my-rpc.example.com' });
+
+// Mainnet currently fails closed until approved program IDs are configured
+assert.throws(() => new SATPV3SDK({ network: 'mainnet' }));
 ```
 
 ## Borsh Deserialization Helpers (v3.6.0)

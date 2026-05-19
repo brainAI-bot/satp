@@ -3,8 +3,9 @@
 `@brainai/satp-client` is delivered from the SATP repository without publishing
 to npm. The durable/merge-safe path is a commit-addressed Git dependency on the
 SATP repository root. The root package is intentionally named
-`@brainai/satp-client` and its `main` points at the extracted client package
-entrypoint in `packages/satp-client/src/index.js`.
+`@brainai/satp-client`; its `main`, `types`, and `exports["."]` point at
+the extracted client package entrypoint in `packages/satp-client/src/index.js`
+and `packages/satp-client/src/index.d.ts`.
 
 ## Durable dependency path for AgentFolio
 
@@ -65,7 +66,14 @@ NODE
 
 Expected result: `require.resolve('@brainai/satp-client')` resolves under the
 consumer `node_modules/@brainai/satp-client`, and the package exposes
-`SATPSDK`, `SATPV3SDK`, and `createSATPClient`.
+`SATPSDK`, `SATPV3SDK`, `createSATPClient`, `getV3ProgramIds`,
+`hashAgentId`, `getGenesisPDA`, and `prepareIdentityAttestationRequest`.
+
+The repo also carries a repeatable clean-consumer smoke:
+
+```bash
+npm run smoke:consumer-install
+```
 
 ## Offline identity attestation request helper
 

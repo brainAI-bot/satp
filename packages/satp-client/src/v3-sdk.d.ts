@@ -6,8 +6,12 @@ export type AgentIdOrHash = string | Buffer;
 export interface SATPV3SDKOptions {
   network?: Network;
   rpcUrl?: string;
+  url?: string;
+  endpoint?: string;
   commitment?: 'processed' | 'confirmed' | 'finalized';
 }
+
+export type SATPV3SDKConstructorOptions = SATPV3SDKOptions | Network | string;
 
 export interface V3ProgramIds {
   IDENTITY: PublicKey;
@@ -185,7 +189,7 @@ export class SATPV3SDK {
   connection: Connection;
   programIds: V3ProgramIds;
 
-  constructor(opts?: SATPV3SDKOptions);
+  constructor(opts?: SATPV3SDKConstructorOptions);
 
   // ─── Identity — Genesis Record CRUD ───────────────────
 

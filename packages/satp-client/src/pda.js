@@ -150,6 +150,9 @@ function getEscrowPDA(client, descriptionHash, network = 'devnet') {
     ? descriptionHash
     : Buffer.from(descriptionHash);
   const programIds = getProgramIds(network);
+  if (!programIds.ESCROW) {
+    throw new Error('SATP v2 mainnet escrow program ID is not configured; pass devnet or wait for an approved mainnet escrow deployment');
+  }
   return PublicKey.findProgramAddressSync(
     [Buffer.from(ESCROW_SEED), clientKey.toBuffer(), hashBuf],
     programIds.ESCROW

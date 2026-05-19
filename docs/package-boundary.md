@@ -6,13 +6,13 @@ Status: SATP S4 package-boundary hardening for branch/PR review. This document i
 
 | Area | Current state | Hardening decision |
 | --- | --- | --- |
-| Git-installable root package | `package.json` is named `@brainai/satp-client`, `private: true`, version `0.0.0-extraction`, `main=packages/satp-client/src/index.js`, `types=packages/satp-client/src/index.d.ts`. | Keep this root shape for branch/PR consumers because clean Git install resolves `@brainai/satp-client` without a sibling tarball or npm publish. |
+| Git-installable root package | `package.json` is named `@brainai/satp-client`, `private: true`, version `0.0.0-extraction`, `main=packages/satp-client/src/index.js`, `types=packages/satp-client/src/index.d.ts`, and `exports["."]` maps to those same JS/types entrypoints. | Keep this root shape for branch/PR consumers because clean Git install resolves `@brainai/satp-client` without a sibling tarball or npm publish. |
 | Workspaces | Root workspaces include `packages/satp-client`, `packages/satp-core`, `packages/satp-solana`, and `packages/satp`. | Keep workspace split as the target boundary; only `packages/satp-client` has runnable JS in this extraction branch. |
 | Client package | `packages/satp-client/package.json` is named `@brainai/satp-client`, private, version `0.0.0-extraction`, `main=src/index.js`, `types=src/index.d.ts`. | Treat as the current public SDK surface for AgentFolio and external consumers. |
 | Umbrella package target | `packages/satp/package.json` is named `@brainai/satp`, private, version `0.0.0-extraction`, `main=README.md`. | Reserve `@brainai/satp` as the future stable umbrella package; do not expose it as install-ready until it has code entrypoints and tests. |
 | Core/Solana packages | `@brainai/satp-core` and `@brainai/satp-solana` are private README placeholders. | Keep placeholders private; do not tell consumers to install them yet. |
 | Runtime dependencies | Root/client depend on `@solana/web3.js`, `borsh`, and `bs58`. | Keep dependencies explicit at the installable boundary; no undeclared `@brainai/satp-v3` dependency is allowed. |
-| Export surface | Root `require('@brainai/satp-client')` resolves to the extracted client entrypoint. | Required exports are smoke-tested by `npm run check:exports`: `SATPSDK`, `SATPV3SDK`, `createSATPClient`, `getV3ProgramIds`, `hashAgentId`, and `getGenesisPDA`. |
+| Export surface | Root `require('@brainai/satp-client')` resolves to the extracted client entrypoint. Existing review-phase subpaths under `@brainai/satp-client/src/*` remain exported. | Required exports are smoke-tested by `npm run check:exports`: `SATPSDK`, `SATPV3SDK`, `createSATPClient`, `getV3ProgramIds`, `hashAgentId`, `getGenesisPDA`, and `prepareIdentityAttestationRequest`. |
 
 ## Package naming and version proposal
 
@@ -52,10 +52,11 @@ npm run ci
 `npm run ci` performs:
 
 1. `npm run validate:idls` — validates all committed IDL JSON files.
-2. `npm run check:js` — syntax-checks extracted client JS sources.
-3. `npm run check:exports` — verifies the Git-installable root export surface.
-4. `npm run test:v3` — runs offline SATP V3 PDA/SDK tests.
-5. `npm run test:borsh` — runs offline Borsh reader tests.
+2. `npm run check:js` - syntax-checks extracted client JS sources.
+3. `npm run check:exports` - verifies the Git-installable root export surface.
+4. `npm run smoke:consumer-install` - installs the package into a clean temporary consumer and verifies `require('@brainai/satp-client')` from `node_modules`.
+5. `npm run test:v3` - runs offline SATP V3 PDA/SDK tests.
+6. `npm run test:borsh` - runs offline Borsh reader tests.
 
 This CI standard intentionally excludes deploy, publish, mainnet/devnet write, keypair, and production actions.
 
@@ -88,5 +89,6 @@ The example conformance gate is fixture-first and offline. It must not publish p
 - [ ] Install docs use commit-addressed Git dependencies and no local tarball/sibling path for mergeable PRs.
 - [ ] `npm run ci` passes from a clean checkout.
 - [ ] `npm run ci:offline-with-examples` passes when consumer-facing runtime examples change.
+- [ ] `npm run smoke:consumer-install` passes from a clean temporary consumer.
 - [ ] Required exports remain available from the Git-installed root package.
 - [ ] Security docs still forbid deploys, keypair movement, secret printing, and npm publish without explicit HQ approval.

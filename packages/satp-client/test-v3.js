@@ -146,6 +146,25 @@ assert(sdk.network === 'devnet', 'SDK network is devnet');
 assert(sdk.rpcUrl === 'https://api.devnet.solana.com', 'SDK RPC URL correct');
 assert(sdk.programIds.IDENTITY.equals(ids.IDENTITY), 'SDK uses correct Identity program ID');
 
+const sdkDevnetString = new SATPV3SDK('devnet');
+assert(sdkDevnetString.network === 'devnet', 'SDK string devnet maps to devnet network');
+assert(sdkDevnetString.rpcUrl === 'https://api.devnet.solana.com', 'SDK string devnet maps to default RPC URL');
+
+try {
+  new SATPV3SDK('mainnet');
+  assert(false, 'SDK string mainnet fails closed until V3 mainnet program IDs are approved');
+} catch (err) {
+  assert(
+    /SATP V3 mainnet program IDs are not configured/.test(err.message),
+    'SDK string mainnet fails closed until V3 mainnet program IDs are approved'
+  );
+}
+
+const customRpcUrl = 'https://example-rpc.invalid';
+const sdkCustomRpc = new SATPV3SDK(customRpcUrl);
+assert(sdkCustomRpc.network === 'devnet', 'SDK string RPC URL preserves devnet default network');
+assert(sdkCustomRpc.rpcUrl === customRpcUrl, 'SDK string RPC URL compatibility is preserved');
+
 const pdas = sdk.getV3PDAs('brainChain');
 assert(pdas.genesis === genesis1.toBase58(), 'SDK getV3PDAs matches direct PDA derivation');
 assert(pdas.agentIdHash === hash1.toString('hex'), 'SDK returns correct hash');

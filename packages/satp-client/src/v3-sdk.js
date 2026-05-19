@@ -25,6 +25,28 @@ const {
 const DEVNET_RPC = 'https://api.devnet.solana.com';
 const MAINNET_RPC = 'https://api.mainnet-beta.solana.com';
 
+function isMainnetRpc(rpcUrl) {
+  return typeof rpcUrl === 'string' && /mainnet/i.test(rpcUrl);
+}
+
+function normalizeSDKOptions(opts = {}) {
+  let normalized = opts;
+  if (typeof opts === 'string') {
+    normalized = opts === 'devnet' || opts === 'mainnet'
+      ? { network: opts }
+      : { rpcUrl: opts };
+  }
+  const rpcUrl = normalized.rpcUrl || normalized.url || normalized.endpoint;
+  if (!normalized.network && isMainnetRpc(rpcUrl)) {
+    throw new Error('Mainnet RPC requires network=mainnet, but SATP V3 mainnet program IDs are not configured');
+  }
+  return {
+    ...normalized,
+    rpcUrl,
+    network: normalized.network || 'devnet',
+  };
+}
+
 /**
  * Compute Anchor instruction discriminator.
  * @param {string} ixName - e.g. "create_identity"
@@ -65,9 +87,10 @@ class SATPV3SDK {
    * @param {string} [opts.commitment='confirmed']
    */
   constructor(opts = {}) {
-    this.network = opts.network || 'devnet';
-    this.rpcUrl = opts.rpcUrl || (this.network === 'mainnet' ? MAINNET_RPC : DEVNET_RPC);
-    this.commitment = opts.commitment || 'confirmed';
+    const normalized = normalizeSDKOptions(opts);
+    this.network = normalized.network;
+    this.rpcUrl = normalized.rpcUrl || (this.network === 'mainnet' ? MAINNET_RPC : DEVNET_RPC);
+    this.commitment = normalized.commitment || 'confirmed';
     this.connection = new Connection(this.rpcUrl, this.commitment);
     this.programIds = getV3ProgramIds(this.network);
   }
@@ -1732,8 +1755,7 @@ module.exports = {
 // ═══════════════════════════════════════════════
 
 function createSATPClient(opts = {}) {
-  const network = opts.network || (opts.rpcUrl && opts.rpcUrl.includes('mainnet') ? 'mainnet' : 'devnet');
-  const sdk = new SATPV3SDK({ rpcUrl: opts.rpcUrl, network });
+  const sdk = new SATPV3SDK(opts);
 
   sdk.resolveAgent = function(agentId) {
     const agentIdHash = hashAgentId(agentId);

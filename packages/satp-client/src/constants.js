@@ -17,7 +17,7 @@ const MAINNET_PROGRAM_IDS = {
   REPUTATION: new PublicKey('C9ogv8TBrvFy4pLKDoGQg9B73Q5rKPPsQ4kzkcDk6Jd'),
   ATTESTATIONS: new PublicKey('ENvaD19QzwWWMJFu5r5xJ9SmHqWN6GvyzxACRejqbdug'),
   VALIDATION: new PublicKey('9p795d2j3eGqzborG2AncucWBaU6PieKxmhKVroV3LNh'),
-  ESCROW: new PublicKey('UpJ7jmUzHkQ7EdBKiBv3zq8Dr1fVh6GVWKa7nYtwQ22'), // TODO: update after mainnet deploy
+  ESCROW: null,
 };
 
 const MAINNET_RPC = 'https://api.mainnet-beta.solana.com';
@@ -40,6 +40,9 @@ const ESCROW_SEED = 'escrow';
  * @returns {object} Program ID map
  */
 function getProgramIds(network = 'devnet') {
+  if (network !== 'devnet' && network !== 'mainnet') {
+    throw new Error('Invalid network: expected devnet or mainnet');
+  }
   return network === 'mainnet' ? MAINNET_PROGRAM_IDS : DEVNET_PROGRAM_IDS;
 }
 
@@ -49,6 +52,9 @@ function getProgramIds(network = 'devnet') {
  * @returns {string} RPC URL
  */
 function getRpcUrl(network = 'devnet') {
+  if (network !== 'devnet' && network !== 'mainnet') {
+    throw new Error('Invalid network: expected devnet or mainnet');
+  }
   return network === 'mainnet' ? MAINNET_RPC : DEVNET_RPC;
 }
 
