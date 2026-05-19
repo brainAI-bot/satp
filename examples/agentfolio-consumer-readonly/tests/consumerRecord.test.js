@@ -17,6 +17,7 @@ test('builds offline SATP trust inputs for an AgentFolio-style consumer', () => 
 
   assert.equal(record.mode, 'offline-readonly-consumer-preflight');
   assert.equal(record.integration.agentfolioRole, 'consumer-adapter');
+  assert.equal(record.integration.conformance.level, 'SATP-C2');
   assert.equal(record.integration.writesRequired, false);
   assert.equal(record.integration.signingRequired, false);
   assert.equal(record.satp.trustInputs.length, 2);
@@ -36,6 +37,15 @@ test('builds offline SATP trust inputs for an AgentFolio-style consumer', () => 
 test('verifies prepared consumer records without network or signing', () => {
   const record = buildAgentFolioSatpConsumerRecord({ profile });
   assert.deepEqual(verifyAgentFolioSatpConsumerRecord(record), { ok: true, errors: [] });
+});
+
+test('detects changed consumer conformance level', () => {
+  const record = buildAgentFolioSatpConsumerRecord({ profile });
+  record.integration.conformance.level = 'SATP-C3';
+
+  const result = verifyAgentFolioSatpConsumerRecord(record);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /conformance must stay SATP-C2/);
 });
 
 test('detects changed trust metadata before an app treats the record as valid', () => {

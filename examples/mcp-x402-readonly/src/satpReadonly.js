@@ -10,6 +10,17 @@ const {
 
 const DEFAULT_NETWORK = 'devnet';
 const EXAMPLE_ATTESTER = '11111111111111111111111111111111';
+const CONFORMANCE_STANDARD = 'docs/conformance.md';
+const CONFORMANCE_READONLY = {
+  level: 'SATP-C1',
+  profile: 'read-only-discovery',
+  standard: CONFORMANCE_STANDARD,
+};
+const CONFORMANCE_PREFLIGHT = {
+  level: 'SATP-C2',
+  profile: 'unsigned-attestation-preflight',
+  standard: CONFORMANCE_STANDARD,
+};
 const ALLOWED_CLAIM_TYPES = new Set([
   'github_verified',
   'domain_verified',
@@ -17,6 +28,10 @@ const ALLOWED_CLAIM_TYPES = new Set([
   'capability_verified',
   'job_completed',
 ]);
+
+function conformanceDescriptor(descriptor) {
+  return { ...descriptor };
+}
 
 function normalizeNetwork(network = DEFAULT_NETWORK) {
   if (network !== 'devnet' && network !== 'mainnet') {
@@ -44,6 +59,7 @@ function getPrograms({ network = DEFAULT_NETWORK } = {}) {
   return {
     network: selectedNetwork,
     mode: 'readonly-fixture',
+    conformance: conformanceDescriptor(CONFORMANCE_READONLY),
     programs: programMapToStrings(getV3ProgramIds(selectedNetwork)),
     fixtureMatchesSdk: JSON.stringify(programMapToStrings(getV3ProgramIds(selectedNetwork))) ===
       JSON.stringify(programsFixture[selectedNetwork]),
@@ -59,6 +75,7 @@ async function resolveIdentity({ wallet, network = DEFAULT_NETWORK, mode = 'fixt
     return {
       network: selectedNetwork,
       mode: 'fixture',
+      conformance: conformanceDescriptor(CONFORMANCE_READONLY),
       wallet: selectedWallet,
       identity: fixtureIdentity,
       found: Boolean(fixtureIdentity),
@@ -78,6 +95,7 @@ async function resolveIdentity({ wallet, network = DEFAULT_NETWORK, mode = 'fixt
   return {
     network: selectedNetwork,
     mode: 'rpc-readonly',
+    conformance: conformanceDescriptor(CONFORMANCE_READONLY),
     wallet: selectedWallet,
     account: account ? { lamports: account.lamports, owner: account.owner.toBase58(), executable: account.executable } : null,
     found: Boolean(account),
@@ -107,6 +125,7 @@ function prepareAttestationRequest({
 
   return {
     ...request,
+    conformance: conformanceDescriptor(CONFORMANCE_PREFLIGHT),
     agentSeed: request.agentIdHash,
     note: 'Example output only; callers must build, review, and sign any write transaction outside this read-only runtime.',
   };
@@ -126,4 +145,7 @@ module.exports = {
   resolveIdentity,
   prepareAttestationRequest,
   validateWallet,
+  CONFORMANCE_READONLY,
+  CONFORMANCE_PREFLIGHT,
+  conformanceDescriptor,
 };

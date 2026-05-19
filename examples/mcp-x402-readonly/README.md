@@ -13,11 +13,14 @@ It is intentionally **read-only by default**:
 
 The server in `src/server.js` exposes three read-only tools:
 
-| Tool | Purpose |
+| Tool | Conformance | Purpose |
 | --- | --- |
-| `satp.getPrograms({ network })` | Return SATP v3 program IDs for `devnet` or `mainnet`. |
-| `satp.resolveIdentity({ wallet, network, mode })` | Resolve a wallet from local fixtures by default; optional read-only RPC lookup requires `SATP_EXAMPLE_ALLOW_RPC=1`. |
-| `satp.prepareAttestationRequest({ subjectWallet, claimType, metadataHash })` | Prepare unsigned attestation request metadata and deterministic PDAs. |
+| satp.getPrograms({ network }) | SATP-C1 | Return SATP v3 program IDs for devnet or mainnet. |
+| satp.resolveIdentity({ wallet, network, mode }) | SATP-C1 | Resolve a wallet from local fixtures by default; optional read-only RPC lookup requires SATP_EXAMPLE_ALLOW_RPC=1. |
+| satp.prepareAttestationRequest({ subjectWallet, claimType, metadataHash }) | SATP-C2 | Prepare unsigned attestation request metadata and deterministic PDAs. |
+
+Compatibility levels are defined in docs/conformance.md. This example must stay
+below SATP-C3: it does not build, sign, or submit write transactions.
 
 ## Usage
 

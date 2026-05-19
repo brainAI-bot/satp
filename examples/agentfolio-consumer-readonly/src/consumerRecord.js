@@ -7,6 +7,11 @@ const { prepareIdentityAttestationRequest } = require('../../../packages/satp-cl
 const DEFAULT_NETWORK = 'devnet';
 const DEFAULT_ATTESTER = '11111111111111111111111111111111';
 const EXAMPLE_KIND = 'agentfolio-satp-consumer-readonly.v1';
+const CONFORMANCE_PREFLIGHT = {
+  level: 'SATP-C2',
+  profile: 'unsigned-attestation-preflight',
+  standard: 'docs/conformance.md',
+};
 
 function normalizeNetwork(network = DEFAULT_NETWORK) {
   if (network !== 'devnet' && network !== 'mainnet') {
@@ -123,6 +128,7 @@ function buildAgentFolioSatpConsumerRecord({
       agentfolioRole: 'consumer-adapter',
       mcpRole: 'can expose this record through a read-only tool',
       x402Role: 'can gate access before returning this read-only record',
+      conformance: { ...CONFORMANCE_PREFLIGHT },
       signingRequired: false,
       writesRequired: false,
       livePaymentRequired: false,
@@ -184,6 +190,10 @@ function verifyAgentFolioSatpConsumerRecord(record) {
     }
   }
 
+  if (record.integration?.conformance?.level !== CONFORMANCE_PREFLIGHT.level) {
+    errors.push('integration conformance must stay SATP-C2');
+  }
+
   if (record.integration?.writesRequired !== false || record.integration?.signingRequired !== false) {
     errors.push('integration flags must stay read-only and unsigned');
   }
@@ -196,4 +206,5 @@ module.exports = {
   verifyAgentFolioSatpConsumerRecord,
   canonicalStringify,
   sha256Hex,
+  CONFORMANCE_PREFLIGHT,
 };

@@ -10,6 +10,10 @@ It uses the SATP client package helper `prepareIdentityAttestationRequest` to de
 
 The example does not sign, send transactions, read keypairs, call RPC, publish packages, deploy programs, mutate AgentFolio production data, or perform live x402 payment handling.
 
+This example conforms to SATP-C2 as defined in docs/conformance.md: it derives
+and verifies unsigned attestation preflight metadata, but does not build, sign,
+or submit write transactions.
+
 ## Usage
 
 ```bash
