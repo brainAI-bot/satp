@@ -784,13 +784,7 @@ const { prepareIdentityAttestationRequest } = require('./attestation-request');
 // see the expected programIds, rpcUrl, and SDK methods.
 class SATPV3SDK extends v3sdk.SATPV3SDK {
   constructor(opts = {}) {
-    if (typeof opts === 'string') {
-      super({
-        rpcUrl: opts,
-      });
-    } else {
-      super(opts);
-    }
+    super(opts);
   }
 }
 

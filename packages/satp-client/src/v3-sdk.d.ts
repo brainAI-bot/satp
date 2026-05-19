@@ -11,6 +11,8 @@ export interface SATPV3SDKOptions {
   commitment?: 'processed' | 'confirmed' | 'finalized';
 }
 
+export type SATPV3SDKConstructorOptions = SATPV3SDKOptions | Network | string;
+
 export interface V3ProgramIds {
   IDENTITY: PublicKey;
   REVIEWS: PublicKey;
@@ -187,7 +189,7 @@ export class SATPV3SDK {
   connection: Connection;
   programIds: V3ProgramIds;
 
-  constructor(opts?: SATPV3SDKOptions);
+  constructor(opts?: SATPV3SDKConstructorOptions);
 
   // ─── Identity — Genesis Record CRUD ───────────────────
 

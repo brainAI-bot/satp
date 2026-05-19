@@ -27,6 +27,14 @@ const customRpc = createSATPClient({ rpcUrl: CUSTOM_RPC });
 assert.equal(customRpc.network, 'devnet');
 assert.equal(customRpc.rpcUrl, CUSTOM_RPC);
 
+const exportedDevnetString = new SATPV3SDK('devnet');
+assert.equal(exportedDevnetString.network, 'devnet');
+assert.equal(exportedDevnetString.rpcUrl, DEVNET_RPC);
+
+const directDevnetString = createSATPClient('devnet');
+assert.equal(directDevnetString.network, 'devnet');
+assert.equal(directDevnetString.rpcUrl, DEVNET_RPC);
+
 assert.throws(
   () => createSATPClient(MAINNET_RPC),
   /Mainnet RPC requires network=mainnet/
@@ -42,6 +50,10 @@ assert.throws(
 );
 assert.throws(
   () => new SATPV3SDK({ network: 'mainnet' }),
+  /SATP V3 mainnet program IDs are not configured/
+);
+assert.throws(
+  () => new SATPV3SDK('mainnet'),
   /SATP V3 mainnet program IDs are not configured/
 );
 assert.throws(

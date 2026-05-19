@@ -30,7 +30,12 @@ function isMainnetRpc(rpcUrl) {
 }
 
 function normalizeSDKOptions(opts = {}) {
-  const normalized = typeof opts === 'string' ? { rpcUrl: opts } : opts;
+  let normalized = opts;
+  if (typeof opts === 'string') {
+    normalized = opts === 'devnet' || opts === 'mainnet'
+      ? { network: opts }
+      : { rpcUrl: opts };
+  }
   const rpcUrl = normalized.rpcUrl || normalized.url || normalized.endpoint;
   if (!normalized.network && isMainnetRpc(rpcUrl)) {
     throw new Error('Mainnet RPC requires network=mainnet, but SATP V3 mainnet program IDs are not configured');
