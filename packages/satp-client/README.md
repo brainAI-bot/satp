@@ -97,7 +97,7 @@ const trustPacket = buildSatpTrustPacket({
   subjectWallet: '11111111111111111111111111111111',
   agentId: 'brainChain',
   claimType: 'identity',
-  metadataHash: 'sha256:example-profile-hash',
+  metadataHash: '93d122f8879fe87c186c10a00db8fbc80a73cecd2ede44b9ffa6410be3c2b805',
   network: 'devnet',
 });
 
