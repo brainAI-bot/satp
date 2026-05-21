@@ -177,4 +177,10 @@ const tamperedTrustPacketResult = validateSatpTrustPacket(tamperedTrustPacket);
 assert.equal(tamperedTrustPacketResult.ok, false);
 assert.match(tamperedTrustPacketResult.errors.join('\n'), /pda does not match derived trust packet/);
 
+const tamperedTrustPacketType = JSON.parse(JSON.stringify(trustPacket));
+tamperedTrustPacketType.packetType = 'not-satp-trust-packet';
+const tamperedTrustPacketTypeResult = validateSatpTrustPacket(tamperedTrustPacketType);
+assert.equal(tamperedTrustPacketTypeResult.ok, false);
+assert.match(tamperedTrustPacketTypeResult.errors.join('\n'), /packetType must be satp-trust-packet/);
+
 console.log('attestation request helper OK');

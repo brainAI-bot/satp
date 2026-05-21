@@ -73,6 +73,9 @@ function validateSatpTrustPacket(packet) {
   if (packet.schemaVersion !== TRUST_PACKET_SCHEMA_VERSION) {
     errors.push('schemaVersion must be ' + TRUST_PACKET_SCHEMA_VERSION);
   }
+  if (packet.packetType !== 'satp-trust-packet') {
+    errors.push('packetType must be satp-trust-packet');
+  }
   if (packet.mode !== 'offline-readonly-trust-packet') {
     errors.push('mode must be offline-readonly-trust-packet');
   }
