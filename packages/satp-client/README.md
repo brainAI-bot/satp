@@ -76,6 +76,41 @@ const tx = await sdk.buildCreateIdentity(creatorPubkey, 'myAgent', {
 
 ## API Reference
 
+### Read-only Trust Packet Helpers
+
+`buildSatpTrustPacket(opts)` creates a deterministic, offline trust packet for
+consumer preflight and release-packet review. It uses the same inputs as
+`prepareIdentityAttestationRequest`, then includes the derived program IDs,
+Genesis PDA, attestation PDA, request hash, and the unsigned request object.
+The packet is intentionally read-only: `flags.signingRequired`,
+`flags.transactionRequired`, `flags.writesRequired`, and
+`flags.livePaymentRequired` are all `false`; `instructions` and `signers`
+are empty; and `transaction` is `null`.
+
+```javascript
+const {
+  buildSatpTrustPacket,
+  validateSatpTrustPacket,
+} = require('@brainai/satp-client');
+
+const trustPacket = buildSatpTrustPacket({
+  subjectWallet: '11111111111111111111111111111111',
+  agentId: 'brainChain',
+  claimType: 'identity',
+  metadataHash: '93d122f8879fe87c186c10a00db8fbc80a73cecd2ede44b9ffa6410be3c2b805',
+  network: 'devnet',
+});
+
+const validation = validateSatpTrustPacket(trustPacket);
+if (!validation.ok) throw new Error(validation.errors.join('; '));
+```
+
+`validateSatpTrustPacket(packet)` returns `{ ok, errors }`. Validation requires
+`packetType: 'satp-trust-packet'` and
+`mode: 'offline-readonly-trust-packet'`, rejects changed read-only flags, and
+re-derives the expected packet so tampered PDA, program, request, or hash fields
+surface as explicit errors.
+
 ### Constructor
 
 ```javascript
