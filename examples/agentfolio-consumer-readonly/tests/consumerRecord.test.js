@@ -22,6 +22,11 @@ test('builds offline SATP trust inputs for an AgentFolio-style consumer', () => 
   assert.equal(record.satp.trustInputs.length, 2);
 
   for (const input of record.satp.trustInputs) {
+    assert.equal(input.trustPacket.mode, 'offline-readonly-trust-packet');
+    assert.equal(input.trustPacket.flags.signingRequired, false);
+    assert.equal(input.trustPacket.flags.noTransaction, true);
+    assert.equal(input.trustPacket.requestHash, input.request.requestHash);
+    assert.equal(input.trustPacket.pda.attestation, input.request.attestationPda);
     assert.equal(input.request.mode, 'unsigned-readonly-request');
     assert.equal(input.request.signingRequired, false);
     assert.equal(input.request.unsigned, true);
@@ -55,6 +60,16 @@ test('detects tampered derived request attestation PDA', () => {
   const result = verifyAgentFolioSatpConsumerRecord(tampered);
   assert.equal(result.ok, false);
   assert.match(result.errors.join('\n'), /request\.attestationPda does not match derived request/);
+});
+
+test('detects tampered derived trust packet PDA', () => {
+  const record = buildAgentFolioSatpConsumerRecord({ profile });
+  const tampered = clone(record);
+  tampered.satp.trustInputs[0].trustPacket.pda.attestation = tampered.satp.trustInputs[1].trustPacket.pda.attestation;
+
+  const result = verifyAgentFolioSatpConsumerRecord(tampered);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /trustPacket/);
 });
 
 test('detects tampered derived request program IDs', () => {

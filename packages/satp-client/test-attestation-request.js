@@ -4,6 +4,8 @@
 const assert = require('node:assert/strict');
 const {
   prepareIdentityAttestationRequest,
+  buildSatpTrustPacket,
+  validateSatpTrustPacket,
   hashAgentId,
   getGenesisPDA,
   getV3AttestationPDA,
@@ -135,5 +137,44 @@ assertThrows(/Invalid expiresAt/, () => prepareIdentityAttestationRequest({
   metadataHash: METADATA_HASH,
   expiresAt: -1,
 }));
+
+const trustPacket = buildSatpTrustPacket({
+  subjectWallet: SUBJECT_WALLET,
+  agentId: 'brainChain',
+  claimType: 'github_verified',
+  metadataHash: METADATA_HASH,
+  attester: ATTESTER,
+  network: 'devnet',
+});
+
+assert.equal(trustPacket.schemaVersion, 'satp.trustPacket.v1');
+assert.equal(trustPacket.mode, 'offline-readonly-trust-packet');
+assert.equal(trustPacket.requestHash, request.requestHash);
+assert.deepEqual(trustPacket.programs, request.programs);
+assert.deepEqual(trustPacket.pda, {
+  genesis: request.genesisPda,
+  genesisBump: request.genesisBump,
+  attestation: request.attestationPda,
+  attestationBump: request.attestationBump,
+});
+assert.deepEqual(trustPacket.flags, {
+  signingRequired: false,
+  transactionRequired: false,
+  writesRequired: false,
+  livePaymentRequired: false,
+  unsigned: true,
+  noSign: true,
+  noTransaction: true,
+});
+assert.deepEqual(trustPacket.instructions, []);
+assert.deepEqual(trustPacket.signers, []);
+assert.equal(trustPacket.transaction, null);
+assert.deepEqual(validateSatpTrustPacket(trustPacket), { ok: true, errors: [] });
+
+const tamperedTrustPacket = JSON.parse(JSON.stringify(trustPacket));
+tamperedTrustPacket.pda.attestation = request.genesisPda;
+const tamperedTrustPacketResult = validateSatpTrustPacket(tamperedTrustPacket);
+assert.equal(tamperedTrustPacketResult.ok, false);
+assert.match(tamperedTrustPacketResult.errors.join('\n'), /pda does not match derived trust packet/);
 
 console.log('attestation request helper OK');

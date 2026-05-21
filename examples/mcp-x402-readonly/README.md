@@ -17,7 +17,7 @@ The server in `src/server.js` exposes three read-only tools:
 | --- | --- |
 | `satp.getPrograms({ network })` | Return SATP v3 program IDs for `devnet` or `mainnet`. |
 | `satp.resolveIdentity({ wallet, network, mode })` | Resolve a wallet from local fixtures by default; optional read-only RPC lookup requires `SATP_EXAMPLE_ALLOW_RPC=1`. |
-| `satp.prepareAttestationRequest({ subjectWallet, claimType, metadataHash })` | Prepare unsigned attestation request metadata and deterministic PDAs. |
+| `satp.prepareAttestationRequest({ subjectWallet, claimType, metadataHash })` | Prepare a validated read-only SATP trust packet with unsigned request metadata, program IDs, Genesis PDA, attestation PDA, and no-sign/no-transaction flags. |
 
 ## Usage
 

@@ -16,11 +16,12 @@
     "check:exports": "node scripts/check-exports.js",
     "smoke:consumer-install": "node scripts/smoke-clean-consumer-install.js",
     "check:examples": "npm --prefix examples/mcp-x402-readonly run check && npm --prefix examples/agentfolio-consumer-readonly run check",
+    "test:attestation-request": "node packages/satp-client/test-attestation-request.js",
     "test:v3": "node packages/satp-client/test-v3.js",
     "test:borsh": "node packages/satp-client/test-borsh-reader.js",
     "test:examples": "npm --prefix examples/mcp-x402-readonly test && npm --prefix examples/agentfolio-consumer-readonly test",
     "ci:offline-with-examples": "npm run ci && npm run check:examples && npm run test:examples",
-    "ci": "npm run validate:idls && npm run check:js && npm run check:exports && npm run smoke:consumer-install && npm run test:v3 && npm run test:borsh"
+    "ci": "npm run validate:idls && npm run check:js && npm run check:exports && npm run smoke:consumer-install && npm run test:attestation-request && npm run test:v3 && npm run test:borsh"
   },
   "main": "packages/satp-client/src/index.js",
   "types": "packages/satp-client/src/index.d.ts",

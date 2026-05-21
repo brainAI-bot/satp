@@ -17,6 +17,8 @@ const requiredExports = [
   'hashAgentId',
   'getGenesisPDA',
   'prepareIdentityAttestationRequest',
+  'buildSatpTrustPacket',
+  'validateSatpTrustPacket',
 ];
 
 const missing = requiredExports.filter((key) => !(key in satp));
@@ -36,6 +38,15 @@ const request = satp.prepareIdentityAttestationRequest({
 });
 if (request.signingRequired !== false || request.instructions.length !== 0 || request.transaction !== null) {
   throw new Error('prepareIdentityAttestationRequest did not return unsigned offline metadata');
+}
+
+const packet = satp.buildSatpTrustPacket({
+  subjectWallet: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG',
+  claimType: 'github_verified',
+  metadataHash: '4d9678a7869c25f26a2e38e43f70fc7d0c4142d20b1743a43e50cd8fd012f3d7',
+});
+if (!satp.validateSatpTrustPacket(packet).ok || packet.flags.signingRequired !== false || packet.transaction !== null) {
+  throw new Error('buildSatpTrustPacket did not return validated read-only metadata');
 }
 
 console.log(`SATP export surface OK: ${requiredExports.join(', ')}`);
