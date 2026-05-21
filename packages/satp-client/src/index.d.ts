@@ -46,6 +46,49 @@ export interface IdentityAttestationRequest {
   requestHash: string;
 }
 
+export interface SatpTrustPacket {
+  schemaVersion: 'satp.trustPacket.v1';
+  packetType: 'satp-trust-packet';
+  mode: 'offline-readonly-trust-packet';
+  network: Network;
+  subjectWallet: string;
+  agentId: string;
+  claimType: string;
+  attestationType: string;
+  metadataHash: string;
+  attester: string;
+  expiresAt: number | null;
+  programs: {
+    identity: string;
+    attestations: string;
+  };
+  pda: {
+    genesis: string;
+    genesisBump: number;
+    attestation: string;
+    attestationBump: number;
+  };
+  requestHash: string;
+  flags: {
+    signingRequired: false;
+    transactionRequired: false;
+    writesRequired: false;
+    livePaymentRequired: false;
+    unsigned: true;
+    noSign: true;
+    noTransaction: true;
+  };
+  instructions: [];
+  signers: [];
+  transaction: null;
+  request: IdentityAttestationRequest;
+}
+
+export interface SatpTrustPacketValidation {
+  ok: boolean;
+  errors: string[];
+}
+
 // ─── V2 SDK ──────────────────────────────────────────────
 
 export interface V2ProgramIds {
@@ -181,6 +224,16 @@ export { getV3ProgramIds, hashAgentId, hashName, getGenesisPDA, getV3ReputationA
 export function prepareIdentityAttestationRequest(
   opts: IdentityAttestationRequestOptions
 ): IdentityAttestationRequest;
+
+export const TRUST_PACKET_SCHEMA_VERSION: 'satp.trustPacket.v1';
+
+export function buildSatpTrustPacket(
+  opts: IdentityAttestationRequestOptions
+): SatpTrustPacket;
+
+export function validateSatpTrustPacket(
+  packet: SatpTrustPacket | Record<string, unknown> | null | undefined
+): SatpTrustPacketValidation;
 
 // ─── Borsh Deserialization Helpers ──────────────────────
 

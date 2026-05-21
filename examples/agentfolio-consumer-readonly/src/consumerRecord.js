@@ -2,7 +2,10 @@
 
 const crypto = require('crypto');
 const { PublicKey } = require('@solana/web3.js');
-const { prepareIdentityAttestationRequest } = require('../../../packages/satp-client/src');
+const {
+  buildSatpTrustPacket,
+  validateSatpTrustPacket,
+} = require('../../../packages/satp-client/src');
 
 const DEFAULT_NETWORK = 'devnet';
 const DEFAULT_ATTESTER = '11111111111111111111111111111111';
@@ -85,7 +88,7 @@ function buildAgentFolioSatpConsumerRecord({
     const claimType = requiredString(signal.claimType, 'trustSignals[].claimType');
     const metadata = buildTrustMetadata({ ...profile, wallet: subjectWallet, profileId, agentId }, signal);
     const metadataHash = sha256Hex(canonicalStringify(metadata));
-    const request = prepareIdentityAttestationRequest({
+    const trustPacket = buildSatpTrustPacket({
       subjectWallet,
       agentId,
       claimType,
@@ -98,7 +101,8 @@ function buildAgentFolioSatpConsumerRecord({
       claimType,
       metadata,
       metadataHash,
-      request,
+      trustPacket,
+      request: trustPacket.request,
     };
   });
 
@@ -151,7 +155,16 @@ function verifyAgentFolioSatpConsumerRecord(record) {
         continue;
       }
 
-      const expectedRequest = prepareIdentityAttestationRequest({
+      if (!input.trustPacket || typeof input.trustPacket !== 'object') {
+        errors.push('trustInputs[' + index + '].trustPacket must be an object');
+      } else {
+        const trustPacketResult = validateSatpTrustPacket(input.trustPacket);
+        if (!trustPacketResult.ok) {
+          errors.push('trustInputs[' + index + '].trustPacket invalid: ' + trustPacketResult.errors.join('; '));
+        }
+      }
+
+      const expectedTrustPacket = buildSatpTrustPacket({
         subjectWallet: record.satp.subjectWallet,
         agentId: record.satp.agentId,
         claimType: input.claimType,
@@ -160,6 +173,7 @@ function verifyAgentFolioSatpConsumerRecord(record) {
         attester: input.request.attester,
         expiresAt: input.request.expiresAt,
       });
+      const expectedRequest = expectedTrustPacket.request;
 
       const expectedFields = [
         'requestHash',
@@ -176,6 +190,10 @@ function verifyAgentFolioSatpConsumerRecord(record) {
         if (!sameJsonValue(input.request[field], expectedRequest[field])) {
           errors.push('trustInputs[' + index + '].request.' + field + ' does not match derived request');
         }
+      }
+
+      if (input.trustPacket && !sameJsonValue(input.trustPacket, expectedTrustPacket)) {
+        errors.push('trustInputs[' + index + '].trustPacket does not match derived trust packet');
       }
 
       if (input.request.transaction !== null || !Array.isArray(input.request.instructions) || input.request.instructions.length !== 0) {

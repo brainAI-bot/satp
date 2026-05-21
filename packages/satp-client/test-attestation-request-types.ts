@@ -1,6 +1,10 @@
 import {
   IdentityAttestationRequestOptions,
+  SatpTrustPacket,
+  SatpTrustPacketValidation,
+  buildSatpTrustPacket,
   prepareIdentityAttestationRequest,
+  validateSatpTrustPacket,
 } from './src';
 
 const subjectWallet = '11111111111111111111111111111111';
@@ -28,6 +32,10 @@ const byBothAliases: IdentityAttestationRequestOptions = {
 prepareIdentityAttestationRequest(byClaimType);
 prepareIdentityAttestationRequest(byAttestationType);
 prepareIdentityAttestationRequest(byBothAliases);
+
+const packet: SatpTrustPacket = buildSatpTrustPacket(byClaimType);
+const validation: SatpTrustPacketValidation = validateSatpTrustPacket(packet);
+void validation.ok;
 
 // @ts-expect-error claimType or attestationType is required.
 const missingAlias: IdentityAttestationRequestOptions = {

@@ -33,10 +33,14 @@ test('satp.prepareAttestationRequest returns unsigned request metadata only', ()
     metadataHash: FIXTURE_HASH,
     network: 'devnet',
   });
-  assert.equal(result.mode, 'unsigned-readonly-request');
+  assert.equal(result.mode, 'offline-readonly-trust-packet');
+  assert.equal(result.flags.signingRequired, false);
+  assert.equal(result.flags.noTransaction, true);
   assert.equal(result.instructions.length, 0);
   assert.equal(result.subjectWallet, FIXTURE_WALLET);
-  assert.match(result.attestationPda, /^[1-9A-HJ-NP-Za-km-z]+$/);
+  assert.match(result.pda.attestation, /^[1-9A-HJ-NP-Za-km-z]+$/);
+  assert.equal(result.request.attestationPda, result.pda.attestation);
+  assert.equal(result.requestHash, result.request.requestHash);
 });
 
 test('mock x402 gate gates MCP tool calls without live payment', async () => {

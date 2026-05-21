@@ -5,7 +5,7 @@ const programsFixture = require('../fixtures/programs.json');
 const identitiesFixture = require('../fixtures/identities.json');
 const {
   getV3ProgramIds,
-  prepareIdentityAttestationRequest,
+  buildSatpTrustPacket,
 } = require('../../../packages/satp-client/src');
 
 const DEFAULT_NETWORK = 'devnet';
@@ -97,7 +97,7 @@ function prepareAttestationRequest({
     throw new Error(`Unsupported claimType: ${claimType}`);
   }
 
-  const request = prepareIdentityAttestationRequest({
+  const trustPacket = buildSatpTrustPacket({
     subjectWallet,
     claimType,
     metadataHash,
@@ -106,8 +106,8 @@ function prepareAttestationRequest({
   });
 
   return {
-    ...request,
-    agentSeed: request.agentIdHash,
+    ...trustPacket,
+    agentSeed: trustPacket.request.agentIdHash,
     note: 'Example output only; callers must build, review, and sign any write transaction outside this read-only runtime.',
   };
 }

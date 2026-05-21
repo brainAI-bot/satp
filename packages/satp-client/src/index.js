@@ -778,6 +778,11 @@ const v3sdk = require('./v3-sdk');
 const v3pda = require('./v3-pda');
 const v3Borsh = require('./borsh-reader');
 const { prepareIdentityAttestationRequest } = require('./attestation-request');
+const {
+  TRUST_PACKET_SCHEMA_VERSION,
+  buildSatpTrustPacket,
+  validateSatpTrustPacket,
+} = require('./trust-packet');
 
 // Legacy V3 SDK wrapper — keeps string constructor compatibility while using
 // the local extracted SATPV3SDK implementation so offline tests and consumers
@@ -918,6 +923,9 @@ module.exports = {
   deriveEscrowPda: v3pda.getV3EscrowPDA,
   deriveReviewAttestationPda: getReviewAttestationPDA,
   prepareIdentityAttestationRequest,
+  TRUST_PACKET_SCHEMA_VERSION,
+  buildSatpTrustPacket,
+  validateSatpTrustPacket,
 
   // V3 Deserialization (local extracted scaffold)
   // NOTE: v3sdk.deserializeGenesis has isActive field mismatch with deployed program

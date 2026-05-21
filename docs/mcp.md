@@ -10,7 +10,7 @@ Use that example as the in-repo reference for fixture-first SATP MCP tool behavi
 
 - `satp.getPrograms({ network })`
 - `satp.resolveIdentity({ wallet, network, mode })`
-- `satp.prepareAttestationRequest({ subjectWallet, claimType, metadataHash })`
+- `satp.prepareAttestationRequest({ subjectWallet, claimType, metadataHash })`, which returns a read-only SATP trust packet built by `buildSatpTrustPacket`
 
 The example is intentionally read-only by default. It uses fixtures unless `mode: "rpc"` is requested and `SATP_EXAMPLE_ALLOW_RPC=1` is explicitly set. It does not sign, send transactions, read keypairs, deploy programs, publish packages, charge payments, mutate production, or depend on AgentFolio as the SATP source of truth.
 
