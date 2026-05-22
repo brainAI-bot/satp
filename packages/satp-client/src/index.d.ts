@@ -89,6 +89,76 @@ export interface SatpTrustPacketValidation {
   errors: string[];
 }
 
+export type RuntimePolicyDecision =
+  | 'allow'
+  | 'deny'
+  | 'degrade'
+  | 'needs_approval';
+
+export interface RuntimePolicyIdentityPayload {
+  active?: boolean;
+  satpVerified?: boolean;
+  verified?: boolean;
+  agentFolioTrustScore?: number;
+  trustScore?: number;
+  capabilities?: string[];
+  evidenceUpdatedAt?: string | number | Date | null;
+}
+
+export interface RuntimePolicyActionDescriptor {
+  type?: string;
+  requiresCapability?: string;
+  minimumTrustScore?: number;
+  allowDegraded?: boolean;
+  requiresFreshEvidence?: boolean;
+  costUsd?: number;
+  requiresApproval?: boolean;
+  evidenceLookup?: {
+    type?: string;
+    endpoint?: string;
+    maxCostUsd?: number;
+  };
+}
+
+export interface RuntimePolicyConfig {
+  minimumTrustScore?: number;
+  denyTrustScoreBelow?: number;
+  maxAutoSpendUsd?: number;
+  requireVerifiedIdentity?: boolean;
+  staleEvidenceAfterMs?: number;
+}
+
+export interface RuntimePolicyOptions {
+  now?: string | number | Date;
+  actionPaymentPreapproved?: boolean;
+  evidenceLookupPaymentPreapproved?: boolean;
+  operatorApproved?: boolean;
+  policy?: RuntimePolicyConfig;
+}
+
+export interface RuntimePolicyResult {
+  decision: RuntimePolicyDecision;
+  reasonCodes: string[];
+  message: string;
+  checks: Record<string, unknown>;
+}
+
+export const DECISIONS: Readonly<{
+  ALLOW: 'allow';
+  DENY: 'deny';
+  DEGRADE: 'degrade';
+  NEEDS_APPROVAL: 'needs_approval';
+}>;
+
+export const REASON_CODES: Readonly<Record<string, string>>;
+export const DEFAULT_POLICY: Readonly<Required<RuntimePolicyConfig>>;
+
+export function evaluateRuntimePolicy(
+  identityPayload: RuntimePolicyIdentityPayload,
+  actionDescriptor: RuntimePolicyActionDescriptor,
+  options?: RuntimePolicyOptions
+): RuntimePolicyResult;
+
 // ─── V2 SDK ──────────────────────────────────────────────
 
 export interface V2ProgramIds {

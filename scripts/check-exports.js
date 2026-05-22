@@ -19,6 +19,7 @@ const requiredExports = [
   'prepareIdentityAttestationRequest',
   'buildSatpTrustPacket',
   'validateSatpTrustPacket',
+  'evaluateRuntimePolicy',
 ];
 
 const missing = requiredExports.filter((key) => !(key in satp));
@@ -47,6 +48,25 @@ const packet = satp.buildSatpTrustPacket({
 });
 if (!satp.validateSatpTrustPacket(packet).ok || packet.flags.signingRequired !== false || packet.transaction !== null) {
   throw new Error('buildSatpTrustPacket did not return validated read-only metadata');
+}
+
+const policyDecision = satp.evaluateRuntimePolicy(
+  {
+    active: true,
+    satpVerified: true,
+    agentFolioTrustScore: 90,
+    capabilities: ['mcp:read'],
+    evidenceUpdatedAt: '2026-05-21T00:00:00Z',
+  },
+  {
+    type: 'mcp_protected_tool',
+    requiresCapability: 'mcp:read',
+    requiresFreshEvidence: true,
+  },
+  { now: '2026-05-22T00:00:00Z' },
+);
+if (policyDecision.decision !== 'allow') {
+  throw new Error('evaluateRuntimePolicy did not return allow for verified local policy input');
 }
 
 console.log(`SATP export surface OK: ${requiredExports.join(', ')}`);

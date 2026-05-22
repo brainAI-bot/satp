@@ -783,6 +783,12 @@ const {
   buildSatpTrustPacket,
   validateSatpTrustPacket,
 } = require('./trust-packet');
+const {
+  DECISIONS,
+  DEFAULT_POLICY,
+  REASON_CODES,
+  evaluateRuntimePolicy,
+} = require('./runtime-policy-adapter');
 
 // Legacy V3 SDK wrapper — keeps string constructor compatibility while using
 // the local extracted SATPV3SDK implementation so offline tests and consumers
@@ -926,6 +932,12 @@ module.exports = {
   TRUST_PACKET_SCHEMA_VERSION,
   buildSatpTrustPacket,
   validateSatpTrustPacket,
+
+  // Runtime policy adapter (offline/local guardrail helper)
+  DECISIONS,
+  DEFAULT_POLICY,
+  REASON_CODES,
+  evaluateRuntimePolicy,
 
   // V3 Deserialization (local extracted scaffold)
   // NOTE: v3sdk.deserializeGenesis has isActive field mismatch with deployed program
