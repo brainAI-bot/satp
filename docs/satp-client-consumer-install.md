@@ -75,6 +75,32 @@ The repo also carries a repeatable clean-consumer smoke:
 npm run smoke:consumer-install
 ```
 
+## Temporary consumer override for monitored uuid audit
+
+Current `npm audit --package-lock-only` output reports a monitored moderate
+advisory chain through `@solana/web3.js -> jayson -> uuid` for
+[`GHSA-w5hq-g745-h8pq`](https://github.com/advisories/GHSA-w5hq-g745-h8pq).
+The affected `uuid` range is `<11.1.1`; the upstream dependency path is owned
+by `@solana/web3.js` and `jayson`, so SATP should not publish a package, tag, or
+release only to force this transitive fix.
+
+Consumers that need a temporary audit mitigation before the upstream
+`@solana/web3.js`/`jayson` dependency chain resolves can add a root-scoped npm
+override in the consuming application's `package.json`:
+
+```json
+{
+  "overrides": {
+    "uuid": "11.1.1"
+  }
+}
+```
+
+This override is consumer/root-scoped only. It belongs in the final consuming
+application that owns the lockfile, not in a published SATP package, and it
+should be removed once `@solana/web3.js` and `jayson` ship an upstream fix that
+resolves `GHSA-w5hq-g745-h8pq` without the override.
+
 ## Offline identity attestation request helper
 
 Consumers can prepare deterministic identity-attestation request metadata
