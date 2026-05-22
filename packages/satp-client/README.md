@@ -1,18 +1,25 @@
-# SATP V3 SDK — `@brainai/satp-client`
+# SATP V3 SDK - `@brainai/satp-client`
 
-**Solana Agent Token Protocol** — JavaScript/TypeScript SDK for interacting with the SATP V3 devnet programs.
+**Solana Agent Token Protocol** - JavaScript/TypeScript SDK for interacting with the SATP V3 devnet programs.
 
-Version: **3.3.0** | Tests: **101 unit + 16 devnet integration** | Programs: **6**
+Current npm package: **@brainai/satp-client@2.0.1** | Programs: **6**
 
 ## Installation
+
+For stable consumer installs, use the latest published npm package:
+
+```bash
+npm install @brainai/satp-client@2.0.1
+```
+
+For branch-only development or PR review, pin an explicit SATP Git commit:
 
 ```bash
 npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>
 ```
 
-The current review package is `@brainai/satp-client@0.0.0-extraction` and
-remains unpublished. Pin a reviewed commit for consumers. Do not publish to npm
-until the release packet passes.
+The old `0.0.0-extraction` label was extraction-branch metadata and is not the
+current consumer package. Do not treat branch-only Git installs as npm latest.
 
 Mainnet program IDs are intentionally not enabled in this release candidate.
 Constructors and helpers fail closed for `network: 'mainnet'` until an approved
