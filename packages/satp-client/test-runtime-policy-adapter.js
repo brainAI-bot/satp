@@ -79,3 +79,49 @@ test('needs approval for stale evidence with an unpaid x402 lookup path', () => 
   assert.ok(result.reasonCodes.includes(REASON_CODES.X402_LOOKUP_REQUIRES_APPROVAL));
   assert.ok(result.reasonCodes.includes(REASON_CODES.X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION));
 });
+
+test('treats future-dated evidence as stale instead of fresh', () => {
+  const result = evaluateRuntimePolicy(
+    { ...baseIdentity, evidenceUpdatedAt: '2026-05-22T00:00:01Z' },
+    {
+      type: 'mcp_protected_tool',
+      requiresCapability: 'mcp:read',
+      requiresFreshEvidence: true,
+    },
+    { now: '2026-05-22T00:00:00Z' }
+  );
+
+  assert.equal(result.decision, DECISIONS.DEGRADE);
+  assert.equal(result.checks.evidenceFresh, false);
+  assert.ok(result.reasonCodes.includes(REASON_CODES.EVIDENCE_STALE_OR_MISSING));
+  assert.ok(!result.reasonCodes.includes(REASON_CODES.EVIDENCE_FRESH));
+  assert.ok(!result.reasonCodes.includes(REASON_CODES.LOCAL_POLICY_ALLOW));
+});
+
+test('denies invalid action costUsd values instead of normalizing them to zero', () => {
+  const invalidCosts = [
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    '0.01',
+    'not-a-number',
+  ];
+
+  for (const costUsd of invalidCosts) {
+    const result = evaluateRuntimePolicy(
+      baseIdentity,
+      {
+        type: 'mcp_protected_tool',
+        requiresCapability: 'mcp:read',
+        costUsd,
+      },
+      { now: '2026-05-21T00:00:00Z' }
+    );
+
+    assert.equal(result.decision, DECISIONS.DENY);
+    assert.equal(result.checks.actionCostUsd, null);
+    assert.equal(result.checks.actionCostUsdValid, false);
+    assert.ok(result.reasonCodes.includes(REASON_CODES.INVALID_ACTION_COST_USD));
+    assert.ok(!result.reasonCodes.includes(REASON_CODES.LOCAL_POLICY_ALLOW));
+  }
+});

@@ -14,6 +14,7 @@ const REASON_CODES = Object.freeze({
   EVIDENCE_STALE_OR_MISSING: 'EVIDENCE_STALE_OR_MISSING',
   IDENTITY_INACTIVE: 'IDENTITY_INACTIVE',
   IDENTITY_UNVERIFIED: 'IDENTITY_UNVERIFIED',
+  INVALID_ACTION_COST_USD: 'INVALID_ACTION_COST_USD',
   LOCAL_POLICY_ALLOW: 'LOCAL_POLICY_ALLOW',
   MISSING_CAPABILITY: 'MISSING_CAPABILITY',
   PROTECTED_TOOL_REQUIRES_APPROVAL: 'PROTECTED_TOOL_REQUIRES_APPROVAL',
@@ -82,7 +83,13 @@ function evaluateRuntimePolicy(identityPayload, actionDescriptor, options = {}) 
   }
   if (action.requiresFreshEvidence) reasonCodes.push(REASON_CODES.EVIDENCE_FRESH);
 
-  checks.actionCostUsd = Number(action.costUsd || 0);
+  checks.actionCostUsd = action.costUsd;
+  checks.actionCostUsdValid = action.costUsdValid;
+  if (!action.costUsdValid) {
+    reasonCodes.push(REASON_CODES.INVALID_ACTION_COST_USD);
+    return decision(DECISIONS.DENY, reasonCodes, checks, 'Action costUsd must be a finite non-negative number.');
+  }
+
   checks.maxAutoSpendUsd = policy.maxAutoSpendUsd;
   if (checks.actionCostUsd > checks.maxAutoSpendUsd && options.actionPaymentPreapproved !== true) {
     reasonCodes.push(REASON_CODES.ACTION_PAYMENT_NEEDS_APPROVAL);
@@ -146,6 +153,8 @@ function normalizeIdentity(identity = {}) {
 }
 
 function normalizeAction(action = {}) {
+  const parsedCost = parseActionCostUsd(action);
+
   return {
     type: action.type || 'generic',
     resource: action.resource || null,
@@ -157,8 +166,21 @@ function normalizeAction(action = {}) {
     evidenceLookup: action.evidenceLookup || null,
     protectedTool: action.protectedTool === true || action.type === 'mcp_protected_tool',
     operatorApprovalRequired: action.operatorApprovalRequired === true,
-    costUsd: Number(action.costUsd || 0),
+    costUsd: parsedCost.value,
+    costUsdValid: parsedCost.valid,
   };
+}
+
+function parseActionCostUsd(action) {
+  if (!Object.prototype.hasOwnProperty.call(action, 'costUsd') || action.costUsd == null) {
+    return { value: 0, valid: true };
+  }
+
+  if (typeof action.costUsd !== 'number' || !Number.isFinite(action.costUsd) || action.costUsd < 0) {
+    return { value: null, valid: false };
+  }
+
+  return { value: action.costUsd, valid: true };
 }
 
 function clampScore(value) {
@@ -171,7 +193,9 @@ function isEvidenceFresh(identity, policy, now) {
   if (!identity.evidenceUpdatedAt) return false;
   const updatedAt = new Date(identity.evidenceUpdatedAt);
   if (Number.isNaN(updatedAt.getTime())) return false;
-  return now.getTime() - updatedAt.getTime() <= policy.staleEvidenceAfterMs;
+  const ageMs = now.getTime() - updatedAt.getTime();
+  if (ageMs < 0) return false;
+  return ageMs <= policy.staleEvidenceAfterMs;
 }
 
 module.exports = {
