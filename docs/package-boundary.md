@@ -6,9 +6,9 @@ Status: SATP S4 package-boundary hardening for branch/PR review. This document i
 
 | Area | Current state | Hardening decision |
 | --- | --- | --- |
-| Git-installable root package | `package.json` is named `@brainai/satp-client`, `private: true`, version `0.0.0-extraction`, `main=packages/satp-client/src/index.js`, `types=packages/satp-client/src/index.d.ts`, and `exports["."]` maps to those same JS/types entrypoints. | Keep this root shape for branch/PR consumers because clean Git install resolves `@brainai/satp-client` without a sibling tarball or npm publish. |
+| Git-installable root package | `package.json` is named `@brainai/satp-client`, `private: true`, and points `main`, `types`, and `exports["."]` at `packages/satp-client/src/index.js` and `packages/satp-client/src/index.d.ts`. | Keep this root shape only for branch/PR review consumers because clean Git install resolves `@brainai/satp-client` without a sibling tarball or review-branch publish. |
 | Workspaces | Root workspaces include `packages/satp-client`, `packages/satp-core`, `packages/satp-solana`, and `packages/satp`. | Keep workspace split as the target boundary; only `packages/satp-client` has runnable JS in this extraction branch. |
-| Client package | `packages/satp-client/package.json` is named `@brainai/satp-client`, private, version `0.0.0-extraction`, `main=src/index.js`, `types=src/index.d.ts`. | Treat as the current public SDK surface for AgentFolio and external consumers. |
+| Client package | `packages/satp-client/package.json` is named `@brainai/satp-client`, `main=src/index.js`, `types=src/index.d.ts`. The current stable consumer package is npm `@brainai/satp-client@2.0.1`; branch metadata is review-only and must not be described as npm latest. | Treat the client package as the SDK source surface while consumer docs point stable installs to npm `2.0.1`. |
 | Umbrella package target | `packages/satp/package.json` is named `@brainai/satp`, private, version `0.0.0-extraction`, `main=README.md`. | Reserve `@brainai/satp` as the future stable umbrella package; do not expose it as install-ready until it has code entrypoints and tests. |
 | Core/Solana packages | `@brainai/satp-core` and `@brainai/satp-solana` are private README placeholders. | Keep placeholders private; do not tell consumers to install them yet. |
 | Runtime dependencies | Root/client depend on `@solana/web3.js`, `borsh`, and `bs58`. | Keep dependencies explicit at the installable boundary; no undeclared `@brainai/satp-v3` dependency is allowed. |
@@ -16,14 +16,25 @@ Status: SATP S4 package-boundary hardening for branch/PR review. This document i
 
 ## Package naming and version proposal
 
-- Branch/PR phase: keep `@brainai/satp-client@0.0.0-extraction` private and Git-installable from a reviewed commit.
-- Pre-release SDK phase: use `@brainai/satp-client@0.1.0-alpha.0` only after CI is green, consumer docs are current, and brainKID/brainForge approve the boundary.
-- Stable package target: expose `@brainai/satp` as the umbrella package only after `packages/satp` has real JS/TS entrypoints, conformance tests, and security review.
-- `1.0.0` is reserved for a security-reviewed public SDK/conformance release. It must not imply mainnet readiness unless the mainnet authority/deploy process is separately approved in HQ.
+- Stable consumer package: use npm `@brainai/satp-client@2.0.1` unless a task explicitly requires branch-only review.
+- Branch/PR phase: Git-install the SATP repo from a reviewed commit only for active development or review; extraction-branch labels such as `0.0.0-extraction` are not the current consumer package.
+- Pre-release SDK phase: use explicit rc/alpha versions only after CI is green, consumer docs are current, and brainKID/brainForge approve the boundary.
+- Future umbrella target: expose `@brainai/satp` only after `packages/satp` has real JS/TS entrypoints, conformance tests, and security review.
+- Version guidance here must not imply mainnet readiness unless the mainnet authority/deploy process is separately approved in HQ.
 
 ## Consumer install path
 
-AgentFolio and external consumers should use a commit-addressed Git dependency while npm publish is blocked:
+Stable consumers should install the current npm package:
+
+```json
+{
+  "dependencies": {
+    "@brainai/satp-client": "2.0.1"
+  }
+}
+```
+
+For active SATP branch/PR review, use a commit-addressed Git dependency:
 
 ```json
 {

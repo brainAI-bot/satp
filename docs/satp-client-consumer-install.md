@@ -1,15 +1,34 @@
 # SATP Client consumer install path
 
-`@brainai/satp-client` is delivered from the SATP repository without publishing
-to npm. The durable/merge-safe path is a commit-addressed Git dependency on the
-SATP repository root. The root package is intentionally named
+`@brainai/satp-client@2.0.1` is the current published npm package for stable
+consumer installs:
+
+```bash
+npm install @brainai/satp-client@2.0.1
+```
+
+Branch-only development and PR review can still use a commit-addressed Git
+dependency on the SATP repository root. The repo root is intentionally named
 `@brainai/satp-client`; its `main`, `types`, and `exports["."]` point at
 the extracted client package entrypoint in `packages/satp-client/src/index.js`
-and `packages/satp-client/src/index.d.ts`.
+and `packages/satp-client/src/index.d.ts`. This Git path is not npm latest and
+must be pinned to a reviewed commit before it is used in mergeable consumer PRs.
 
-## Durable dependency path for AgentFolio
+## Stable npm dependency path
 
-Use a commit-addressed Git dependency:
+Use the published package for ordinary consumers:
+
+```json
+{
+  "dependencies": {
+    "@brainai/satp-client": "2.0.1"
+  }
+}
+```
+
+## Branch-only dependency path for review
+
+Use a commit-addressed Git dependency only for active SATP branch or PR review:
 
 ```json
 {
@@ -40,10 +59,10 @@ merge-safe dependency should pin a commit hash:
 }
 ```
 
-## Why this is durable and merge-safe
+## Why the Git path is review-only
 
 - It does not depend on a sibling checkout or local tarball path.
-- It does not require npm publish.
+- It avoids publishing from a review branch.
 - npm can install it from a clean external consumer using only GitHub access.
 - Pinning a commit makes the dependency immutable and reviewable in the consumer
   lockfile.
@@ -112,7 +131,7 @@ A local tarball can still be produced for isolated debugging:
 
 ```bash
 npm run pack:satp-client
-npm install --ignore-scripts --no-audit --no-fund ../satp/dist/brainai-satp-client-0.0.0-extraction.tgz
+npm install --ignore-scripts --no-audit --no-fund ../satp/dist/brainai-satp-client-<VERSION>.tgz
 ```
 
 Do not use the local tarball path as the merge dependency in AgentFolio.

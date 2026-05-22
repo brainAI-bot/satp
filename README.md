@@ -5,8 +5,15 @@ identity, reputation, attestation, validation, review, and escrow helpers.
 
 ## Install Path
 
-Until the release packet passes, consumers should install from a reviewed SATP
-Git commit instead of npm:
+Stable consumers should install the current published npm package:
+
+    {
+      "dependencies": {
+        "@brainai/satp-client": "2.0.1"
+      }
+    }
+
+For branch-only development or PR review, pin a reviewed SATP Git commit:
 
     {
       "dependencies": {
@@ -14,9 +21,10 @@ Git commit instead of npm:
       }
     }
 
-The package root is intentionally named @brainai/satp-client, remains
-private: true, and exposes packages/satp-client/src/index.js plus
-packages/satp-client/src/index.d.ts through the package exports map.
+The Git review package root is intentionally named @brainai/satp-client,
+remains private: true, and exposes packages/satp-client/src/index.js plus
+packages/satp-client/src/index.d.ts through the package exports map. Do not
+treat a branch-only Git dependency as npm latest.
 
 ## API Surface
 
