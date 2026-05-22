@@ -107,12 +107,15 @@ export interface RuntimePolicyIdentityPayload {
 
 export interface RuntimePolicyActionDescriptor {
   type?: string;
+  resource?: string;
+  operation?: string;
   requiresCapability?: string;
   minimumTrustScore?: number;
   allowDegraded?: boolean;
   requiresFreshEvidence?: boolean;
   costUsd?: number;
-  requiresApproval?: boolean;
+  protectedTool?: boolean;
+  operatorApprovalRequired?: boolean;
   evidenceLookup?: {
     type?: string;
     endpoint?: string;

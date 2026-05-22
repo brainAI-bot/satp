@@ -7,6 +7,8 @@
  * expected by AgentFolio and external consumers. This script does not read keys,
  * call Solana RPC, publish packages, or deploy anything.
  */
+const fs = require('node:fs');
+const path = require('node:path');
 const satp = require('..');
 
 const requiredExports = [
@@ -69,4 +71,25 @@ if (policyDecision.decision !== 'allow') {
   throw new Error('evaluateRuntimePolicy did not return allow for verified local policy input');
 }
 
-console.log(`SATP export surface OK: ${requiredExports.join(', ')}`);
+const declarations = fs.readFileSync(path.join(__dirname, '..', 'packages/satp-client/src/index.d.ts'), 'utf8');
+const actionDescriptor = declarations.match(/export interface RuntimePolicyActionDescriptor \{([\s\S]*?)\n\}/);
+if (!actionDescriptor) {
+  throw new Error('Missing RuntimePolicyActionDescriptor declaration');
+}
+
+const requiredActionFields = [
+  'resource?: string;',
+  'operation?: string;',
+  'protectedTool?: boolean;',
+  'operatorApprovalRequired?: boolean;',
+];
+const missingActionFields = requiredActionFields.filter((field) => !actionDescriptor[1].includes(field));
+if (missingActionFields.length) {
+  throw new Error('RuntimePolicyActionDescriptor missing runtime-supported fields: ' + missingActionFields.join(', '));
+}
+
+if (actionDescriptor[1].includes('requiresApproval')) {
+  throw new Error('RuntimePolicyActionDescriptor exposes requiresApproval, but runtime does not read that no-op field');
+}
+
+console.log('SATP export surface OK: ' + requiredExports.join(', '));
