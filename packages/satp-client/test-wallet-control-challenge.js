@@ -116,6 +116,10 @@ expectInvalid(/challenge is expired/, {
   now: 1893456300,
 });
 
+expectInvalid(/challenge issuedAt is in the future/, {
+  now: 1893455999,
+});
+
 expectInvalid(/nonce has already been used/, {
   usedNonces: new Set(['wallet-control-nonce-001']),
 });

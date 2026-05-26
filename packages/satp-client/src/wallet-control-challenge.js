@@ -274,8 +274,13 @@ function verifyWalletControlChallengeSignature({
   }
   if (!Number.isSafeInteger(now) || now < 0) {
     errors.push('now must be a non-negative safe integer Unix timestamp');
-  } else if (normalized.expiresAt <= now) {
-    errors.push('challenge is expired');
+  } else {
+    if (normalized.issuedAt > now) {
+      errors.push('challenge issuedAt is in the future');
+    }
+    if (normalized.expiresAt <= now) {
+      errors.push('challenge is expired');
+    }
   }
 
   if (normalized.agentIdHash !== normalized.derived.agentIdHash) {
