@@ -89,6 +89,62 @@ export interface SatpTrustPacketValidation {
   errors: string[];
 }
 
+export interface WalletControlChallengeOptions {
+  agentId: string;
+  wallet: PublicKey | string;
+  network?: Network;
+  domain?: string;
+  audience?: string;
+  nonce?: string;
+  issuedAt?: number;
+  expiresAt?: number;
+}
+
+export interface WalletControlChallenge {
+  schemaVersion: 'satp.walletControlChallenge.v1';
+  challengeType: 'wallet-control';
+  domain: string;
+  audience: string;
+  network: Network;
+  agentId: string;
+  wallet: string;
+  nonce: string;
+  issuedAt: number;
+  expiresAt: number;
+  agentIdHash: string;
+  genesisPda: string;
+  genesisBump: number;
+  linkedWalletPda: string;
+  linkedWalletBump: number;
+}
+
+export interface WalletControlChallengePdas {
+  agentIdHash: string;
+  genesisPda: string;
+  genesisBump: number;
+  linkedWalletPda: string;
+  linkedWalletBump: number;
+}
+
+export interface VerifyWalletControlChallengeSignatureOptions {
+  challenge: WalletControlChallenge | Record<string, unknown>;
+  signature: string | Buffer | Uint8Array | number[];
+  expectedWallet?: PublicKey | string;
+  expectedAgentId?: string;
+  expectedDomain?: string;
+  expectedAudience?: string;
+  now?: number;
+  usedNonces?: Set<string> | string[] | Record<string, boolean>;
+  replayCache?: { has(nonce: string): boolean } | string[] | Record<string, boolean>;
+  isNonceUsed?: (nonce: string, challenge: WalletControlChallenge) => boolean;
+}
+
+export interface WalletControlChallengeVerification {
+  ok: boolean;
+  errors: string[];
+  challengeHash: string;
+}
+
 // ─── V2 SDK ──────────────────────────────────────────────
 
 export interface V2ProgramIds {
@@ -234,6 +290,31 @@ export function buildSatpTrustPacket(
 export function validateSatpTrustPacket(
   packet: SatpTrustPacket | Record<string, unknown> | null | undefined
 ): SatpTrustPacketValidation;
+
+export const WALLET_CONTROL_CHALLENGE_SCHEMA_VERSION: 'satp.walletControlChallenge.v1';
+export const WALLET_CONTROL_CHALLENGE_TYPE: 'wallet-control';
+export const DEFAULT_WALLET_CONTROL_DOMAIN: string;
+export const DEFAULT_WALLET_CONTROL_AUDIENCE: string;
+
+export function buildWalletControlChallenge(
+  opts: WalletControlChallengeOptions
+): WalletControlChallenge;
+
+export function canonicalWalletControlChallenge(
+  challenge: WalletControlChallenge | Record<string, unknown>
+): string;
+
+export function hashWalletControlChallenge(
+  challenge: WalletControlChallenge | Record<string, unknown>
+): string;
+
+export function deriveWalletControlChallengePdas(
+  opts: Pick<WalletControlChallengeOptions, 'agentId' | 'wallet' | 'network'>
+): WalletControlChallengePdas;
+
+export function verifyWalletControlChallengeSignature(
+  opts: VerifyWalletControlChallengeSignatureOptions
+): WalletControlChallengeVerification;
 
 // ─── Borsh Deserialization Helpers ──────────────────────
 

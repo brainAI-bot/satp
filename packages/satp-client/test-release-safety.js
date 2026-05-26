@@ -9,7 +9,13 @@ const {
   getEscrowPDA,
   getProgramIds,
   getV3ProgramIds,
+  buildWalletControlChallenge,
+  canonicalWalletControlChallenge,
+  hashWalletControlChallenge,
+  deriveWalletControlChallengePdas,
+  verifyWalletControlChallengeSignature,
 } = require('./src');
+const walletControlChallengeSubpath = require('@brainai/satp-client/wallet-control-challenge');
 
 const DEVNET_RPC = 'https://api.devnet.solana.com';
 const MAINNET_RPC = 'https://api.mainnet-beta.solana.com';
@@ -75,5 +81,16 @@ assert.throws(
   () => getEscrowPDA('11111111111111111111111111111112', Buffer.alloc(32), 'mainnet'),
   /mainnet escrow program ID is not configured/
 );
+
+for (const [name, value] of Object.entries({
+  buildWalletControlChallenge,
+  canonicalWalletControlChallenge,
+  hashWalletControlChallenge,
+  deriveWalletControlChallengePdas,
+  verifyWalletControlChallengeSignature,
+})) {
+  assert.equal(typeof value, 'function', name + ' export must be a function');
+  assert.equal(typeof walletControlChallengeSubpath[name], 'function', name + ' subpath export must be a function');
+}
 
 console.log('release safety defaults OK');

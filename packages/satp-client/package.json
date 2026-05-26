@@ -9,6 +9,10 @@
       "types": "./src/index.d.ts",
       "default": "./src/index.js"
     },
+    "./wallet-control-challenge": {
+      "types": "./src/index.d.ts",
+      "default": "./src/wallet-control-challenge.js"
+    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
@@ -17,7 +21,9 @@
     "README.md"
   ],
   "scripts": {
-    "test": "node test.js"
+    "test": "node test.js",
+    "test:wallet-control": "node test-wallet-control-challenge.js",
+    "check:exports": "node test-release-safety.js"
   },
   "keywords": [
     "solana",

@@ -111,6 +111,48 @@ if (!validation.ok) throw new Error(validation.errors.join('; '));
 re-derives the expected packet so tampered PDA, program, request, or hash fields
 surface as explicit errors.
 
+### Wallet-Control Challenge Helpers
+
+`buildWalletControlChallenge(opts)` creates a canonical, offline challenge that
+binds an agent ID to a Solana wallet. It derives the SATP V3 Genesis PDA and
+linked-wallet PDA from `agentId`, `wallet`, and `network`, includes a nonce and
+expiry, and returns plain JSON. It does not connect to RPC, read keypairs,
+create transactions, sign, send, deploy, or mutate chain state.
+
+`canonicalWalletControlChallenge(challenge)` returns the exact UTF-8 message a
+wallet signs. `verifyWalletControlChallengeSignature(opts)` verifies a 64-byte
+Ed25519 signature against the challenge wallet and fails closed for mismatched
+wallets, signatures, agent IDs, PDAs, domain, audience, expiry, and replayed
+nonces supplied by your replay cache.
+
+```javascript
+const {
+  buildWalletControlChallenge,
+  canonicalWalletControlChallenge,
+  verifyWalletControlChallengeSignature,
+} = require('@brainai/satp-client');
+
+const challenge = buildWalletControlChallenge({
+  agentId: 'brainChain',
+  wallet: walletPublicKey,
+  audience: 'my-service',
+  nonce: crypto.randomBytes(16).toString('hex'),
+});
+
+// Ask the wallet to sign this exact canonical string.
+const message = canonicalWalletControlChallenge(challenge);
+
+const verification = verifyWalletControlChallengeSignature({
+  challenge,
+  signature,
+  expectedWallet: walletPublicKey,
+  expectedAgentId: 'brainChain',
+  expectedAudience: 'my-service',
+  usedNonces: replayCache,
+});
+if (!verification.ok) throw new Error(verification.errors.join('; '));
+```
+
 ### Constructor
 
 ```javascript
