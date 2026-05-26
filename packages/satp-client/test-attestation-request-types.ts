@@ -2,7 +2,13 @@ import {
   IdentityAttestationRequestOptions,
   SatpTrustPacket,
   SatpTrustPacketValidation,
+  WalletControlChallenge,
+  WalletControlChallengeOptions,
+  WalletControlChallengeVerification,
   buildSatpTrustPacket,
+  buildWalletControlChallenge,
+  canonicalWalletControlChallenge,
+  verifyWalletControlChallengeSignature,
   prepareIdentityAttestationRequest,
   validateSatpTrustPacket,
 } from './src';
@@ -36,6 +42,27 @@ prepareIdentityAttestationRequest(byBothAliases);
 const packet: SatpTrustPacket = buildSatpTrustPacket(byClaimType);
 const validation: SatpTrustPacketValidation = validateSatpTrustPacket(packet);
 void validation.ok;
+
+const walletChallengeOptions: WalletControlChallengeOptions = {
+  agentId: 'brainChain',
+  wallet: subjectWallet,
+  nonce: 'type-check-nonce',
+  issuedAt: 1893456000,
+  expiresAt: 1893456300,
+  audience: 'type-check',
+};
+const walletChallenge: WalletControlChallenge = buildWalletControlChallenge(walletChallengeOptions);
+const walletChallengeMessage: string = canonicalWalletControlChallenge(walletChallenge);
+const walletChallengeVerification: WalletControlChallengeVerification = verifyWalletControlChallengeSignature({
+  challenge: walletChallenge,
+  signature: new Uint8Array(64),
+  expectedWallet: subjectWallet,
+  expectedAgentId: 'brainChain',
+  expectedAudience: 'type-check',
+  usedNonces: new Set<string>(),
+});
+void walletChallengeMessage;
+void walletChallengeVerification.ok;
 
 // @ts-expect-error claimType or attestationType is required.
 const missingAlias: IdentityAttestationRequestOptions = {
