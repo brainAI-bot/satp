@@ -22,6 +22,11 @@ const requiredExports = [
   'buildSatpTrustPacket',
   'validateSatpTrustPacket',
   'evaluateRuntimePolicy',
+  'buildWalletControlChallenge',
+  'canonicalWalletControlChallenge',
+  'hashWalletControlChallenge',
+  'deriveWalletControlChallengePdas',
+  'verifyWalletControlChallengeSignature',
 ];
 
 const missing = requiredExports.filter((key) => !(key in satp));
@@ -92,4 +97,20 @@ if (actionDescriptor[1].includes('requiresApproval')) {
   throw new Error('RuntimePolicyActionDescriptor exposes requiresApproval, but runtime does not read that no-op field');
 }
 
-console.log('SATP export surface OK: ' + requiredExports.join(', '));
+const walletControlChallenge = require('@brainai/satp-client/wallet-control-challenge');
+for (const key of [
+  'buildWalletControlChallenge',
+  'canonicalWalletControlChallenge',
+  'hashWalletControlChallenge',
+  'deriveWalletControlChallengePdas',
+  'verifyWalletControlChallengeSignature',
+]) {
+  if (typeof satp[key] !== 'function') {
+    throw new Error(`SATP root export ${key} is not a function`);
+  }
+  if (typeof walletControlChallenge[key] !== 'function') {
+    throw new Error(`SATP wallet-control subpath export ${key} is not a function`);
+  }
+}
+
+console.log(`SATP export surface OK: ${requiredExports.join(', ')}`);

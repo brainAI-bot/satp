@@ -789,6 +789,7 @@ const {
   REASON_CODES,
   evaluateRuntimePolicy,
 } = require('./runtime-policy-adapter');
+const walletControlChallenge = require('./wallet-control-challenge');
 
 // Legacy V3 SDK wrapper — keeps string constructor compatibility while using
 // the local extracted SATPV3SDK implementation so offline tests and consumers
@@ -932,6 +933,15 @@ module.exports = {
   TRUST_PACKET_SCHEMA_VERSION,
   buildSatpTrustPacket,
   validateSatpTrustPacket,
+  WALLET_CONTROL_CHALLENGE_SCHEMA_VERSION: walletControlChallenge.WALLET_CONTROL_CHALLENGE_SCHEMA_VERSION,
+  WALLET_CONTROL_CHALLENGE_TYPE: walletControlChallenge.WALLET_CONTROL_CHALLENGE_TYPE,
+  DEFAULT_WALLET_CONTROL_DOMAIN: walletControlChallenge.DEFAULT_WALLET_CONTROL_DOMAIN,
+  DEFAULT_WALLET_CONTROL_AUDIENCE: walletControlChallenge.DEFAULT_WALLET_CONTROL_AUDIENCE,
+  buildWalletControlChallenge: walletControlChallenge.buildWalletControlChallenge,
+  canonicalWalletControlChallenge: walletControlChallenge.canonicalWalletControlChallenge,
+  hashWalletControlChallenge: walletControlChallenge.hashWalletControlChallenge,
+  deriveWalletControlChallengePdas: walletControlChallenge.deriveWalletControlChallengePdas,
+  verifyWalletControlChallengeSignature: walletControlChallenge.verifyWalletControlChallengeSignature,
 
   // Runtime policy adapter (offline/local guardrail helper)
   DECISIONS,

@@ -9,6 +9,10 @@
       "types": "./src/index.d.ts",
       "default": "./src/index.js"
     },
+    "./wallet-control-challenge": {
+      "types": "./src/index.d.ts",
+      "default": "./src/wallet-control-challenge.js"
+    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
@@ -20,7 +24,9 @@
   "scripts": {
     "test": "node test.js",
     "test:runtime-policy": "node --test test-runtime-policy-adapter.js",
-    "runtime-policy:example": "node examples/runtime-policy-adapter.js"
+    "runtime-policy:example": "node examples/runtime-policy-adapter.js",
+    "test:wallet-control": "node test-wallet-control-challenge.js",
+    "check:exports": "node test-release-safety.js"
   },
   "keywords": [
     "solana",
