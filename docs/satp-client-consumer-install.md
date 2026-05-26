@@ -103,22 +103,28 @@ The affected `uuid` range is `<11.1.1`; the upstream dependency path is owned
 by `@solana/web3.js` and `jayson`, so SATP should not publish a package, tag, or
 release only to force this transitive fix.
 
-Consumers that need a temporary audit mitigation before the upstream
-`@solana/web3.js`/`jayson` dependency chain resolves can add a root-scoped npm
-override in the consuming application's `package.json`:
+SATP's release-candidate branch pins the same transitive path with an npm
+override at the repository root and in `packages/satp-client/package.json`:
 
 ```json
 {
   "overrides": {
-    "uuid": "11.1.1"
+    "jayson": {
+      "uuid": "^11.1.1"
+    }
   }
 }
 ```
 
-This override is consumer/root-scoped only. It belongs in the final consuming
-application that owns the lockfile, not in a published SATP package, and it
-should be removed once `@solana/web3.js` and `jayson` ship an upstream fix that
-resolves `GHSA-w5hq-g745-h8pq` without the override.
+This is a monitored semver override: `jayson@4.3.0` declares `uuid@^8.3.2`,
+so the override intentionally steps outside that transitive dependency range.
+Keep it until `@solana/web3.js` or `jayson` ships an upstream range that
+resolves the audit chain without an application lockfile override.
+
+AgentFolio and other package consumers should not rely on a dependency package's
+own override to protect their final install tree. Consumer applications that
+need this mitigation should carry the same root override or lockfile resolution
+until the upstream dependency chain is fixed.
 
 ## Offline identity attestation request helper
 
