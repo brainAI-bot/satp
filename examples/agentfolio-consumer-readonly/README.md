@@ -23,6 +23,8 @@ Example:
 const profile = require('./fixtures/agentfolio-profile.json');
 const {
   buildAgentFolioSatpConsumerRecord,
+  buildAgentFolioRuntimePreflight,
+  prepareAgentFolioWalletControlChallenge,
   verifyAgentFolioSatpConsumerRecord,
 } = require('./src/consumerRecord');
 
@@ -32,6 +34,33 @@ const verification = verifyAgentFolioSatpConsumerRecord(record);
 console.log(verification.ok, record.satp.trustInputs.map((input) => input.trustPacket.pda.attestation));
 ```
 
+Wallet-control runtime preflight shape:
+
+```js
+const challengeRequest = prepareAgentFolioWalletControlChallenge({
+  profile,
+  network: 'devnet',
+});
+
+// In a real AgentFolio runtime this is a wallet-adapter signMessage call.
+const signature = await walletAdapter.signMessage(
+  Buffer.from(challengeRequest.message, challengeRequest.messageEncoding)
+);
+
+const preflight = buildAgentFolioRuntimePreflight({
+  profile,
+  walletControlChallenge: challengeRequest.challenge,
+  walletControlSignature: signature,
+  network: 'devnet',
+});
+
+if (preflight.readyForQueue) {
+  console.log(preflight.identityAttestation.request.requestHash);
+}
+```
+
+`buildAgentFolioRuntimePreflight` verifies the wallet-control signature with SATP wallet-control helpers, then prepares the unsigned identity-attestation request through `prepareIdentityAttestationRequest`. The returned record keeps AgentFolio in a consumer role: it can display, queue, or pass the request to a later reviewed write path, but this example does not create a transaction, signer list, RPC call, npm publish, or deploy.
+
 ## Consumer boundary
 
 AgentFolio owns product profile data and display. SATP owns program IDs, PDA derivation, identity-attestation request shape, and later transaction construction. This example keeps that boundary explicit by importing SATP helpers from the repo package and returning only unsigned metadata:
@@ -39,7 +68,9 @@ AgentFolio owns product profile data and display. SATP owns program IDs, PDA der
 ```text
 AgentFolio fixture profile
   -> consumer adapter
+  -> SATP wallet-control challenge verification
   -> SATP buildSatpTrustPacket
+  -> SATP prepareIdentityAttestationRequest
   -> read-only trust packet for display, review, MCP, or x402-gated read access
 ```
 

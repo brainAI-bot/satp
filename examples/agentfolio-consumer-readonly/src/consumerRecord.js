@@ -4,11 +4,17 @@ const crypto = require('crypto');
 const { PublicKey } = require('@solana/web3.js');
 const {
   buildSatpTrustPacket,
+  buildWalletControlChallenge,
+  canonicalWalletControlChallenge,
+  prepareIdentityAttestationRequest,
   validateSatpTrustPacket,
+  verifyWalletControlChallengeSignature,
 } = require('../../../packages/satp-client/src');
 
 const DEFAULT_NETWORK = 'devnet';
 const DEFAULT_ATTESTER = '11111111111111111111111111111111';
+const DEFAULT_WALLET_CONTROL_DOMAIN = 'agentfolio.example.wallet-control';
+const DEFAULT_WALLET_CONTROL_AUDIENCE = 'agentfolio-consumer-readonly';
 const EXAMPLE_KIND = 'agentfolio-satp-consumer-readonly.v1';
 
 function normalizeNetwork(network = DEFAULT_NETWORK) {
@@ -61,6 +67,22 @@ function buildTrustMetadata(profile, signal) {
     issuer: signal.issuer,
     subject: signal.subject,
     evidenceUri: signal.evidenceUri,
+  };
+}
+
+function normalizeSignature(value, field) {
+  if (Buffer.isBuffer(value)) return value.toString('base64');
+  if (value instanceof Uint8Array || Array.isArray(value)) return Buffer.from(value).toString('base64');
+  return requiredString(value, field);
+}
+
+function walletControlSignal(profile) {
+  const signals = Array.isArray(profile.trustSignals) ? profile.trustSignals : [];
+  return signals.find((signal) => signal && signal.claimType === 'wallet_control_verified') || {
+    claimType: 'wallet_control_verified',
+    issuer: 'agentfolio-runtime-example',
+    subject: profile.wallet,
+    evidenceUri: 'wallet-adapter://signMessage',
   };
 }
 
@@ -130,6 +152,132 @@ function buildAgentFolioSatpConsumerRecord({
       signingRequired: false,
       writesRequired: false,
       livePaymentRequired: false,
+    },
+  };
+}
+
+function prepareAgentFolioWalletControlChallenge({
+  profile,
+  network = DEFAULT_NETWORK,
+  domain = DEFAULT_WALLET_CONTROL_DOMAIN,
+  audience = DEFAULT_WALLET_CONTROL_AUDIENCE,
+  nonce,
+  issuedAt,
+  expiresAt,
+} = {}) {
+  if (!profile || typeof profile !== 'object') {
+    throw new Error('Invalid profile: expected an AgentFolio-style profile object');
+  }
+
+  const selectedNetwork = normalizeNetwork(network);
+  const subjectWallet = normalizePublicKey(profile.wallet, 'profile.wallet');
+  const profileId = requiredString(profile.profileId, 'profile.profileId');
+  const agentId = requiredString(profile.agentId || profileId, 'profile.agentId');
+  const challenge = buildWalletControlChallenge({
+    network: selectedNetwork,
+    agentId,
+    wallet: subjectWallet,
+    domain,
+    audience,
+    nonce,
+    issuedAt,
+    expiresAt,
+  });
+
+  return {
+    schemaVersion: 'agentfolio.walletControlChallengeRequest.v1',
+    mode: 'wallet-adapter-sign-message',
+    challenge,
+    message: canonicalWalletControlChallenge(challenge),
+    messageEncoding: 'utf8',
+    wallet: subjectWallet,
+    agentId,
+    signing: {
+      expectedWalletAdapterMethod: 'signMessage',
+      keypairExportRequired: false,
+      rpcRequired: false,
+      transactionRequired: false,
+    },
+  };
+}
+
+function buildAgentFolioRuntimePreflight({
+  profile,
+  walletControlChallenge,
+  walletControlSignature,
+  network = DEFAULT_NETWORK,
+  attester = DEFAULT_ATTESTER,
+  now,
+  usedNonces,
+  replayCache,
+} = {}) {
+  if (!profile || typeof profile !== 'object') {
+    throw new Error('Invalid profile: expected an AgentFolio-style profile object');
+  }
+  if (!walletControlChallenge || typeof walletControlChallenge !== 'object') {
+    throw new Error('Invalid walletControlChallenge: expected a challenge object');
+  }
+
+  const selectedNetwork = normalizeNetwork(network);
+  const subjectWallet = normalizePublicKey(profile.wallet, 'profile.wallet');
+  const profileId = requiredString(profile.profileId, 'profile.profileId');
+  const agentId = requiredString(profile.agentId || profileId, 'profile.agentId');
+  const signature = normalizeSignature(walletControlSignature, 'walletControlSignature');
+  const walletControlVerification = verifyWalletControlChallengeSignature({
+    challenge: walletControlChallenge,
+    signature,
+    expectedWallet: subjectWallet,
+    expectedAgentId: agentId,
+    expectedDomain: walletControlChallenge.domain,
+    expectedAudience: walletControlChallenge.audience,
+    now,
+    usedNonces,
+    replayCache,
+  });
+  const signal = walletControlSignal({ ...profile, wallet: subjectWallet, profileId, agentId });
+  const metadata = buildTrustMetadata({ ...profile, wallet: subjectWallet, profileId, agentId }, signal);
+  const metadataHash = sha256Hex(canonicalStringify(metadata));
+  const identityAttestationRequest = prepareIdentityAttestationRequest({
+    subjectWallet,
+    agentId,
+    claimType: signal.claimType,
+    metadataHash,
+    network: selectedNetwork,
+    attester,
+  });
+  const consumerRecord = buildAgentFolioSatpConsumerRecord({
+    profile: { ...profile, wallet: subjectWallet, agentId },
+    network: selectedNetwork,
+    attester,
+  });
+  const consumerVerification = verifyAgentFolioSatpConsumerRecord(consumerRecord);
+
+  return {
+    schemaVersion: 'agentfolio.satpRuntimePreflight.v1',
+    mode: 'offline-wallet-control-and-identity-attestation-preflight',
+    network: selectedNetwork,
+    readyForQueue: walletControlVerification.ok && consumerVerification.ok,
+    walletControl: {
+      challenge: walletControlChallenge,
+      signature,
+      verification: walletControlVerification,
+    },
+    identityAttestation: {
+      metadata,
+      metadataHash,
+      request: identityAttestationRequest,
+      directHelper: 'prepareIdentityAttestationRequest',
+    },
+    agentfolioConsumer: {
+      record: consumerRecord,
+      verification: consumerVerification,
+    },
+    boundaries: {
+      npmPublishRequired: false,
+      solanaWriteRequired: false,
+      keypairReadRequired: false,
+      productionDeployRequired: false,
+      publicLaunchRequired: false,
     },
   };
 }
@@ -211,6 +359,8 @@ function verifyAgentFolioSatpConsumerRecord(record) {
 
 module.exports = {
   buildAgentFolioSatpConsumerRecord,
+  prepareAgentFolioWalletControlChallenge,
+  buildAgentFolioRuntimePreflight,
   verifyAgentFolioSatpConsumerRecord,
   canonicalStringify,
   sha256Hex,
