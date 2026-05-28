@@ -27,6 +27,10 @@ const requiredExports = [
   'hashWalletControlChallenge',
   'deriveWalletControlChallengePdas',
   'verifyWalletControlChallengeSignature',
+  'X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION',
+  'parseX402DiscoveryMetadata',
+  'buildX402EvidenceLookup',
+  'buildRuntimePolicyActionDescriptorFromX402Discovery',
 ];
 
 const missing = requiredExports.filter((key) => !(key in satp));
@@ -98,6 +102,7 @@ if (actionDescriptor[1].includes('requiresApproval')) {
 }
 
 const walletControlChallenge = require('@brainai/satp-client/wallet-control-challenge');
+const x402Discovery = require('@brainai/satp-client/x402-discovery');
 for (const key of [
   'buildWalletControlChallenge',
   'canonicalWalletControlChallenge',
@@ -110,6 +115,19 @@ for (const key of [
   }
   if (typeof walletControlChallenge[key] !== 'function') {
     throw new Error(`SATP wallet-control subpath export ${key} is not a function`);
+  }
+}
+
+for (const key of [
+  'parseX402DiscoveryMetadata',
+  'buildX402EvidenceLookup',
+  'buildRuntimePolicyActionDescriptorFromX402Discovery',
+]) {
+  if (typeof satp[key] !== 'function') {
+    throw new Error(`SATP root export ${key} is not a function`);
+  }
+  if (typeof x402Discovery[key] !== 'function') {
+    throw new Error(`SATP x402-discovery subpath export ${key} is not a function`);
   }
 }
 

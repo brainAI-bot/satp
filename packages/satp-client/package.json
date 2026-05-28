@@ -13,6 +13,10 @@
       "types": "./src/index.d.ts",
       "default": "./src/wallet-control-challenge.js"
     },
+    "./x402-discovery": {
+      "types": "./src/index.d.ts",
+      "default": "./src/x402-discovery.js"
+    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
@@ -26,6 +30,7 @@
     "test:runtime-policy": "node --test test-runtime-policy-adapter.js",
     "runtime-policy:example": "node examples/runtime-policy-adapter.js",
     "test:wallet-control": "node test-wallet-control-challenge.js",
+    "test:x402-discovery": "node test-x402-discovery.js",
     "check:exports": "node test-release-safety.js"
   },
   "keywords": [

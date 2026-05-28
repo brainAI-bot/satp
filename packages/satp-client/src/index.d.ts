@@ -89,6 +89,51 @@ export interface SatpTrustPacketValidation {
   errors: string[];
 }
 
+export interface X402PaymentRequirement {
+  scheme?: string;
+  network?: string;
+  asset?: string;
+  payTo?: string;
+  maxAmountRequired?: string | number;
+  amountRequired?: string | number;
+  resource?: string;
+  description?: string;
+  mimeType?: string;
+  maxTimeoutSeconds?: number;
+  extra?: unknown;
+}
+
+export interface X402DiscoveryMetadata {
+  schemaVersion: 'satp.x402DiscoveryMetadata.v1';
+  protocol: 'x402';
+  resource: string | null;
+  endpoint: string | null;
+  action: string | null;
+  paymentRequired: boolean;
+  paymentRequirements: X402PaymentRequirement[];
+  guardrail: 'X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION';
+}
+
+export interface X402EvidenceLookup {
+  type: 'x402';
+  endpoint: string | null;
+  maxCostUsd: number | null;
+  protocol: 'x402';
+  source: {
+    kind: string;
+    url: string | null;
+  };
+  resource: string | null;
+  paymentRequired: boolean;
+  paymentRequirements: X402PaymentRequirement[];
+  discovery: X402DiscoveryMetadata;
+  guardrail: 'X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION';
+  paymentAuthorization: false;
+  actionAuthorization: false;
+  spendAuthorized: false;
+  livePaymentRequired: false;
+}
+
 export type RuntimePolicyDecision =
   | 'allow'
   | 'deny'
@@ -120,7 +165,7 @@ export interface RuntimePolicyActionDescriptor {
     type?: string;
     endpoint?: string;
     maxCostUsd?: number;
-  };
+  } | X402EvidenceLookup;
 }
 
 export interface RuntimePolicyConfig {
@@ -363,6 +408,48 @@ export function buildSatpTrustPacket(
 export function validateSatpTrustPacket(
   packet: SatpTrustPacket | Record<string, unknown> | null | undefined
 ): SatpTrustPacketValidation;
+
+export const X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION: 'X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION';
+export const X402_DISCOVERY_SCHEMA_VERSION: 'satp.x402DiscoveryMetadata.v1';
+export const RUNTIME_POLICY_ACTION_DESCRIPTOR_SCHEMA_VERSION: 'satp.runtimePolicyActionDescriptor.v1';
+
+export function parseX402DiscoveryMetadata(
+  input: Record<string, unknown> | string
+): X402DiscoveryMetadata;
+
+export function buildX402EvidenceLookup(
+  input: Record<string, unknown> | string,
+  opts?: {
+    endpoint?: string;
+    maxCostUsd?: number;
+    sourceKind?: string;
+    sourceUrl?: string;
+  }
+): X402EvidenceLookup;
+
+export function buildRuntimePolicyActionDescriptorFromX402Discovery(
+  input: Record<string, unknown> | string,
+  opts?: {
+    type?: string;
+    resource?: string;
+    operation?: string;
+    requiresFreshEvidence?: boolean;
+    endpoint?: string;
+    maxCostUsd?: number;
+    sourceKind?: string;
+    sourceUrl?: string;
+  }
+): RuntimePolicyActionDescriptor & {
+  schemaVersion: 'satp.runtimePolicyActionDescriptor.v1';
+  evidenceLookup: X402EvidenceLookup;
+  paymentAuthorization: false;
+  actionAuthorization: false;
+  spendAuthorized: false;
+  livePaymentRequired: false;
+  guardrail: 'X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION';
+};
+
+export const buildRuntimePolicyActionDescriptorFromX402: typeof buildRuntimePolicyActionDescriptorFromX402Discovery;
 
 export const WALLET_CONTROL_CHALLENGE_SCHEMA_VERSION: 'satp.walletControlChallenge.v1';
 export const WALLET_CONTROL_CHALLENGE_TYPE: 'wallet-control';
