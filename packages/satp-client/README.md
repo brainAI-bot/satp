@@ -144,6 +144,27 @@ if (!validation.ok) throw new Error(validation.errors.join('; '));
 re-derives the expected packet so tampered PDA, program, request, or hash fields
 surface as explicit errors.
 
+### x402 Discovery Evidence Lookup Helpers
+
+`parseX402DiscoveryMetadata(input)`, `buildX402EvidenceLookup(input, opts)`,
+and `buildRuntimePolicyActionDescriptorFromX402Discovery(input, opts)` map x402
+discovery metadata into SATP runtime policy evidence lookup data. The helpers are
+read-only: x402 payment metadata can identify where evidence may be fetched, but
+it is discovery/evidence lookup only and never authorizes SATP action execution,
+spending, live payment, signing, transactions, or host policy bypass.
+
+Run the offline example:
+
+```bash
+node packages/satp-client/examples/x402-discovery-evidence-lookup.js
+```
+
+The example parses discovery metadata, builds an evidence lookup descriptor, and
+builds a runtime policy action descriptor. It asserts
+`X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION` plus
+`paymentAuthorization: false`, `actionAuthorization: false`,
+`spendAuthorized: false`, and `livePaymentRequired: false`.
+
 ### Wallet-Control Challenge Helpers
 
 `buildWalletControlChallenge(opts)` creates a canonical, offline challenge that
