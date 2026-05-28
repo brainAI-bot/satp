@@ -5,11 +5,34 @@ identity, reputation, attestation, validation, review, and escrow helpers.
 
 ## Install Path
 
-Stable consumers should install the current published npm package:
+Choose the dependency source by release channel:
+
+| Channel | Use when | Dependency |
+| --- | --- | --- |
+| Stable npm | Production or default consumer installs that should follow the public stable package. | `npm install @brainai/satp-client@2.0.1` or `npm install @brainai/satp-client` |
+| Release candidate npm | Downstream apps are validating the rc package metadata or need reproducible rc manifests before promotion. | `npm install @brainai/satp-client@0.1.0-rc.0` or opt in to `npm install @brainai/satp-client@rc` |
+| Reviewed Git commit | PR coordination or unpublished review work where the exact repository commit is the artifact under review. | `git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
+
+The npm `latest` tag still resolves to `@brainai/satp-client@2.0.1`.
+Use `@brainai/satp-client@rc` only when intentionally opting into the current
+release candidate. Downstream apps that need reproducible manifests for rc
+readback should pin `@brainai/satp-client@0.1.0-rc.0` exactly instead of
+depending on the moving `rc` dist-tag.
+
+Stable consumers can pin the current published npm package:
 
     {
       "dependencies": {
         "@brainai/satp-client": "2.0.1"
+      }
+    }
+
+For rc validation, pin the exact rc package when the downstream lockfile is the
+auditable artifact:
+
+    {
+      "dependencies": {
+        "@brainai/satp-client": "0.1.0-rc.0"
       }
     }
 

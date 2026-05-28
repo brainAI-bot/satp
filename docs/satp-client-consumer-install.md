@@ -1,22 +1,29 @@
 # SATP Client consumer install path
 
-`@brainai/satp-client@2.0.1` is the current published npm package for stable
-consumer installs:
+`@brainai/satp-client` can be consumed from stable npm, the rc npm channel, or
+a reviewed SATP Git commit. Choose the source based on the artifact the
+downstream app needs to prove:
+
+| Channel | Use when | Dependency |
+| --- | --- | --- |
+| Stable npm | Production or default consumer installs should stay on the stable public package. | `@brainai/satp-client@2.0.1` or `@brainai/satp-client` |
+| Release candidate npm | The app is validating the rc package metadata or needs reproducible rc manifests before promotion. | `@brainai/satp-client@0.1.0-rc.0` |
+| Release candidate tag | Short-lived rc opt-in where a moving dist-tag is acceptable. | `@brainai/satp-client@rc` |
+| Reviewed Git commit | PR coordination or source-review installs tied to an exact SATP commit. | `git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
+
+The npm `latest` tag still resolves to `@brainai/satp-client@2.0.1`. The
+`rc` tag points at `@brainai/satp-client@0.1.0-rc.0`; downstream apps that
+need reproducible manifests for rc readback should pin
+`@brainai/satp-client@0.1.0-rc.0` exactly instead of relying on the moving
+`@rc` tag.
+
+## Stable npm dependency path
+
+Use the current published npm package for stable consumer installs:
 
 ```bash
 npm install @brainai/satp-client@2.0.1
 ```
-
-Branch-only development and PR review can still use a commit-addressed Git
-dependency on the SATP repository root. The repo root is intentionally named
-`@brainai/satp-client`; its `main`, `types`, and `exports["."]` point at
-the extracted client package entrypoint in `packages/satp-client/src/index.js`
-and `packages/satp-client/src/index.d.ts`. This Git path is not npm latest and
-must be pinned to a reviewed commit before it is used in mergeable consumer PRs.
-
-## Stable npm dependency path
-
-Use the published package for ordinary consumers:
 
 ```json
 {
@@ -25,6 +32,36 @@ Use the published package for ordinary consumers:
   }
 }
 ```
+
+## Release candidate dependency path
+
+Pin the exact rc package when downstream reproducibility or lockfile readback is
+the auditable artifact:
+
+```bash
+npm install @brainai/satp-client@0.1.0-rc.0
+```
+
+```json
+{
+  "dependencies": {
+    "@brainai/satp-client": "0.1.0-rc.0"
+  }
+}
+```
+
+Use the moving `rc` dist-tag only for short-lived rc opt-in:
+
+```bash
+npm install @brainai/satp-client@rc
+```
+
+Branch-only development and PR review can still use a commit-addressed Git
+dependency on the SATP repository root. The repo root is intentionally named
+`@brainai/satp-client`; its `main`, `types`, and `exports["."]` point at
+the extracted client package entrypoint in `packages/satp-client/src/index.js`
+and `packages/satp-client/src/index.d.ts`. This Git path is not npm latest and
+must be pinned to a reviewed commit before it is used in mergeable consumer PRs.
 
 ## Branch-only dependency path for review
 
