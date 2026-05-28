@@ -6,10 +6,36 @@ Current npm package: **@brainai/satp-client@2.0.1** | Programs: **6**
 
 ## Installation
 
-For stable consumer installs, use the latest published npm package:
+Choose stable, rc, or Git based on what the consumer needs to prove:
+
+| Channel | Use when | Command |
+| --- | --- | --- |
+| Stable npm | Default production-style consumption of the stable public package. | `npm install @brainai/satp-client@2.0.1` |
+| Release candidate npm | Validating the rc package before promotion or producing reproducible rc manifests. | `npm install @brainai/satp-client@0.1.0-rc.0` |
+| Release candidate tag | Quick rc opt-in where a moving dist-tag is acceptable. | `npm install @brainai/satp-client@rc` |
+| Reviewed Git commit | PR coordination or source-review installs tied to an exact SATP commit. | `npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
+
+The npm `latest` tag still resolves to `@brainai/satp-client@2.0.1`.
+The `rc` tag points at `@brainai/satp-client@0.1.0-rc.0`; downstream apps
+that need reproducible manifests should pin `@brainai/satp-client@0.1.0-rc.0`
+exactly instead of relying on `@rc`.
+
+For stable consumer installs, pin the current published npm package:
 
 ```bash
 npm install @brainai/satp-client@2.0.1
+```
+
+For exact rc validation:
+
+```bash
+npm install @brainai/satp-client@0.1.0-rc.0
+```
+
+For short-lived rc opt-in:
+
+```bash
+npm install @brainai/satp-client@rc
 ```
 
 For branch-only development or PR review, pin an explicit SATP Git commit:
