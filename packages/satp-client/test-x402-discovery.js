@@ -106,6 +106,27 @@ const nested = parseX402DiscoveryMetadata({
 assert.equal(nested.resource, 'https://example.invalid/evidence.json');
 assert.equal(nested.paymentRequirements.length, 1);
 
+const acceptsOnlyResource = 'https://example.invalid/protected/satp-evidence.json';
+const acceptsOnlyDiscovery = {
+  accepts: [
+    {
+      scheme: 'exact',
+      network: 'base',
+      amountRequired: '1',
+      resource: acceptsOnlyResource,
+    },
+  ],
+};
+const acceptsOnlyParsed = parseX402DiscoveryMetadata(acceptsOnlyDiscovery);
+assert.equal(acceptsOnlyParsed.resource, acceptsOnlyResource);
+const acceptsOnlyEvidenceLookup = buildX402EvidenceLookup(acceptsOnlyDiscovery);
+assert.equal(acceptsOnlyEvidenceLookup.resource, acceptsOnlyResource);
+assert.equal(acceptsOnlyEvidenceLookup.source.url, acceptsOnlyResource);
+const acceptsOnlyDescriptor = buildRuntimePolicyActionDescriptorFromX402Discovery(acceptsOnlyDiscovery);
+assert.equal(acceptsOnlyDescriptor.resource, acceptsOnlyResource);
+assert.equal(acceptsOnlyDescriptor.evidenceLookup.resource, acceptsOnlyResource);
+assert.equal(acceptsOnlyDescriptor.evidenceLookup.source.url, acceptsOnlyResource);
+
 assert.equal(buildRuntimePolicyActionDescriptorFromX402, buildRuntimePolicyActionDescriptorFromX402Discovery);
 assert.equal(typeof x402DiscoverySubpath.parseX402DiscoveryMetadata, 'function');
 assert.equal(typeof x402DiscoverySubpath.buildX402EvidenceLookup, 'function');

@@ -73,6 +73,14 @@ function normalizePaymentRequirements(x402) {
   return (Array.isArray(value) ? value : [value]).map(copyPaymentRequirement);
 }
 
+function firstPaymentRequirementResource(paymentRequirements) {
+  for (const requirement of paymentRequirements) {
+    const resource = optionalString(requirement.resource);
+    if (resource) return resource;
+  }
+  return null;
+}
+
 function resolveDiscoveryEnvelope(input) {
   const metadata = parseJsonObject(input, 'x402 discovery metadata');
   if (!isRecord(metadata)) {
@@ -106,7 +114,7 @@ function parseX402DiscoveryMetadata(input) {
     x402.resourceUrl,
     envelope.resource,
     envelope.resourceUrl,
-  ]));
+  ])) || firstPaymentRequirementResource(paymentRequirements);
 
   return {
     schemaVersion: X402_DISCOVERY_SCHEMA_VERSION,
@@ -129,7 +137,7 @@ function buildX402EvidenceLookup(input, opts = {}) {
     protocol: 'x402',
     source: {
       kind: opts.sourceKind || 'x402-discovery-metadata',
-      url: opts.sourceUrl || discovery.endpoint,
+      url: opts.sourceUrl || discovery.endpoint || discovery.resource,
     },
     resource: discovery.resource,
     paymentRequired: discovery.paymentRequired,
