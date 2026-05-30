@@ -106,6 +106,10 @@ npm run ci validates committed IDLs, syntax-checks client sources, verifies the
 public export surface, runs a clean external-consumer install smoke test, and
 runs the offline SDK/Borsh tests.
 
+RC-S6 conformance fixture planning is tracked in
+`docs/conformance.md`. The current plan is fixture-first and offline; executable
+conformance fixtures remain pending until assigned separately.
+
 This package task does not publish to npm, deploy Solana programs, write to
 mainnet/devnet, read or move keypairs, change AgentFolio product code, perform
 client work, or make public announcements.
