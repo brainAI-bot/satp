@@ -1,0 +1,45 @@
+{
+  "fixtureVersion": "satp.rc-s6.fixture.v1",
+  "specRefs": [
+    "SPEC.md:96-119",
+    "SPEC.md:141-183",
+    "SPEC.md:186-205",
+    "SPEC.md:333-350",
+    "SPEC.md:354-400",
+    "SPEC.md:478-493"
+  ],
+  "id": "escrow-reference-boundary",
+  "description": "Escrow reference proves RC-S6 conformance does not imply escrow activation or value-bearing readiness.",
+  "expected": {
+    "verdict": "warning",
+    "details": [
+      "escrowReferenceBoundaryExplicit",
+      "noEscrowActivation"
+    ]
+  },
+  "record": {
+    "schemaVersion": "satp.escrowReference.v1",
+    "recordType": "escrow-reference-boundary",
+    "network": "devnet",
+    "subjectIdentity": {
+      "agentId": "rc-s6-fixture-agent",
+      "agentIdHash": "6dc0a0a47a40224b9dee426b29cf4b7842a907b005a1f23ecaf35e381e80294f",
+      "genesisPda": "3L1hQV51pJGbhv6ie1aYVZ8T719PUtNGxRMxUJLkc5cY"
+    },
+    "payer": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG",
+    "escrowPda": "7bKvQVPTiBM3TP1fbRB2iFmkNJ4EnW2WfUcbDygyUqJm",
+    "escrowBump": 254,
+    "descriptionHash": "322bf7a8c7cd0222c352577ce6bf4f7b5f08dccc1bf8585cd1dcf0386351cbb8",
+    "nonce": 42,
+    "state": "reference_only",
+    "valueBearingReady": false,
+    "amount": null,
+    "mint": null,
+    "uncertaintyStatus": "rc-s6-boundary",
+    "uncertaintyNote": "Fixture is read-only evidence of PDA/reference semantics only.",
+    "programs": {
+      "escrow": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C"
+    }
+  }
+}
+

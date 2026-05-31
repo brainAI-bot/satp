@@ -1,0 +1,57 @@
+{
+  "fixtureVersion": "satp.rc-s6.fixture.v1",
+  "specRefs": [
+    "SPEC.md:96-119",
+    "SPEC.md:141-183",
+    "SPEC.md:186-205",
+    "SPEC.md:333-350",
+    "SPEC.md:354-400",
+    "SPEC.md:478-493"
+  ],
+  "id": "attestation-positive",
+  "description": "Valid active attestation with supported claim type, issuer trust class, evidence hash, and PDA.",
+  "expected": {
+    "verdict": "pass",
+    "details": [
+      "schemaVersion",
+      "network",
+      "subjectIdentity",
+      "attestationPda",
+      "issuerTrustClass",
+      "claimType",
+      "evidenceHash",
+      "freshness"
+    ]
+  },
+  "record": {
+    "schemaVersion": "satp.attestation.v1",
+    "recordType": "attestation",
+    "network": "devnet",
+    "attestationId": "FgUPnA4cQ2aLvFe7FFDT1DU2WU6A1EwodTDYFFqepUf4",
+    "issuer": "9xQeWvG816bUx9EPf3q2w7Sc4pTCK2n12u3Zmd4Mx2f",
+    "issuerTrustClass": "partner",
+    "subjectIdentity": {
+      "agentId": "rc-s6-fixture-agent",
+      "agentIdHash": "6dc0a0a47a40224b9dee426b29cf4b7842a907b005a1f23ecaf35e381e80294f",
+      "genesisPda": "3L1hQV51pJGbhv6ie1aYVZ8T719PUtNGxRMxUJLkc5cY"
+    },
+    "subjectWallet": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG",
+    "claimType": "github_verified",
+    "canonicalClaimType": "identity.github_verified",
+    "claimValue": "github:brainai/rc-s6-fixture",
+    "evidenceHash": "414f0c9b1ded7a0636e2215c93d37b91c247592f4319d3ff302cd1085bbac710",
+    "metadataHash": "414f0c9b1ded7a0636e2215c93d37b91c247592f4319d3ff302cd1085bbac710",
+    "issuedAt": 1748739600,
+    "expiresAt": 1893456000,
+    "revokedAt": null,
+    "status": "active",
+    "pda": {
+      "attestation": "FgUPnA4cQ2aLvFe7FFDT1DU2WU6A1EwodTDYFFqepUf4",
+      "attestationBump": 255
+    },
+    "programs": {
+      "attestations": "6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD"
+    }
+  }
+}
+

@@ -1,0 +1,49 @@
+{
+  "fixtureVersion": "satp.rc-s6.fixture.v1",
+  "specRefs": [
+    "SPEC.md:96-119",
+    "SPEC.md:141-183",
+    "SPEC.md:186-205",
+    "SPEC.md:333-350",
+    "SPEC.md:354-400",
+    "SPEC.md:478-493"
+  ],
+  "id": "linked-account-positive",
+  "description": "Valid linked Solana wallet proof bound to the same SATP identity subject.",
+  "expected": {
+    "verdict": "pass",
+    "details": [
+      "schemaVersion",
+      "network",
+      "subjectIdentity",
+      "linkedWalletPda",
+      "proofHash",
+      "issuerTrustClass"
+    ]
+  },
+  "record": {
+    "schemaVersion": "satp.linkedAccount.v1",
+    "recordType": "linked-account",
+    "network": "devnet",
+    "subjectIdentity": {
+      "agentId": "rc-s6-fixture-agent",
+      "agentIdHash": "6dc0a0a47a40224b9dee426b29cf4b7842a907b005a1f23ecaf35e381e80294f",
+      "genesisPda": "3L1hQV51pJGbhv6ie1aYVZ8T719PUtNGxRMxUJLkc5cY"
+    },
+    "accountKind": "solana_wallet",
+    "accountRef": "Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc",
+    "proofHash": "b94b9a4486e6f5c134d2f0dd54a65b4ee427b9b95a684e34ec3f31ebadcbba45",
+    "issuer": "9xQeWvG816bUx9EPf3q2w7Sc4pTCK2n12u3Zmd4Mx2f",
+    "issuerTrustClass": "platform",
+    "expiresAt": 1893456000,
+    "enabled": true,
+    "pda": {
+      "linkedWallet": "8e5H8euuvzg9nd8TMJn2GxszH2Hvn76S64sY6Z5Pt7Ss",
+      "linkedWalletBump": 254
+    },
+    "programs": {
+      "identity": "GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG"
+    }
+  }
+}
+

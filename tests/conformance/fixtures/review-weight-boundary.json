@@ -1,0 +1,47 @@
+{
+  "fixtureVersion": "satp.rc-s6.fixture.v1",
+  "specRefs": [
+    "SPEC.md:96-119",
+    "SPEC.md:141-183",
+    "SPEC.md:186-205",
+    "SPEC.md:333-350",
+    "SPEC.md:354-400",
+    "SPEC.md:478-493"
+  ],
+  "id": "review-weight-boundary",
+  "description": "Review input reaches an RC-S6 uncertainty boundary and must not silently inflate trust.",
+  "expected": {
+    "verdict": "warning",
+    "details": [
+      "reviewWeightBoundaryExplicit",
+      "noValidationPromotion"
+    ]
+  },
+  "record": {
+    "schemaVersion": "satp.reviewWeightInput.v1",
+    "recordType": "review-weight-boundary",
+    "network": "devnet",
+    "subjectIdentity": {
+      "agentId": "rc-s6-fixture-agent",
+      "agentIdHash": "6dc0a0a47a40224b9dee426b29cf4b7842a907b005a1f23ecaf35e381e80294f",
+      "genesisPda": "3L1hQV51pJGbhv6ie1aYVZ8T719PUtNGxRMxUJLkc5cY"
+    },
+    "reviewer": "Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc",
+    "reviewPda": "7zGN3FxvDkQ4zpPKH9b7EEFCVRkVg9MkE2msbD8WdAmm",
+    "reviewBump": 254,
+    "reviewScore": 5,
+    "reviewWeight": 100,
+    "formulaVersion": "rc-s6-boundary",
+    "inputRefs": [
+      "attestation-positive"
+    ],
+    "proposedValidationLevel": 4,
+    "uncertaintyStatus": "rc-s6-boundary",
+    "uncertaintyNote": "Single review input is evidence, not a release-final trust promotion.",
+    "descriptionHash": "667e0e4dd58df2124755ac18c626d3b20a6ae82139967b369c601be94bd411ba",
+    "programs": {
+      "reviews": "r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4"
+    }
+  }
+}
+

@@ -1,0 +1,51 @@
+{
+  "fixtureVersion": "satp.rc-s6.fixture.v1",
+  "specRefs": [
+    "SPEC.md:96-119",
+    "SPEC.md:141-183",
+    "SPEC.md:186-205",
+    "SPEC.md:333-350",
+    "SPEC.md:354-400",
+    "SPEC.md:478-493"
+  ],
+  "id": "identity-stale",
+  "description": "Previously valid identity that is outside the RC-S6 freshness and compatibility window.",
+  "expected": {
+    "verdict": "fail",
+    "details": [
+      "stale",
+      "schemaCompatibility"
+    ]
+  },
+  "record": {
+    "schemaVersion": "satp.identity.v1",
+    "recordType": "identity",
+    "network": "devnet",
+    "identityId": "3L1hQV51pJGbhv6ie1aYVZ8T719PUtNGxRMxUJLkc5cY",
+    "agentId": "rc-s6-fixture-agent",
+    "agentIdHash": "6dc0a0a47a40224b9dee426b29cf4b7842a907b005a1f23ecaf35e381e80294f",
+    "authority": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG",
+    "primaryWallet": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG",
+    "metadataHash": "414f0c9b1ded7a0636e2215c93d37b91c247592f4319d3ff302cd1085bbac710",
+    "status": "active",
+    "createdAt": 1748736000,
+    "updatedAt": 1748739600,
+    "freshness": {
+      "checkedAt": 1767139200,
+      "notAfter": 1704067200
+    },
+    "schemaCompatibility": {
+      "reader": "rc-s6",
+      "minReaderVersion": "pre-rc-s6"
+    },
+    "pda": {
+      "genesis": "3L1hQV51pJGbhv6ie1aYVZ8T719PUtNGxRMxUJLkc5cY",
+      "genesisBump": 255
+    },
+    "programs": {
+      "identity": "GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG"
+    },
+    "stalenessReason": "fixture intentionally predates the RC-S6 compatibility window"
+  }
+}
+

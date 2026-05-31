@@ -1,6 +1,6 @@
 # SATP RC-S6 Conformance Fixture Test Plan
 
-Status: draft for RC-S6 review
+Status: executable fixture suite added for RC-S6 review
 
 This plan defines the fixture-first conformance gate for RC-S6. It proves that a
 third-party consumer can verify SATP identity, linked accounts, attestations,
@@ -22,8 +22,8 @@ public launch work, or token work.
 
 ## Fixture Set
 
-The future executable conformance suite should keep fixtures under
-`tests/conformance/fixtures/` and treat those files as the review artifact.
+The executable conformance suite keeps fixtures under
+`tests/conformance/fixtures/` and treats those files as the review artifact.
 
 | Fixture | Expected verdict | Purpose |
 | --- | --- | --- |
@@ -54,10 +54,9 @@ Executable tests should assert:
 6. Consumer examples can load conformance fixtures without importing AgentFolio
    product code or depending on AgentFolio APIs.
 
-## Proposed Test Layout
+## Test Layout
 
-Future implementation PRs should add the executable gate without changing this
-phase's non-actions:
+The executable gate is offline and does not change this phase's non-actions:
 
 ```text
 tests/conformance/
@@ -75,9 +74,15 @@ tests/conformance/
   rc-s6-fixtures.test.js
 ```
 
-The test runner should be wired to a new offline npm script, then included in
-`npm run ci:offline-with-examples` only after the fixtures and assertions are
-reviewed.
+Run the conformance gate directly:
+
+```bash
+npm run test:conformance:rc-s6
+```
+
+The root offline CI now includes this gate through `npm run ci`. The expanded
+example gate `npm run ci:offline-with-examples` also runs it because that
+command starts with `npm run ci`.
 
 ## Evidence Required For RC-S6
 
@@ -96,5 +101,8 @@ An RC-S6 conformance evidence packet should include:
 
 ## Current RC-S6 Status
 
-This document is the test plan only. The executable fixture suite remains
-pending until HQ assigns implementation work for `tests/conformance/`.
+The executable fixture suite is present under `tests/conformance/` and wired
+to the offline CI path. Remaining RC-S6 release review should still treat issuer
+authority, stale/revoked evidence, unsupported issuers, score meaning, review
+weight, escrow references, and AgentFolio consumer copy boundaries as explicit
+uncertainty areas until separate release approval closes them.
