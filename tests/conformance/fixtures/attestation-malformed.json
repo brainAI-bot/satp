@@ -1,0 +1,53 @@
+{
+  "fixtureVersion": "satp.rc-s6.fixture.v1",
+  "specRefs": [
+    "SPEC.md:96-119",
+    "SPEC.md:141-183",
+    "SPEC.md:186-205",
+    "SPEC.md:333-350",
+    "SPEC.md:354-400",
+    "SPEC.md:478-493"
+  ],
+  "id": "attestation-malformed",
+  "description": "Malformed attestation with invalid schema, wallet, hash, subject linkage, and PDA.",
+  "expected": {
+    "verdict": "fail",
+    "details": [
+      "schemaVersion",
+      "subjectIdentity",
+      "attestationPda",
+      "evidenceHash"
+    ]
+  },
+  "record": {
+    "schemaVersion": "satp.attestation.v0",
+    "recordType": "attestation",
+    "network": "devnet",
+    "attestationId": "FgUPnA4cQ2aLvFe7FFDT1DU2WU6A1EwodTDYFFqepUf4",
+    "issuer": "9xQeWvG816bUx9EPf3q2w7Sc4pTCK2n12u3Zmd4Mx2f",
+    "issuerTrustClass": "partner",
+    "subjectIdentity": {
+      "agentId": "rc-s6-fixture-agent",
+      "agentIdHash": "not-a-hash",
+      "genesisPda": "FgUPnA4cQ2aLvFe7FFDT1DU2WU6A1EwodTDYFFqepUf4"
+    },
+    "subjectWallet": "not-a-solana-wallet",
+    "claimType": "github_verified",
+    "canonicalClaimType": "identity.github_verified",
+    "claimValue": "github:brainai/rc-s6-fixture",
+    "evidenceHash": "abc",
+    "metadataHash": "abc",
+    "issuedAt": 1748739600,
+    "expiresAt": 1893456000,
+    "revokedAt": null,
+    "status": "active",
+    "pda": {
+      "attestation": "3L1hQV51pJGbhv6ie1aYVZ8T719PUtNGxRMxUJLkc5cY",
+      "attestationBump": 255
+    },
+    "programs": {
+      "attestations": "6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD"
+    }
+  }
+}
+
