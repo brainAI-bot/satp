@@ -150,15 +150,10 @@ const sdkDevnetString = new SATPV3SDK('devnet');
 assert(sdkDevnetString.network === 'devnet', 'SDK string devnet maps to devnet network');
 assert(sdkDevnetString.rpcUrl === 'https://api.devnet.solana.com', 'SDK string devnet maps to default RPC URL');
 
-try {
-  new SATPV3SDK('mainnet');
-  assert(false, 'SDK string mainnet fails closed until V3 mainnet program IDs are approved');
-} catch (err) {
-  assert(
-    /SATP V3 mainnet program IDs are not configured/.test(err.message),
-    'SDK string mainnet fails closed until V3 mainnet program IDs are approved'
-  );
-}
+const sdkMainnetString = new SATPV3SDK('mainnet');
+assert(sdkMainnetString.network === 'mainnet', 'SDK string mainnet maps to mainnet network');
+assert(sdkMainnetString.rpcUrl === 'https://api.mainnet-beta.solana.com', 'SDK string mainnet maps to default RPC URL');
+assert(sdkMainnetString.programIds.IDENTITY.toBase58() === 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG', 'SDK string mainnet uses executable V3 program IDs');
 
 const customRpcUrl = 'https://example-rpc.invalid';
 const sdkCustomRpc = new SATPV3SDK(customRpcUrl);

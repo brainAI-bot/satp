@@ -1,6 +1,6 @@
 const { PublicKey } = require('@solana/web3.js');
 
-// SATP v2 Program IDs — Devnet
+// SATP v2 Program IDs — Devnet-only compatibility surface
 const DEVNET_PROGRAM_IDS = {
   IDENTITY: new PublicKey('EJtQh4Gyg88zXvSmFpxYkkeZsPwTsjfm4LvjmPQX1FD3'),
   REVIEWS: new PublicKey('D8HsSpK3JtAN7tVcA1yfgxScju7KcG6skEfaShSKojki'),
@@ -10,14 +10,14 @@ const DEVNET_PROGRAM_IDS = {
   ESCROW: new PublicKey('UpJ7jmUzHkQ7EdBKiBv3zq8Dr1fVh6GVWKa7nYtwQ22'),
 };
 
-// SATP v2 Program IDs — Mainnet
+// SATP V3 Program IDs — Mainnet executable programs
 const MAINNET_PROGRAM_IDS = {
-  IDENTITY: new PublicKey('97yL33fcu6iWT2TdERS5HeqrMSGiUnxuy6nUcTrKieSq'),
-  REVIEWS: new PublicKey('Ge1sD2qwmH8QaaKCPZzZERvsFXNVMvKbAgTp2p17yjLK'),
-  REPUTATION: new PublicKey('C9ogv8TBrvFy4pLKDoGQg9B73Q5rKPPsQ4kzkcDk6Jd'),
-  ATTESTATIONS: new PublicKey('ENvaD19QzwWWMJFu5r5xJ9SmHqWN6GvyzxACRejqbdug'),
-  VALIDATION: new PublicKey('9p795d2j3eGqzborG2AncucWBaU6PieKxmhKVroV3LNh'),
-  ESCROW: null,
+  IDENTITY: new PublicKey('GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG'),
+  REVIEWS: new PublicKey('r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4'),
+  REPUTATION: new PublicKey('2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ'),
+  ATTESTATIONS: new PublicKey('6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD'),
+  VALIDATION: new PublicKey('6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV'),
+  ESCROW: new PublicKey('HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C'),
 };
 
 const MAINNET_RPC = 'https://api.mainnet-beta.solana.com';

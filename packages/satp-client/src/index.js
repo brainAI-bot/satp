@@ -606,9 +606,7 @@ class SATPSDK {
       hashBuf,
     ]);
 
-    // Identity program ID (hardcoded in Reviews V3 program)
-    const IDENTITY_PROGRAM = new PublicKey('EJtQh4Gyg88zXvSmFpxYkkeZsPwTsjfm4LvjmPQX1FD3');
-    // Escrow program ID
+    const IDENTITY_PROGRAM = this.programIds.IDENTITY;
     const ESCROW_PROGRAM = this.programIds.ESCROW;
 
     const ix = new TransactionInstruction({

@@ -46,26 +46,21 @@ assert.throws(
   /Mainnet RPC requires network=mainnet/
 );
 
-assert.throws(
-  () => createSATPClient({ network: 'mainnet', rpcUrl: MAINNET_RPC }),
-  /SATP V3 mainnet program IDs are not configured/
-);
+const explicitMainnet = createSATPClient({ network: 'mainnet', rpcUrl: MAINNET_RPC });
+assert.equal(explicitMainnet.network, 'mainnet');
+assert.equal(explicitMainnet.rpcUrl, MAINNET_RPC);
 assert.throws(
   () => new SATPV3SDK({ rpcUrl: MAINNET_RPC }),
   /Mainnet RPC requires network=mainnet/
 );
-assert.throws(
-  () => new SATPV3SDK({ network: 'mainnet' }),
-  /SATP V3 mainnet program IDs are not configured/
-);
-assert.throws(
-  () => new SATPV3SDK('mainnet'),
-  /SATP V3 mainnet program IDs are not configured/
-);
-assert.throws(
-  () => getV3ProgramIds('mainnet'),
-  /SATP V3 mainnet program IDs are not configured/
-);
+const v3Mainnet = new SATPV3SDK({ network: 'mainnet' });
+assert.equal(v3Mainnet.network, 'mainnet');
+assert.equal(v3Mainnet.rpcUrl, MAINNET_RPC);
+const v3MainnetString = new SATPV3SDK('mainnet');
+assert.equal(v3MainnetString.network, 'mainnet');
+const v3MainnetIds = getV3ProgramIds('mainnet');
+assert.equal(v3MainnetIds.IDENTITY.toBase58(), 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG');
+assert.equal(v3MainnetIds.ESCROW.toBase58(), 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C');
 
 const v2Default = new SATPSDK();
 assert.equal(v2Default.network, 'devnet');
@@ -76,11 +71,10 @@ assert.equal(v2Custom.network, 'devnet');
 assert.equal(v2Custom.rpcUrl, CUSTOM_RPC);
 
 const v2MainnetIds = getProgramIds('mainnet');
-assert.equal(v2MainnetIds.ESCROW, null);
-assert.throws(
-  () => getEscrowPDA('11111111111111111111111111111112', Buffer.alloc(32), 'mainnet'),
-  /mainnet escrow program ID is not configured/
-);
+assert.equal(v2MainnetIds.IDENTITY.toBase58(), v3MainnetIds.IDENTITY.toBase58());
+assert.equal(v2MainnetIds.ESCROW.toBase58(), v3MainnetIds.ESCROW.toBase58());
+const [mainnetEscrowPda] = getEscrowPDA('11111111111111111111111111111112', Buffer.alloc(32), 'mainnet');
+assert.equal(typeof mainnetEscrowPda.toBase58(), 'string');
 
 for (const [name, value] of Object.entries({
   buildWalletControlChallenge,

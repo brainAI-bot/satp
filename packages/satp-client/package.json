@@ -29,6 +29,7 @@
     "test": "node test.js",
     "test:runtime-policy": "node --test test-runtime-policy-adapter.js",
     "runtime-policy:example": "node examples/runtime-policy-adapter.js",
+    "test:mainnet-program-ids": "node test-mainnet-program-ids.js",
     "test:wallet-control": "node test-wallet-control-challenge.js",
     "test:x402-discovery": "node test-x402-discovery.js",
     "check:exports": "node test-release-safety.js"

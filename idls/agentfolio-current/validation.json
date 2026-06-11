@@ -1,5 +1,5 @@
 {
-  "address": "8jLaqodAzfM7oCxP7aedFeszeNjnJ5ik56dzhDU2HQgc",
+  "address": "6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV",
   "metadata": {
     "name": "validation",
     "version": "0.1.0",
@@ -100,7 +100,7 @@
           "docs": [
             "The Identity Registry program for CPI"
           ],
-          "address": "EJtQh4Gyg88zXvSmFpxYkkeZsPwTsjfm4LvjmPQX1FD3"
+          "address": "GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG"
         },
         {
           "name": "caller",
