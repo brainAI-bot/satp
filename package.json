@@ -13,6 +13,7 @@
     "lint:roadmap": "node scripts/lint-roadmap.js",
     "validate:idls": "python3 scripts/validate-idls.py",
     "pack:satp-client": "mkdir -p dist && npm pack ./packages/satp-client --pack-destination dist",
+    "check:satp-client-health": "node scripts/check-satp-client-package-health.js",
     "check:js": "find packages/satp-client/src -name '*.js' -type f -print0 | xargs -0 -n1 node --check",
     "check:exports": "node scripts/check-exports.js",
     "smoke:consumer-install": "node scripts/smoke-clean-consumer-install.js",
@@ -67,7 +68,7 @@
     "bs58": "^6.0.0"
   },
   "overrides": {
-    "ws": "^8.20.1",
+    "ws": "^8.21.0",
     "jayson": {
       "uuid": "^11.1.1"
     }
