@@ -96,7 +96,13 @@ export type RuntimePolicyDecision =
   | 'needs_approval';
 
 export interface RuntimePolicyIdentityPayload {
+  agentId?: string;
+  profileId?: string;
   active?: boolean;
+  revoked?: boolean;
+  status?: string;
+  issuer?: string;
+  attestationIssuer?: string;
   satpVerified?: boolean;
   verified?: boolean;
   agentFolioTrustScore?: number;
@@ -129,6 +135,7 @@ export interface RuntimePolicyConfig {
   maxAutoSpendUsd?: number;
   requireVerifiedIdentity?: boolean;
   staleEvidenceAfterMs?: number;
+  allowedIssuers?: string[];
 }
 
 export interface RuntimePolicyOptions {

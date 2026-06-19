@@ -25,6 +25,7 @@ const result = evaluateRuntimePolicy(identityPayload, actionDescriptor, {
     maxAutoSpendUsd: 0,
     requireVerifiedIdentity: true,
     staleEvidenceAfterMs: 604800000,
+    allowedIssuers: ['satp.fixture.local', 'agentfolio.fixture.local', 'mcp.fixture.local'],
   },
 });
 ~~~
@@ -35,6 +36,7 @@ Input identity payload:
 {
   "agentId": "brainchain-demo",
   "active": true,
+  "issuer": "satp.fixture.local",
   "satpVerified": true,
   "agentFolioTrustScore": 88,
   "capabilities": ["mcp:deploy-readiness", "agentfolio:trust-read"],
@@ -80,11 +82,14 @@ Output:
 ## Reason codes
 
 - IDENTITY_INACTIVE: the identity is disabled locally.
+- IDENTITY_REVOKED: local SATP/AgentFolio evidence marks the identity revoked.
 - IDENTITY_UNVERIFIED: verified identity is required, but missing.
+- MALFORMED_INPUT: the identity or action descriptor is missing required fixture fields.
 - MISSING_CAPABILITY: the action requires a capability not present in the identity payload.
 - TRUST_SCORE_BELOW_DENY_FLOOR: AgentFolio trust score is below the local deny floor.
 - TRUST_SCORE_BELOW_MINIMUM: AgentFolio trust score is below the action or policy minimum.
 - TRUST_SCORE_OK: AgentFolio trust score meets the local threshold.
+- UNSUPPORTED_ISSUER: the identity issuer is outside the local allowed issuer list.
 - EVIDENCE_FRESH: local evidence is within the freshness window.
 - EVIDENCE_STALE_OR_MISSING: local evidence is absent or stale.
 - X402_LOOKUP_REQUIRES_APPROVAL: a paid x402 lookup path exists, but payment approval is not present.
@@ -130,6 +135,24 @@ evaluateRuntimePolicy({ ...identity, agentFolioTrustScore: 62 }, {
   type: 'agentfolio_trust_gate',
   minimumTrustScore: 80,
   allowDegraded: true,
+});
+~~~
+
+Revoked, malformed, and unsupported issuer inputs fail closed before allow, degrade, needs_approval, or payment-related paths:
+
+~~~js
+evaluateRuntimePolicy({ ...identity, revoked: true }, {
+  type: 'agentfolio_trust_gate',
+});
+
+evaluateRuntimePolicy({ active: true, satpVerified: true }, {
+  type: 'agentfolio_trust_gate',
+});
+
+evaluateRuntimePolicy({ ...identity, issuer: 'unknown.example' }, {
+  type: 'agentfolio_trust_gate',
+}, {
+  policy: { allowedIssuers: ['satp.fixture.local'] },
 });
 ~~~
 

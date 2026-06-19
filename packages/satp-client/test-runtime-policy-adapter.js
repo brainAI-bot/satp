@@ -11,6 +11,7 @@ const {
 const baseIdentity = {
   agentId: 'brainchain-test',
   active: true,
+  issuer: 'satp.fixture.local',
   satpVerified: true,
   agentFolioTrustScore: 85,
   capabilities: ['mcp:read', 'agentfolio:trust-read'],
@@ -43,6 +44,69 @@ test('denies inactive identities before checking action details', () => {
 
   assert.equal(result.decision, DECISIONS.DENY);
   assert.deepEqual(result.reasonCodes, [REASON_CODES.IDENTITY_INACTIVE]);
+});
+
+test('denies revoked identity evidence before trust or action checks', () => {
+  const result = evaluateRuntimePolicy(
+    { ...baseIdentity, revoked: true, agentFolioTrustScore: 100 },
+    {
+      type: 'agentfolio_trust_gate',
+      minimumTrustScore: 75,
+      allowDegraded: true,
+    }
+  );
+
+  assert.equal(result.decision, DECISIONS.DENY);
+  assert.deepEqual(result.reasonCodes, [REASON_CODES.IDENTITY_REVOKED]);
+  assert.equal(result.checks.identityRevoked, true);
+  assert.ok(!result.reasonCodes.includes(REASON_CODES.LOCAL_POLICY_ALLOW));
+});
+
+test('denies malformed identity or action fixture input', () => {
+  const malformedCases = [
+    {
+      name: 'missing identity subject',
+      identity: { active: true, issuer: 'satp.fixture.local', satpVerified: true },
+      action: { type: 'agentfolio_trust_gate' },
+    },
+    {
+      name: 'missing action type',
+      identity: baseIdentity,
+      action: { minimumTrustScore: 75 },
+    },
+    {
+      name: 'null identity',
+      identity: null,
+      action: { type: 'agentfolio_trust_gate' },
+    },
+    {
+      name: 'null action',
+      identity: baseIdentity,
+      action: null,
+    },
+  ];
+
+  for (const item of malformedCases) {
+    const result = evaluateRuntimePolicy(item.identity, item.action);
+
+    assert.equal(result.decision, DECISIONS.DENY, item.name);
+    assert.deepEqual(result.reasonCodes, [REASON_CODES.MALFORMED_INPUT], item.name);
+    assert.equal(result.checks.inputWellFormed, false, item.name);
+    assert.ok(!result.reasonCodes.includes(REASON_CODES.LOCAL_POLICY_ALLOW), item.name);
+  }
+});
+
+test('denies unsupported issuers by local allow-list', () => {
+  const result = evaluateRuntimePolicy(
+    { ...baseIdentity, issuer: 'unknown.example' },
+    { type: 'agentfolio_trust_gate' },
+    { policy: { allowedIssuers: ['satp.fixture.local'] } }
+  );
+
+  assert.equal(result.decision, DECISIONS.DENY);
+  assert.deepEqual(result.reasonCodes, [REASON_CODES.UNSUPPORTED_ISSUER]);
+  assert.equal(result.checks.issuerSupported, false);
+  assert.ok(!result.reasonCodes.includes(REASON_CODES.LOCAL_POLICY_ALLOW));
 });
 
 test('degrades when trust score is below action minimum and degraded mode is allowed', () => {

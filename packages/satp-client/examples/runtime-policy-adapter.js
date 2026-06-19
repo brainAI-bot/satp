@@ -6,6 +6,7 @@ const { evaluateRuntimePolicy } = require('..');
 const trustedIdentity = {
   agentId: 'brainchain-demo',
   active: true,
+  issuer: 'satp.fixture.local',
   satpVerified: true,
   agentFolioTrustScore: 88,
   capabilities: ['mcp:deploy-readiness', 'agentfolio:trust-read'],
@@ -22,6 +23,9 @@ const examples = [
       operation: 'read',
       requiresCapability: 'mcp:deploy-readiness',
       requiresFreshEvidence: true,
+    },
+    options: {
+      now: '2026-05-21T00:00:00Z',
     },
   },
   {

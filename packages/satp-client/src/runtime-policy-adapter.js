@@ -13,14 +13,17 @@ const REASON_CODES = Object.freeze({
   EVIDENCE_FRESH: 'EVIDENCE_FRESH',
   EVIDENCE_STALE_OR_MISSING: 'EVIDENCE_STALE_OR_MISSING',
   IDENTITY_INACTIVE: 'IDENTITY_INACTIVE',
+  IDENTITY_REVOKED: 'IDENTITY_REVOKED',
   IDENTITY_UNVERIFIED: 'IDENTITY_UNVERIFIED',
   INVALID_ACTION_COST_USD: 'INVALID_ACTION_COST_USD',
   LOCAL_POLICY_ALLOW: 'LOCAL_POLICY_ALLOW',
+  MALFORMED_INPUT: 'MALFORMED_INPUT',
   MISSING_CAPABILITY: 'MISSING_CAPABILITY',
   PROTECTED_TOOL_REQUIRES_APPROVAL: 'PROTECTED_TOOL_REQUIRES_APPROVAL',
   TRUST_SCORE_BELOW_DENY_FLOOR: 'TRUST_SCORE_BELOW_DENY_FLOOR',
   TRUST_SCORE_BELOW_MINIMUM: 'TRUST_SCORE_BELOW_MINIMUM',
   TRUST_SCORE_OK: 'TRUST_SCORE_OK',
+  UNSUPPORTED_ISSUER: 'UNSUPPORTED_ISSUER',
   X402_LOOKUP_PAYMENT_PREAPPROVED: 'X402_LOOKUP_PAYMENT_PREAPPROVED',
   X402_LOOKUP_REQUIRES_APPROVAL: 'X402_LOOKUP_REQUIRES_APPROVAL',
   X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION: 'X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION',
@@ -32,6 +35,11 @@ const DEFAULT_POLICY = Object.freeze({
   maxAutoSpendUsd: 0,
   requireVerifiedIdentity: true,
   staleEvidenceAfterMs: 7 * 24 * 60 * 60 * 1000,
+  allowedIssuers: [
+    'satp.fixture.local',
+    'agentfolio.fixture.local',
+    'mcp.fixture.local',
+  ],
 });
 
 function evaluateRuntimePolicy(identityPayload, actionDescriptor, options = {}) {
@@ -42,10 +50,28 @@ function evaluateRuntimePolicy(identityPayload, actionDescriptor, options = {}) 
   const reasonCodes = [];
   const checks = {};
 
+  checks.inputWellFormed = identity.inputWellFormed && action.inputWellFormed;
+  if (!checks.inputWellFormed) {
+    reasonCodes.push(REASON_CODES.MALFORMED_INPUT);
+    return decision(DECISIONS.DENY, reasonCodes, checks, 'Identity or action input is malformed.');
+  }
+
   checks.identityActive = identity.active === true;
   if (!checks.identityActive) {
     reasonCodes.push(REASON_CODES.IDENTITY_INACTIVE);
     return decision(DECISIONS.DENY, reasonCodes, checks, 'Identity is not active.');
+  }
+
+  checks.identityRevoked = identity.revoked === true;
+  if (checks.identityRevoked) {
+    reasonCodes.push(REASON_CODES.IDENTITY_REVOKED);
+    return decision(DECISIONS.DENY, reasonCodes, checks, 'Identity evidence has been revoked.');
+  }
+
+  checks.issuerSupported = isIssuerSupported(identity.issuer, policy.allowedIssuers);
+  if (!checks.issuerSupported) {
+    reasonCodes.push(REASON_CODES.UNSUPPORTED_ISSUER);
+    return decision(DECISIONS.DENY, reasonCodes, checks, 'Identity issuer is not supported by local policy.');
   }
 
   checks.identityVerified = !policy.requireVerifiedIdentity || identity.verified === true;
@@ -142,30 +168,39 @@ function decision(value, reasonCodes, checks, message) {
 }
 
 function normalizeIdentity(identity = {}) {
+  const source = isPlainObject(identity) ? identity : {};
+  const inputWellFormed = Boolean(source.agentId || source.profileId);
+
   return {
-    agentId: identity.agentId || identity.profileId || null,
-    active: identity.active !== false,
-    verified: identity.verified === true || identity.satpVerified === true,
-    trustScore: clampScore(identity.trustScore ?? identity.agentFolioTrustScore ?? 0),
-    capabilities: Array.isArray(identity.capabilities) ? identity.capabilities.slice() : [],
-    evidenceUpdatedAt: identity.evidenceUpdatedAt || identity.lastEvidenceAt || null,
+    inputWellFormed,
+    agentId: source.agentId || source.profileId || null,
+    active: source.active !== false,
+    revoked: source.revoked === true || source.status === 'revoked',
+    verified: source.verified === true || source.satpVerified === true,
+    issuer: source.issuer || source.attestationIssuer || null,
+    trustScore: clampScore(source.trustScore ?? source.agentFolioTrustScore ?? 0),
+    capabilities: Array.isArray(source.capabilities) ? source.capabilities.slice() : [],
+    evidenceUpdatedAt: source.evidenceUpdatedAt || source.lastEvidenceAt || null,
   };
 }
 
 function normalizeAction(action = {}) {
-  const parsedCost = parseActionCostUsd(action);
+  const source = isPlainObject(action) ? action : {};
+  const parsedCost = parseActionCostUsd(source);
+  const inputWellFormed = Boolean(source.type);
 
   return {
-    type: action.type || 'generic',
-    resource: action.resource || null,
-    operation: action.operation || null,
-    requiresCapability: action.requiresCapability || null,
-    minimumTrustScore: Number.isFinite(action.minimumTrustScore) ? action.minimumTrustScore : null,
-    allowDegraded: action.allowDegraded === true,
-    requiresFreshEvidence: action.requiresFreshEvidence === true,
-    evidenceLookup: action.evidenceLookup || null,
-    protectedTool: action.protectedTool === true || action.type === 'mcp_protected_tool',
-    operatorApprovalRequired: action.operatorApprovalRequired === true,
+    inputWellFormed,
+    type: source.type || 'generic',
+    resource: source.resource || null,
+    operation: source.operation || null,
+    requiresCapability: source.requiresCapability || null,
+    minimumTrustScore: Number.isFinite(source.minimumTrustScore) ? source.minimumTrustScore : null,
+    allowDegraded: source.allowDegraded === true,
+    requiresFreshEvidence: source.requiresFreshEvidence === true,
+    evidenceLookup: source.evidenceLookup || null,
+    protectedTool: source.protectedTool === true || source.type === 'mcp_protected_tool',
+    operatorApprovalRequired: source.operatorApprovalRequired === true,
     costUsd: parsedCost.value,
     costUsdValid: parsedCost.valid,
   };
@@ -196,6 +231,16 @@ function isEvidenceFresh(identity, policy, now) {
   const ageMs = now.getTime() - updatedAt.getTime();
   if (ageMs < 0) return false;
   return ageMs <= policy.staleEvidenceAfterMs;
+}
+
+function isIssuerSupported(issuer, allowedIssuers) {
+  if (!issuer) return true;
+  if (!Array.isArray(allowedIssuers) || allowedIssuers.length === 0) return true;
+  return allowedIssuers.includes(issuer);
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 module.exports = {
