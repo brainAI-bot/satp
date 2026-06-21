@@ -29,7 +29,7 @@ const {
 
 // ═══════════════════════════════════════════════════════
 //  PATTERN 1: Agent Identity Lookup (Read-Only)
-//  Use case: AgentFolio profile page, marketplace listings
+//  Use case: agent profile pages, marketplace listings
 // ═══════════════════════════════════════════════════════
 
 async function lookupAgent(agentId = 'brainChain') {

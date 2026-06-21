@@ -11,7 +11,7 @@
 
 ## 1. Core rule
 
-Production private key material must never enter the SATP repo, AgentFolio repo, HQ messages, reports, logs, screenshots, npm packages, or public PRs.
+Production private key material must never enter the SATP repo, downstream app repos, HQ messages, reports, logs, screenshots, npm packages, or public PRs.
 
 Only public keys and redacted evidence may be used for review.
 

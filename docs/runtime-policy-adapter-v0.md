@@ -36,8 +36,8 @@ Input identity payload:
   "agentId": "brainchain-demo",
   "active": true,
   "satpVerified": true,
-  "agentFolioTrustScore": 88,
-  "capabilities": ["mcp:deploy-readiness", "agentfolio:trust-read"],
+  "trustScore": 88,
+  "capabilities": ["mcp:deploy-readiness", "satp:trust-read"],
   "evidenceUpdatedAt": "2026-05-21T00:00:00Z"
 }
 ~~~
@@ -82,9 +82,9 @@ Output:
 - IDENTITY_INACTIVE: the identity is disabled locally.
 - IDENTITY_UNVERIFIED: verified identity is required, but missing.
 - MISSING_CAPABILITY: the action requires a capability not present in the identity payload.
-- TRUST_SCORE_BELOW_DENY_FLOOR: AgentFolio trust score is below the local deny floor.
-- TRUST_SCORE_BELOW_MINIMUM: AgentFolio trust score is below the action or policy minimum.
-- TRUST_SCORE_OK: AgentFolio trust score meets the local threshold.
+- TRUST_SCORE_BELOW_DENY_FLOOR: the local trust score is below the local deny floor.
+- TRUST_SCORE_BELOW_MINIMUM: the local trust score is below the action or policy minimum.
+- TRUST_SCORE_OK: the local trust score meets the local threshold.
 - EVIDENCE_FRESH: local evidence is within the freshness window.
 - EVIDENCE_STALE_OR_MISSING: local evidence is absent or stale.
 - X402_LOOKUP_REQUIRES_APPROVAL: a paid x402 lookup path exists, but payment approval is not present.
@@ -123,11 +123,12 @@ evaluateRuntimePolicy(identity, {
 });
 ~~~
 
-AgentFolio trust-score gate:
+Local trust-score gate:
 
 ~~~js
-evaluateRuntimePolicy({ ...identity, agentFolioTrustScore: 62 }, {
-  type: 'agentfolio_trust_gate',
+evaluateRuntimePolicy({ ...identity, trustScore: 62 }, {
+  type: 'satp_trust_gate',
+  resource: 'urn:satp:local-reputation:trust-score',
   minimumTrustScore: 80,
   allowDegraded: true,
 });
@@ -149,7 +150,11 @@ evaluateRuntimePolicy({ ...identity, evidenceUpdatedAt: null }, {
 
 ## Security note
 
-Policy decisions remain local to the host. SATP identity and AgentFolio trust signals are inputs to local policy, not blanket authorization. x402 payment grants lookup or endpoint access only; it does not authorize the agent action, bypass protected-tool approval, or replace host policy.
+Policy decisions remain local to the host. SATP identity and local trust signals are inputs to local policy, not blanket authorization. x402 payment grants lookup or endpoint access only; it does not authorize the agent action, bypass protected-tool approval, or replace host policy.
+
+## Compatibility note
+
+The adapter accepts `agentFolioTrustScore` as a legacy alias for `trustScore`, but SATP-owned docs and examples should use the app-agnostic `trustScore` field.
 
 ## SATP repo integration
 

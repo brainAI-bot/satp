@@ -7,8 +7,8 @@ const trustedIdentity = {
   agentId: 'brainchain-demo',
   active: true,
   satpVerified: true,
-  agentFolioTrustScore: 88,
-  capabilities: ['mcp:deploy-readiness', 'agentfolio:trust-read'],
+  trustScore: 88,
+  capabilities: ['mcp:deploy-readiness', 'satp:trust-read'],
   evidenceUpdatedAt: '2026-05-21T00:00:00Z',
 };
 
@@ -39,11 +39,11 @@ const examples = [
     },
   },
   {
-    name: 'AgentFolio trust-score degrade',
-    identity: { ...trustedIdentity, agentFolioTrustScore: 62 },
+    name: 'Local trust-score degrade',
+    identity: { ...trustedIdentity, trustScore: 62 },
     action: {
-      type: 'agentfolio_trust_gate',
-      resource: 'agentfolio://trust-score',
+      type: 'satp_trust_gate',
+      resource: 'urn:satp:local-reputation:trust-score',
       operation: 'gate',
       minimumTrustScore: 80,
       allowDegraded: true,

@@ -111,5 +111,5 @@ RC-S6 conformance fixture planning is tracked in
 conformance fixtures remain pending until assigned separately.
 
 This package task does not publish to npm, deploy Solana programs, write to
-mainnet/devnet, read or move keypairs, change AgentFolio product code, perform
+mainnet/devnet, read or move keypairs, change downstream product code, perform
 client work, or make public announcements.

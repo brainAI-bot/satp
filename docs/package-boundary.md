@@ -1,6 +1,6 @@
 # SATP package boundary and consumer hardening
 
-Status: SATP S4 package-boundary hardening for branch/PR review. This document is policy and consumer guidance only; it does not publish npm packages, deploy programs, write to devnet/mainnet, move/read keypairs, or change AgentFolio product code.
+Status: SATP S4 package-boundary hardening for branch/PR review. This document is policy and consumer guidance only; it does not publish npm packages, deploy programs, write to devnet/mainnet, move/read keypairs, or change downstream product code.
 
 ## Current package audit
 
@@ -47,7 +47,7 @@ For active SATP branch/PR review, use a commit-addressed Git dependency:
 Rules:
 
 - Pin a commit hash for mergeable consumer PRs; branch refs are only for temporary review.
-- Do not use sibling paths such as `file:../satp/...` in mergeable AgentFolio changes.
+- Do not use sibling paths such as `file:../satp/...` in mergeable consumer changes.
 - Do not publish to npm from this hardening phase.
 - Do not require consumer apps to copy SATP IDLs, PDA seeds, or private protocol logic.
 
@@ -83,7 +83,7 @@ npm run ci:offline-with-examples
 1. `examples/mcp-x402-readonly` - MCP/x402 SATP read-only runtime example.
 2. `examples/agentfolio-consumer-readonly` - AgentFolio consumer read-only SATP record example.
 
-The example conformance gate is fixture-first and offline. It must not publish packages, deploy programs, read or change keypairs, write to Solana devnet/mainnet, mutate production, perform client work, or change AgentFolio product code.
+The example conformance gate is fixture-first and offline. It must not publish packages, deploy programs, read or change keypairs, write to Solana devnet/mainnet, mutate production, perform client work, or change downstream product code.
 
 ## Security and key-management guardrails
 
@@ -92,7 +92,7 @@ The example conformance gate is fixture-first and offline. It must not publish p
 - No keypair reads, movement, rotation, deletion, or path disclosure.
 - No `.env`, RPC token, GitHub token, HQ token, private key, or seed material may be printed or committed.
 - SDK methods may build unsigned transactions, but CI must not sign or send transactions.
-- AgentFolio remains a consumer/adapter. It must not become SATP source-of-truth, edit SATP IDLs, or own protocol deployment authority.
+- Downstream applications remain consumers/adapters. They must not become SATP source-of-truth, edit SATP IDLs, or own protocol deployment authority.
 
 ## Review checklist
 

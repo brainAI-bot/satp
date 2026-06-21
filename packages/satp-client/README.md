@@ -426,15 +426,10 @@ await connection.confirmTransaction(sig);
 
 ## REST API
 
-The SATP V3 API is available at `https://agentfolio.bot/api/v3/`:
-
-| Endpoint | Description |
-|----------|-------------|
-| `GET /api/v3/health` | API health + program IDs |
-| `GET /api/v3/escrow/by-client/:wallet` | Escrows by client wallet |
-| `GET /api/v3/escrow/by-agent/:wallet` | Escrows by agent wallet |
-| `GET /api/v3/escrow/by-agent-id/:agentId` | Escrows by SATP agent_id |
-| + 18 more | See OpenAPI spec in `docs/` |
+This package is the SATP client SDK surface. It does not define a canonical
+SATP-hosted REST API endpoint. Downstream applications may expose their own
+HTTP adapters, but those adapters are consumer-owned and should not be treated
+as the SATP protocol source of truth.
 
 ## Testing
 

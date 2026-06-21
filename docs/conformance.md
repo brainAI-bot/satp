@@ -4,10 +4,10 @@ Status: executable fixture suite added for RC-S6 review
 
 This plan defines the fixture-first conformance gate for RC-S6. It proves that a
 third-party consumer can verify SATP identity, linked accounts, attestations,
-trust packets, and failure cases without AgentFolio infrastructure.
+trust packets, and failure cases without application-specific infrastructure.
 
 This plan does not authorize extraction work, Solana devnet/mainnet writes,
-signing flows, keypair reads, package publishing, AgentFolio product changes,
+signing flows, keypair reads, package publishing, downstream product changes,
 public launch work, or token work.
 
 ## Goals
@@ -51,8 +51,8 @@ Executable tests should assert:
 5. Reputation, validation, review, and escrow reference fixtures cannot be
    promoted into release-ready semantics unless their RC-S6 uncertainty status
    is explicit.
-6. Consumer examples can load conformance fixtures without importing AgentFolio
-   product code or depending on AgentFolio APIs.
+6. Consumer examples can load conformance fixtures without importing downstream
+   product code or depending on application-specific APIs.
 
 ## Test Layout
 
@@ -92,17 +92,17 @@ An RC-S6 conformance evidence packet should include:
 - The exact offline command used to run conformance tests.
 - Passing output for root CI and the conformance gate.
 - Confirmation of no deploy, no keypair access, no package publish, no
-  AgentFolio product change, no public launch, and no token work.
+  downstream product change, no public launch, and no token work.
 - A table mapping each fixture verdict to the corresponding `SPEC.md` and IDL
   requirement.
 - Remaining uncertainty notes for issuer authority, stale/revoked evidence,
   unsupported issuers, score meaning, review weight, escrow references, and
-  AgentFolio consumer copy boundaries.
+  consumer copy boundaries.
 
 ## Current RC-S6 Status
 
 The executable fixture suite is present under `tests/conformance/` and wired
 to the offline CI path. Remaining RC-S6 release review should still treat issuer
 authority, stale/revoked evidence, unsupported issuers, score meaning, review
-weight, escrow references, and AgentFolio consumer copy boundaries as explicit
+weight, escrow references, and consumer copy boundaries as explicit
 uncertainty areas until separate release approval closes them.

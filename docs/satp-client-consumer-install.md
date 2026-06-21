@@ -158,7 +158,7 @@ so the override intentionally steps outside that transitive dependency range.
 Keep it until `@solana/web3.js` or `jayson` ships an upstream range that
 resolves the audit chain without an application lockfile override.
 
-AgentFolio and other package consumers should not rely on a dependency package's
+Downstream package consumers should not rely on a dependency package's
 own override to protect their final install tree. Consumer applications that
 need this mitigation should carry the same root override or lockfile resolution
 until the upstream dependency chain is fixed.
@@ -203,7 +203,7 @@ npm run pack:satp-client
 npm install --ignore-scripts --no-audit --no-fund ../satp/dist/brainai-satp-client-<VERSION>.tgz
 ```
 
-Do not use the local tarball path as the merge dependency in AgentFolio.
+Do not use the local tarball path as the merge dependency in downstream apps.
 
 
 ## Package-boundary hardening reference
@@ -221,5 +221,5 @@ npm install --ignore-scripts --no-audit --no-fund
 ```
 
 No npm publish, Solana deploy, keypair action, mainnet/devnet write,
-AgentFolio product code change, Masthead work, client work, or public launch is
+Downstream product code change, Masthead work, client work, or public launch is
 part of this install path.

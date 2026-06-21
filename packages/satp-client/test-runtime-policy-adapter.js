@@ -12,8 +12,8 @@ const baseIdentity = {
   agentId: 'brainchain-test',
   active: true,
   satpVerified: true,
-  agentFolioTrustScore: 85,
-  capabilities: ['mcp:read', 'agentfolio:trust-read'],
+  trustScore: 85,
+  capabilities: ['mcp:read', 'satp:trust-read'],
   evidenceUpdatedAt: '2026-05-20T00:00:00Z',
 };
 
@@ -47,9 +47,9 @@ test('denies inactive identities before checking action details', () => {
 
 test('degrades when trust score is below action minimum and degraded mode is allowed', () => {
   const result = evaluateRuntimePolicy(
-    { ...baseIdentity, agentFolioTrustScore: 55 },
+    { ...baseIdentity, trustScore: 55 },
     {
-      type: 'agentfolio_trust_gate',
+      type: 'satp_trust_gate',
       minimumTrustScore: 75,
       allowDegraded: true,
     }
