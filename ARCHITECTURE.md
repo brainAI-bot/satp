@@ -1,13 +1,13 @@
 # SATP Architecture
 
-**Status:** Final working architecture v1  
+**Status:** Final working architecture v2
 **Repo:** `github.com/brainAI-bot/satp`  
 **Visibility:** Public  
 **Lead:** brainChain  
 **AgentFolio consumer review:** brainForge  
 **Security/key-management gate:** brainShield  
 **Final approval:** brainKID  
-**Last updated:** 2026-04-26  
+**Last updated:** 2026-06-22
 
 > This is the canonical SATP architecture document for the next build phase.
 >
@@ -44,6 +44,18 @@ Some legacy docs or package names may still say `@brainai/satp-v3`. The stable p
 ```
 
 `@brainai/satp-v3` may be used only as a temporary migration alias.
+
+### v2 build contract
+
+SATP v2 is the public protocol and package contract consumed by AgentFolio and third-party apps:
+
+```text
+ADR-007 single-key custody is the only accepted transitional authority model
+ADR-008 open-core packaging is the public distribution model
+mint_tracker is the canonical mint lifecycle record
+USDC escrow is in scope alongside SOL escrow
+@brainai/satp is the stable package name and public umbrella API
+```
 
 ---
 
@@ -1322,6 +1334,30 @@ Reason: lowers cost, protects privacy, improves upgradeability.
 Status: proposed  
 Decision: no mainnet-stable SATP release until third-party conformance tests pass.  
 Reason: SATP is a standard, not just an AgentFolio integration.
+
+### ADR-007 — Single-key transitional custody
+
+Status: accepted
+Decision: SATP v2 permits one explicitly named transitional upgrade/signing authority only when the key is outside Git, documented in SECURITY.md, and guarded by a migration plan to multisig or hardware-backed custody before mainnet-stable release. No second ad hoc operator key, local fallback key, or untracked authority is allowed.
+Reason: extraction needs one auditable control point while preventing silent authority sprawl.
+
+### ADR-008 — Open-core package and repo model
+
+Status: accepted
+Decision: SATP v2 is open-core: protocol specs, IDLs, SDK interfaces, conformance fixtures, and the public umbrella package `@brainai/satp` are public and reusable. Private services may exist outside the protocol repo, but they must not be required to verify identity, attestations, reviews, reputation inputs, or escrow references.
+Reason: SATP must be a portable standard rather than an AgentFolio-only backend dependency.
+
+### ADR-009 — `mint_tracker` is the canonical mint lifecycle record
+
+Status: accepted
+Decision: SATP v2 uses `mint_tracker` as the canonical record name for mint lifecycle state. It tracks identity, mint, cluster, metadata hash/URI, request/finalize signatures, status, timestamps, and error state. Legacy mint state names may be migration aliases only.
+Reason: mint lifecycle state must be inspectable and stable across AgentFolio and non-AgentFolio consumers.
+
+### ADR-010 — USDC escrow is in scope
+
+Status: accepted
+Decision: SATP escrow supports native SOL and SPL USDC by recording mint, amount, vault PDA, payer, payee/agent identity, cluster, and release/refund transaction references. Consumers must not assume SOL-only escrow semantics.
+Reason: marketplace escrow needs stablecoin support while preserving one portable protocol primitive.
 
 ---
 
