@@ -211,7 +211,7 @@ if (!verification.ok) throw new Error(verification.errors.join('; '));
 
 ```javascript
 const sdk = new SATPV3SDK({ network, rpcUrl });
-// network: 'devnet' (default). 'mainnet' fails closed until approved IDs exist.
+// network: 'devnet' (default) or 'mainnet'.
 // rpcUrl: optional custom RPC endpoint
 ```
 
@@ -464,8 +464,8 @@ const sdk = new SATPV3SDK({ network: 'devnet' });
 // Custom RPC
 const sdk = new SATPV3SDK({ rpcUrl: 'https://my-rpc.example.com' });
 
-// Mainnet currently fails closed until approved program IDs are configured
-assert.throws(() => new SATPV3SDK({ network: 'mainnet' }));
+// Mainnet must be selected explicitly when using a mainnet RPC URL
+const sdkMainnet = new SATPV3SDK({ network: 'mainnet' });
 ```
 
 ## Borsh Deserialization Helpers (v3.6.0)
