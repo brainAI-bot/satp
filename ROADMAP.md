@@ -1,8 +1,8 @@
 # SATP — Roadmap
 
-Schema: HQ roadmap v1
+Schema: HQ roadmap v2
 Status: ACTIVE - PLANNING
-Last updated: 2026-05-30
+Last updated: 2026-06-22
 
 SATP is the Solana Agent Trust Protocol: an app-agnostic protocol and SDK
 surface for portable AI-agent identity, attestations, reputation, validation,
@@ -24,6 +24,7 @@ conformance, security, release, and mainnet authority gates remain open.
 ## Current state snapshot
 
 - Repository: brainAI-bot/satp.
+- Stable package target: `@brainai/satp`.
 - Lead: brainChain. Consumer review: brainForge / AgentFolio. Security review:
   brainShield after HQ stability.
 - SATP remains in planning/package-hardening mode. The repository has
