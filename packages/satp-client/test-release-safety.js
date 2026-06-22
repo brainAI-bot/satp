@@ -46,25 +46,31 @@ assert.throws(
   /Mainnet RPC requires network=mainnet/
 );
 
-assert.throws(
-  () => createSATPClient({ network: 'mainnet', rpcUrl: MAINNET_RPC }),
-  /SATP V3 mainnet program IDs are not configured/
-);
+const mainnetClient = createSATPClient({ network: 'mainnet', rpcUrl: MAINNET_RPC });
+assert.equal(mainnetClient.network, 'mainnet');
+assert.equal(mainnetClient.rpcUrl, MAINNET_RPC);
+
 assert.throws(
   () => new SATPV3SDK({ rpcUrl: MAINNET_RPC }),
   /Mainnet RPC requires network=mainnet/
 );
+const mainnetSdk = new SATPV3SDK({ network: 'mainnet' });
+assert.equal(mainnetSdk.network, 'mainnet');
+assert.equal(mainnetSdk.programIds.ESCROW, null);
+
+const mainnetStringSdk = new SATPV3SDK('mainnet');
+assert.equal(mainnetStringSdk.network, 'mainnet');
+
+const v3MainnetIds = getV3ProgramIds('mainnet');
+assert.equal(v3MainnetIds.IDENTITY, null);
+assert.equal(v3MainnetIds.REVIEWS, null);
+assert.equal(v3MainnetIds.REPUTATION, null);
+assert.equal(v3MainnetIds.ATTESTATIONS, null);
+assert.equal(v3MainnetIds.VALIDATION, null);
+assert.equal(v3MainnetIds.ESCROW, null);
 assert.throws(
-  () => new SATPV3SDK({ network: 'mainnet' }),
-  /SATP V3 mainnet program IDs are not configured/
-);
-assert.throws(
-  () => new SATPV3SDK('mainnet'),
-  /SATP V3 mainnet program IDs are not configured/
-);
-assert.throws(
-  () => getV3ProgramIds('mainnet'),
-  /SATP V3 mainnet program IDs are not configured/
+  () => mainnetSdk.getV3PDAs('brainChain'),
+  /SATP V3 mainnet identity program ID is not configured/
 );
 
 const v2Default = new SATPSDK();

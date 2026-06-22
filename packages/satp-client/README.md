@@ -98,14 +98,20 @@ const tx = await sdk.buildCreateIdentity(creatorPubkey, 'myAgent', {
 
 ## Programs & Program IDs
 
-| Program | Devnet | Description |
-|---------|--------|-------------|
-| `identity_v3` | `GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG` | Agent identity, names, wallets, face/birth |
-| `reviews_v3` | `r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4` | Peer reviews with 1-5 star ratings |
-| `attestations_v3` | `6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD` | Third-party attestations & proofs |
-| `reputation_v3` | `2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ` | Weighted reputation scoring (CPI → identity) |
-| `validation_v3` | `6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV` | Validation level computation (CPI → identity) |
-| `escrow_v3` | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | SOL escrow for agent jobs |
+| Program | Devnet | Mainnet | Description |
+|---------|--------|---------|-------------|
+| `identity_v3` | `GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG` | `null` | Agent identity, names, wallets, face/birth |
+| `reviews_v3` | `r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4` | `null` | Peer reviews with 1-5 star ratings |
+| `attestations_v3` | `6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD` | `null` | Third-party attestations & proofs |
+| `reputation_v3` | `2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ` | `null` | Weighted reputation scoring (CPI to identity) |
+| `validation_v3` | `6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV` | `null` | Validation level computation (CPI to identity) |
+| `escrow_v3` | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | `null` | SOL escrow for agent jobs |
+
+`getV3ProgramIds('mainnet')` intentionally returns this explicit `null` map
+instead of throwing, so consumers can inspect mainnet readiness without crashing
+route initialization. PDA derivation and transaction builders still fail closed
+with a specific missing-program error until approved mainnet deployments are
+available.
 
 ## API Reference
 

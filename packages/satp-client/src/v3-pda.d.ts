@@ -1,14 +1,15 @@
 import { PublicKey } from '@solana/web3.js';
 
 export type Network = 'mainnet' | 'devnet';
+export type MaybeProgramId = PublicKey | null;
 
 export interface V3ProgramIds {
-  IDENTITY: PublicKey;
-  REVIEWS: PublicKey;
-  REPUTATION: PublicKey;
-  ATTESTATIONS: PublicKey;
-  VALIDATION: PublicKey;
-  ESCROW: PublicKey;
+  IDENTITY: MaybeProgramId;
+  REVIEWS: MaybeProgramId;
+  REPUTATION: MaybeProgramId;
+  ATTESTATIONS: MaybeProgramId;
+  VALIDATION: MaybeProgramId;
+  ESCROW: MaybeProgramId;
 }
 
 /** Get all V3 program IDs for a network. */

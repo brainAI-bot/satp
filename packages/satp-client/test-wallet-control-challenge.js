@@ -131,6 +131,6 @@ assert.throws(() => buildWalletControlChallenge({
   nonce: 'mainnet-fails-closed',
   issuedAt: 1893456000,
   expiresAt: 1893456300,
-}), /SATP V3 mainnet program IDs are not configured/);
+}), /SATP V3 mainnet identity program ID is not configured/);
 
 console.log('wallet-control challenge helper OK');

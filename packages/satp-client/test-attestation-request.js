@@ -98,7 +98,7 @@ assert.equal(aliasRequest.attester, ATTESTER);
 assert.equal(aliasRequest.network, 'devnet');
 assert.equal(aliasRequest.expiresAt, 1893456000);
 
-assertThrows(/SATP V3 mainnet program IDs are not configured/, () => prepareIdentityAttestationRequest({
+assertThrows(/SATP V3 mainnet identity program ID is not configured/, () => prepareIdentityAttestationRequest({
   subjectWallet: SUBJECT_WALLET,
   attestationType: 'wallet_control_verified',
   metadataHash: METADATA_HASH.toLowerCase(),

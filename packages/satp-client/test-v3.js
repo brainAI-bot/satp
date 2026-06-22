@@ -150,13 +150,17 @@ const sdkDevnetString = new SATPV3SDK('devnet');
 assert(sdkDevnetString.network === 'devnet', 'SDK string devnet maps to devnet network');
 assert(sdkDevnetString.rpcUrl === 'https://api.devnet.solana.com', 'SDK string devnet maps to default RPC URL');
 
+const sdkMainnetString = new SATPV3SDK('mainnet');
+assert(sdkMainnetString.network === 'mainnet', 'SDK string mainnet maps to mainnet network');
+assert(sdkMainnetString.rpcUrl === 'https://api.mainnet-beta.solana.com', 'SDK string mainnet maps to default RPC URL');
+assert(sdkMainnetString.programIds.ESCROW === null, 'SDK mainnet exposes explicit null V3 program IDs until deployment');
 try {
-  new SATPV3SDK('mainnet');
-  assert(false, 'SDK string mainnet fails closed until V3 mainnet program IDs are approved');
+  sdkMainnetString.getV3PDAs('brainChain');
+  assert(false, 'SDK mainnet PDA derivation fails closed until V3 mainnet program IDs are approved');
 } catch (err) {
   assert(
-    /SATP V3 mainnet program IDs are not configured/.test(err.message),
-    'SDK string mainnet fails closed until V3 mainnet program IDs are approved'
+    /SATP V3 mainnet identity program ID is not configured/.test(err.message),
+    'SDK mainnet PDA derivation fails closed until V3 mainnet program IDs are approved'
   );
 }
 

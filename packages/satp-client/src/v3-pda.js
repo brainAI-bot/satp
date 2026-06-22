@@ -14,7 +14,14 @@ const V3_DEVNET_PROGRAM_IDS = {
   ESCROW: new PublicKey('HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C'),
 };
 
-const V3_MAINNET_PROGRAM_IDS = null;
+const V3_MAINNET_PROGRAM_IDS = {
+  IDENTITY: null,
+  REVIEWS: null,
+  REPUTATION: null,
+  ATTESTATIONS: null,
+  VALIDATION: null,
+  ESCROW: null,
+};
 
 // ═══════════════════════════════════════════════════
 //  V3 PDA Seeds — must match on-chain programs
@@ -41,10 +48,15 @@ function getV3ProgramIds(network = 'devnet') {
   if (network !== 'devnet' && network !== 'mainnet') {
     throw new Error('Invalid network: expected devnet or mainnet');
   }
-  if (network === 'mainnet') {
-    throw new Error('SATP V3 mainnet program IDs are not configured; use devnet or provide an approved mainnet decision packet before enabling mainnet');
+  return network === 'mainnet' ? V3_MAINNET_PROGRAM_IDS : V3_DEVNET_PROGRAM_IDS;
+}
+
+function requireV3ProgramId(network, programName) {
+  const programId = getV3ProgramIds(network)[programName];
+  if (!programId) {
+    throw new Error(`SATP V3 mainnet ${programName.toLowerCase()} program ID is not configured; use devnet or wait for an approved mainnet deployment`);
   }
-  return V3_DEVNET_PROGRAM_IDS;
+  return programId;
 }
 
 // ═══════════════════════════════════════════════════
@@ -84,10 +96,10 @@ function getGenesisPDA(agentIdOrHash, network = 'devnet') {
   const hash = typeof agentIdOrHash === 'string'
     ? hashAgentId(agentIdOrHash)
     : Buffer.from(agentIdOrHash);
-  const programIds = getV3ProgramIds(network);
+  const identityProgramId = requireV3ProgramId(network, 'IDENTITY');
   return PublicKey.findProgramAddressSync(
     [Buffer.from(V3_SEEDS.GENESIS), hash],
-    programIds.IDENTITY
+    identityProgramId
   );
 }
 
@@ -98,10 +110,10 @@ function getGenesisPDA(agentIdOrHash, network = 'devnet') {
  * @returns {[PublicKey, number]}
  */
 function getV3ReputationAuthorityPDA(network = 'devnet') {
-  const programIds = getV3ProgramIds(network);
+  const reputationProgramId = requireV3ProgramId(network, 'REPUTATION');
   return PublicKey.findProgramAddressSync(
     [Buffer.from(V3_SEEDS.REPUTATION_AUTHORITY)],
-    programIds.REPUTATION
+    reputationProgramId
   );
 }
 
@@ -112,10 +124,10 @@ function getV3ReputationAuthorityPDA(network = 'devnet') {
  * @returns {[PublicKey, number]}
  */
 function getV3ValidationAuthorityPDA(network = 'devnet') {
-  const programIds = getV3ProgramIds(network);
+  const validationProgramId = requireV3ProgramId(network, 'VALIDATION');
   return PublicKey.findProgramAddressSync(
     [Buffer.from(V3_SEEDS.VALIDATION_AUTHORITY)],
-    programIds.VALIDATION
+    validationProgramId
   );
 }
 
@@ -128,10 +140,10 @@ function getV3ValidationAuthorityPDA(network = 'devnet') {
  */
 function getV3MintTrackerPDA(genesisPDA, network = 'devnet') {
   const genesisKey = new PublicKey(genesisPDA);
-  const programIds = getV3ProgramIds(network);
+  const identityProgramId = requireV3ProgramId(network, 'IDENTITY');
   return PublicKey.findProgramAddressSync(
     [Buffer.from(V3_SEEDS.MINT_TRACKER), genesisKey.toBuffer()],
-    programIds.IDENTITY
+    identityProgramId
   );
 }
 
@@ -146,10 +158,10 @@ function getNameRegistryPDA(nameOrHash, network = 'devnet') {
   const hash = typeof nameOrHash === 'string'
     ? hashName(nameOrHash)
     : Buffer.from(nameOrHash);
-  const programIds = getV3ProgramIds(network);
+  const identityProgramId = requireV3ProgramId(network, 'IDENTITY');
   return PublicKey.findProgramAddressSync(
     [Buffer.from(V3_SEEDS.NAME_REGISTRY), hash],
-    programIds.IDENTITY
+    identityProgramId
   );
 }
 
@@ -164,10 +176,10 @@ function getNameRegistryPDA(nameOrHash, network = 'devnet') {
 function getLinkedWalletPDA(genesisPDA, wallet, network = 'devnet') {
   const genesisKey = new PublicKey(genesisPDA);
   const walletKey = new PublicKey(wallet);
-  const programIds = getV3ProgramIds(network);
+  const identityProgramId = requireV3ProgramId(network, 'IDENTITY');
   return PublicKey.findProgramAddressSync(
     [Buffer.from(V3_SEEDS.LINKED_WALLET), genesisKey.toBuffer(), walletKey.toBuffer()],
-    programIds.IDENTITY
+    identityProgramId
   );
 }
 
@@ -184,10 +196,10 @@ function getV3ReviewPDA(agentIdOrHash, reviewer, network = 'devnet') {
     ? hashAgentId(agentIdOrHash)
     : Buffer.from(agentIdOrHash);
   const reviewerKey = new PublicKey(reviewer);
-  const programIds = getV3ProgramIds(network);
+  const reviewsProgramId = requireV3ProgramId(network, 'REVIEWS');
   return PublicKey.findProgramAddressSync(
     [Buffer.from(V3_SEEDS.REVIEW), hash, reviewerKey.toBuffer()],
-    programIds.REVIEWS
+    reviewsProgramId
   );
 }
 
@@ -202,10 +214,10 @@ function getV3ReviewCounterPDA(agentIdOrHash, network = 'devnet') {
   const hash = typeof agentIdOrHash === 'string'
     ? hashAgentId(agentIdOrHash)
     : Buffer.from(agentIdOrHash);
-  const programIds = getV3ProgramIds(network);
+  const reviewsProgramId = requireV3ProgramId(network, 'REVIEWS');
   return PublicKey.findProgramAddressSync(
     [Buffer.from(V3_SEEDS.REVIEW_COUNTER), hash],
-    programIds.REVIEWS
+    reviewsProgramId
   );
 }
 
@@ -223,7 +235,7 @@ function getV3AttestationPDA(agentIdOrHash, attester, attestationType, network =
     ? hashAgentId(agentIdOrHash)
     : Buffer.from(agentIdOrHash);
   const attesterKey = new PublicKey(attester);
-  const programIds = getV3ProgramIds(network);
+  const attestationsProgramId = requireV3ProgramId(network, 'ATTESTATIONS');
   return PublicKey.findProgramAddressSync(
     [
       Buffer.from(V3_SEEDS.ATTESTATION),
@@ -231,7 +243,7 @@ function getV3AttestationPDA(agentIdOrHash, attester, attestationType, network =
       attesterKey.toBuffer(),
       Buffer.from(attestationType, 'utf8'),
     ],
-    programIds.ATTESTATIONS
+    attestationsProgramId
   );
 }
 
@@ -249,10 +261,10 @@ function getV3EscrowPDA(client, descriptionHash, nonce, network = 'devnet') {
   const hashBuf = Buffer.isBuffer(descriptionHash) ? descriptionHash : Buffer.from(descriptionHash);
   const nonceBuf = Buffer.alloc(8);
   nonceBuf.writeBigUInt64LE(BigInt(nonce));
-  const programIds = getV3ProgramIds(network);
+  const escrowProgramId = requireV3ProgramId(network, 'ESCROW');
   return PublicKey.findProgramAddressSync(
     [Buffer.from(V3_SEEDS.ESCROW_V3), clientKey.toBuffer(), hashBuf, nonceBuf],
-    programIds.ESCROW
+    escrowProgramId
   );
 }
 
