@@ -1,11 +1,46 @@
 # SATP Client consumer install path
 
-`@brainai/satp-client` is delivered from the SATP repository without publishing
-to npm. The durable/merge-safe path is a commit-addressed Git dependency on the
-SATP repository root. The root package is intentionally named
-`@brainai/satp-client`; its `main`, `types`, and `exports["."]` point at
-the extracted client package entrypoint in `packages/satp-client/src/index.js`
-and `packages/satp-client/src/index.d.ts`.
+`@brainai/satp-client` can be consumed from stable npm, the rc npm channel, or
+a reviewed SATP Git commit. Choose the source based on the artifact the
+downstream app needs to prove:
+
+| Channel | Use when | Dependency |
+| --- | --- | --- |
+| Stable npm | Production or default consumer installs should stay on the stable public package. | `@brainai/satp-client@2.0.1` or `@brainai/satp-client` |
+| Release candidate npm | The app is validating the rc package metadata or needs reproducible rc manifests before promotion. | `@brainai/satp-client@0.1.0-rc.0` |
+| Release candidate tag | Short-lived rc opt-in where a moving dist-tag is acceptable. | `@brainai/satp-client@rc` |
+| Reviewed Git commit | PR coordination or source-review installs tied to an exact SATP commit. | `git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
+
+The npm `latest` tag still resolves to `@brainai/satp-client@2.0.1`. The
+`rc` tag points at `@brainai/satp-client@0.1.0-rc.0`; downstream apps that need
+reproducible manifests for rc readback should pin
+`@brainai/satp-client@0.1.0-rc.0` exactly instead of relying on the moving
+`@rc` tag.
+
+The Git dependency path installs from the SATP repository root. The root package
+is intentionally named `@brainai/satp-client`; its `main`, `types`, and
+`exports["."]` point at the extracted client package entrypoint in
+`packages/satp-client/src/index.js` and `packages/satp-client/src/index.d.ts`.
+
+## Stable and rc npm examples
+
+Stable package:
+
+```bash
+npm install @brainai/satp-client@2.0.1
+```
+
+Exact rc package for reproducible manifests:
+
+```bash
+npm install @brainai/satp-client@0.1.0-rc.0
+```
+
+Moving rc opt-in:
+
+```bash
+npm install @brainai/satp-client@rc
+```
 
 ## Durable dependency path for AgentFolio
 
@@ -43,7 +78,8 @@ merge-safe dependency should pin a commit hash:
 ## Why this is durable and merge-safe
 
 - It does not depend on a sibling checkout or local tarball path.
-- It does not require npm publish.
+- Stable and rc npm installs do not require a new npm publish or dist-tag
+  mutation from downstream consumers.
 - npm can install it from a clean external consumer using only GitHub access.
 - Pinning a commit makes the dependency immutable and reviewable in the consumer
   lockfile.

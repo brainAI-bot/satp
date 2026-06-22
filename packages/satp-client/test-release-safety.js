@@ -43,29 +43,28 @@ assert.equal(directDevnetString.rpcUrl, DEVNET_RPC);
 
 assert.throws(
   () => createSATPClient(MAINNET_RPC),
-  /Mainnet RPC requires network=mainnet/
+  /Mainnet RPC requires explicit network=mainnet/
 );
 
-assert.throws(
-  () => createSATPClient({ network: 'mainnet', rpcUrl: MAINNET_RPC }),
-  /SATP V3 mainnet program IDs are not configured/
-);
+const explicitMainnet = createSATPClient({ network: 'mainnet', rpcUrl: MAINNET_RPC });
+assert.equal(explicitMainnet.network, 'mainnet');
+assert.equal(explicitMainnet.rpcUrl, MAINNET_RPC);
+
 assert.throws(
   () => new SATPV3SDK({ rpcUrl: MAINNET_RPC }),
-  /Mainnet RPC requires network=mainnet/
+  /Mainnet RPC requires explicit network=mainnet/
 );
-assert.throws(
-  () => new SATPV3SDK({ network: 'mainnet' }),
-  /SATP V3 mainnet program IDs are not configured/
-);
-assert.throws(
-  () => new SATPV3SDK('mainnet'),
-  /SATP V3 mainnet program IDs are not configured/
-);
-assert.throws(
-  () => getV3ProgramIds('mainnet'),
-  /SATP V3 mainnet program IDs are not configured/
-);
+const mainnetSdk = new SATPV3SDK({ network: 'mainnet' });
+assert.equal(mainnetSdk.network, 'mainnet');
+assert.equal(mainnetSdk.rpcUrl, MAINNET_RPC);
+
+const mainnetStringSdk = new SATPV3SDK('mainnet');
+assert.equal(mainnetStringSdk.network, 'mainnet');
+assert.equal(mainnetStringSdk.rpcUrl, MAINNET_RPC);
+
+const mainnetV3Ids = getV3ProgramIds('mainnet');
+assert.equal(mainnetV3Ids.IDENTITY.toBase58(), 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG');
+assert.equal(mainnetV3Ids.ESCROW.toBase58(), 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C');
 
 const v2Default = new SATPSDK();
 assert.equal(v2Default.network, 'devnet');
@@ -76,10 +75,10 @@ assert.equal(v2Custom.network, 'devnet');
 assert.equal(v2Custom.rpcUrl, CUSTOM_RPC);
 
 const v2MainnetIds = getProgramIds('mainnet');
-assert.equal(v2MainnetIds.ESCROW, null);
-assert.throws(
-  () => getEscrowPDA('11111111111111111111111111111112', Buffer.alloc(32), 'mainnet'),
-  /mainnet escrow program ID is not configured/
+assert.equal(v2MainnetIds.IDENTITY.toBase58(), mainnetV3Ids.IDENTITY.toBase58());
+assert.equal(v2MainnetIds.ESCROW.toBase58(), mainnetV3Ids.ESCROW.toBase58());
+assert.doesNotThrow(
+  () => getEscrowPDA('11111111111111111111111111111112', Buffer.alloc(32), 'mainnet')
 );
 
 for (const [name, value] of Object.entries({

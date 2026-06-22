@@ -18,11 +18,12 @@
     "check:examples": "npm --prefix examples/mcp-x402-readonly run check && npm --prefix examples/agentfolio-consumer-readonly run check",
     "test:attestation-request": "node packages/satp-client/test-attestation-request.js",
     "test:wallet-control": "node packages/satp-client/test-wallet-control-challenge.js",
+    "test:x402-discovery": "node packages/satp-client/test-x402-discovery.js",
     "test:v3": "node packages/satp-client/test-v3.js",
     "test:borsh": "node packages/satp-client/test-borsh-reader.js",
     "test:examples": "npm --prefix examples/mcp-x402-readonly test && npm --prefix examples/agentfolio-consumer-readonly test",
     "ci:offline-with-examples": "npm run ci && npm run check:examples && npm run test:examples",
-    "ci": "npm run validate:idls && npm run check:js && npm run check:exports && npm run smoke:consumer-install && npm run test:attestation-request && npm run test:wallet-control && npm run test:v3 && npm run test:borsh"
+    "ci": "npm run validate:idls && npm run check:js && npm run check:exports && npm run smoke:consumer-install && npm run test:attestation-request && npm run test:wallet-control && npm run test:x402-discovery && npm run test:v3 && npm run test:borsh"
   },
   "main": "packages/satp-client/src/index.js",
   "types": "packages/satp-client/src/index.d.ts",
@@ -34,6 +35,10 @@
     "./wallet-control-challenge": {
       "types": "./packages/satp-client/src/index.d.ts",
       "default": "./packages/satp-client/src/wallet-control-challenge.js"
+    },
+    "./x402-discovery": {
+      "types": "./packages/satp-client/src/index.d.ts",
+      "default": "./packages/satp-client/src/x402-discovery.js"
     },
     "./src/*": "./packages/satp-client/src/*",
     "./package.json": "./package.json"
@@ -57,6 +62,9 @@
     "bs58": "^6.0.0"
   },
   "overrides": {
-    "ws": "^8.20.1"
+    "ws": "^8.21.0",
+    "jayson": {
+      "uuid": "^11.1.1"
+    }
   }
 }

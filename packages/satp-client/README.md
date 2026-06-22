@@ -1,22 +1,35 @@
 # SATP V3 SDK — `@brainai/satp-client`
 
-**Solana Agent Token Protocol** — JavaScript/TypeScript SDK for interacting with the SATP V3 devnet programs.
+**Solana Agent Token Protocol** — JavaScript/TypeScript SDK for interacting with the SATP V3 programs.
 
 Version: **3.3.0** | Tests: **101 unit + 16 devnet integration** | Programs: **6**
 
 ## Installation
 
+Choose stable, rc, or Git based on what the consumer is trying to prove:
+
+| Channel | Use when | Command |
+| --- | --- | --- |
+| Stable npm | Default production-style consumption of the stable public package. | `npm install @brainai/satp-client@2.0.1` |
+| Release candidate npm | Validating the rc package before promotion or producing reproducible rc manifests. | `npm install @brainai/satp-client@0.1.0-rc.0` |
+| Release candidate tag | Quick rc opt-in where a moving dist-tag is acceptable. | `npm install @brainai/satp-client@rc` |
+| Reviewed Git commit | PR coordination or source-review installs tied to an exact SATP commit. | `npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
+
+The npm `latest` tag still resolves to `@brainai/satp-client@2.0.1`.
+The `rc` tag points at `@brainai/satp-client@0.1.0-rc.0`; downstream apps
+that need reproducible manifests should pin `@brainai/satp-client@0.1.0-rc.0`
+exactly instead of relying on `@rc`.
+
 ```bash
 npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>
 ```
 
-The current review package is `@brainai/satp-client@0.0.0-extraction` and
-remains unpublished. Pin a reviewed commit for consumers. Do not publish to npm
-until the release packet passes.
+Pin a reviewed Git commit for source-review consumers. Do not change npm
+dist-tags from this docs path.
 
-Mainnet program IDs are intentionally not enabled in this release candidate.
-Constructors and helpers fail closed for `network: 'mainnet'` until an approved
-mainnet decision packet provides production program IDs.
+Mainnet program IDs use the verified SATP V3 program set. Passing a mainnet RPC
+without `network: 'mainnet'` still fails closed to avoid accidental network
+selection.
 
 **Runtime dependency:** `@solana/web3.js ^1.98.4`
 
@@ -111,6 +124,32 @@ if (!validation.ok) throw new Error(validation.errors.join('; '));
 re-derives the expected packet so tampered PDA, program, request, or hash fields
 surface as explicit errors.
 
+### x402 Discovery Evidence Lookup Helpers
+
+`parseX402DiscoveryMetadata(input)`, `buildX402EvidenceLookup(input, opts)`, and
+`buildRuntimePolicyActionDescriptorFromX402(input, opts)` turn x402 discovery or
+payment metadata into `RuntimePolicyActionDescriptor.evidenceLookup`
+configuration for SATP runtimes. They are pure parsers/helpers: x402 payment
+metadata can describe where evidence may be fetched and what a remote resource
+advertises, but it never authorizes spending or SATP action execution.
+
+```javascript
+const {
+  X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION,
+  buildRuntimePolicyActionDescriptorFromX402,
+} = require('@brainai/satp-client');
+
+const descriptor = buildRuntimePolicyActionDescriptorFromX402({
+  action: 'satp.resolveIdentity',
+  endpoint: 'https://example.invalid/.well-known/x402/satp',
+  accepts: [{ scheme: 'exact', network: 'base', amountRequired: '1' }],
+});
+
+console.assert(descriptor.evidenceLookup.guardrail === X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION);
+console.assert(descriptor.authorization.paymentAuthorization === false);
+console.assert(descriptor.authorization.actionAuthorization === false);
+```
+
 ### Wallet-Control Challenge Helpers
 
 `buildWalletControlChallenge(opts)` creates a canonical, offline challenge that
@@ -157,7 +196,7 @@ if (!verification.ok) throw new Error(verification.errors.join('; '));
 
 ```javascript
 const sdk = new SATPV3SDK({ network, rpcUrl });
-// network: 'devnet' (default). 'mainnet' fails closed until approved IDs exist.
+// network: 'devnet' (default) or 'mainnet' for verified V3 program IDs.
 // rpcUrl: optional custom RPC endpoint
 ```
 
@@ -410,8 +449,8 @@ const sdk = new SATPV3SDK({ network: 'devnet' });
 // Custom RPC
 const sdk = new SATPV3SDK({ rpcUrl: 'https://my-rpc.example.com' });
 
-// Mainnet currently fails closed until approved program IDs are configured
-assert.throws(() => new SATPV3SDK({ network: 'mainnet' }));
+// Mainnet
+const mainnetSdk = new SATPV3SDK({ network: 'mainnet' });
 ```
 
 ## Borsh Deserialization Helpers (v3.6.0)

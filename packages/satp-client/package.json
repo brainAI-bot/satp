@@ -1,6 +1,6 @@
 {
   "name": "@brainai/satp-client",
-  "version": "0.1.0-rc.0",
+  "version": "2.0.1",
   "description": "SATP client SDK surface prepared for release-candidate review; publish only after the release packet passes.",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -13,16 +13,24 @@
       "types": "./src/index.d.ts",
       "default": "./src/wallet-control-challenge.js"
     },
+    "./x402-discovery": {
+      "types": "./src/index.d.ts",
+      "default": "./src/x402-discovery.js"
+    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
   "files": [
     "src/",
-    "README.md"
+    "README.md",
+    "MIGRATION-V2-TO-V3.md",
+    "test*.js",
+    "test*.ts"
   ],
   "scripts": {
     "test": "node test.js",
     "test:wallet-control": "node test-wallet-control-challenge.js",
+    "test:x402-discovery": "node test-x402-discovery.js",
     "check:exports": "node test-release-safety.js"
   },
   "keywords": [
@@ -51,7 +59,10 @@
   },
   "private": false,
   "overrides": {
-    "ws": "^8.20.1"
+    "ws": "^8.21.0",
+    "jayson": {
+      "uuid": "^11.1.1"
+    }
   },
   "publishConfig": {
     "tag": "rc",

@@ -8,6 +8,7 @@
  * call Solana RPC, publish packages, or deploy anything.
  */
 const satp = require('..');
+const { Connection, clusterApiUrl } = require('@solana/web3.js');
 
 const requiredExports = [
   'SATPSDK',
@@ -24,6 +25,10 @@ const requiredExports = [
   'hashWalletControlChallenge',
   'deriveWalletControlChallengePdas',
   'verifyWalletControlChallengeSignature',
+  'X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION',
+  'parseX402DiscoveryMetadata',
+  'buildX402EvidenceLookup',
+  'buildRuntimePolicyActionDescriptorFromX402',
 ];
 
 const missing = requiredExports.filter((key) => !(key in satp));
@@ -55,6 +60,7 @@ if (!satp.validateSatpTrustPacket(packet).ok || packet.flags.signingRequired !==
 }
 
 const walletControlChallenge = require('@brainai/satp-client/wallet-control-challenge');
+const x402Discovery = require('@brainai/satp-client/x402-discovery');
 for (const key of [
   'buildWalletControlChallenge',
   'canonicalWalletControlChallenge',
@@ -70,4 +76,42 @@ for (const key of [
   }
 }
 
-console.log(`SATP export surface OK: ${requiredExports.join(', ')}`);
+for (const key of [
+  'parseX402DiscoveryMetadata',
+  'buildX402EvidenceLookup',
+  'buildRuntimePolicyActionDescriptorFromX402',
+]) {
+  if (typeof satp[key] !== 'function') {
+    throw new Error(`SATP root export ${key} is not a function`);
+  }
+  if (typeof x402Discovery[key] !== 'function') {
+    throw new Error(`SATP x402-discovery subpath export ${key} is not a function`);
+  }
+}
+
+async function assertExecutableMainnetPrograms() {
+  const ids = satp.getV3ProgramIds('mainnet');
+  const entries = Object.entries(ids);
+  const connection = new Connection(
+    process.env.SATP_MAINNET_RPC_URL || clusterApiUrl('mainnet-beta'),
+    'confirmed'
+  );
+  const accounts = await connection.getMultipleAccountsInfo(entries.map(([, id]) => id));
+  const invalid = entries
+    .filter(([, id], index) => !accounts[index] || accounts[index].executable !== true)
+    .map(([name, id]) => `${name}:${id.toBase58()}`);
+  if (invalid.length) {
+    throw new Error(`SATP V3 mainnet program IDs are not executable: ${invalid.join(', ')}`);
+  }
+  return entries.map(([name, id]) => `${name}:${id.toBase58()}`);
+}
+
+assertExecutableMainnetPrograms()
+  .then((verified) => {
+    console.log(`SATP export surface OK: ${requiredExports.join(', ')}`);
+    console.log(`SATP V3 mainnet executable programs OK: ${verified.join(', ')}`);
+  })
+  .catch((err) => {
+    console.error(err.message);
+    process.exit(1);
+  });

@@ -606,11 +606,6 @@ class SATPSDK {
       hashBuf,
     ]);
 
-    // Identity program ID (hardcoded in Reviews V3 program)
-    const IDENTITY_PROGRAM = new PublicKey('EJtQh4Gyg88zXvSmFpxYkkeZsPwTsjfm4LvjmPQX1FD3');
-    // Escrow program ID
-    const ESCROW_PROGRAM = this.programIds.ESCROW;
-
     const ix = new TransactionInstruction({
       programId: this.programIds.REVIEWS,
       keys: [
@@ -618,8 +613,8 @@ class SATPSDK {
         { pubkey: identityPDA, isSigner: false, isWritable: false },
         { pubkey: jobKey, isSigner: false, isWritable: false },
         { pubkey: reviewPDA, isSigner: false, isWritable: true },
-        { pubkey: IDENTITY_PROGRAM, isSigner: false, isWritable: false },
-        { pubkey: ESCROW_PROGRAM, isSigner: false, isWritable: false },
+        { pubkey: this.programIds.IDENTITY, isSigner: false, isWritable: false },
+        { pubkey: this.programIds.ESCROW, isSigner: false, isWritable: false },
         { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
       ],
       data,
@@ -784,6 +779,7 @@ const {
   validateSatpTrustPacket,
 } = require('./trust-packet');
 const walletControlChallenge = require('./wallet-control-challenge');
+const x402Discovery = require('./x402-discovery');
 
 // Legacy V3 SDK wrapper — keeps string constructor compatibility while using
 // the local extracted SATPV3SDK implementation so offline tests and consumers
@@ -927,6 +923,12 @@ module.exports = {
   TRUST_PACKET_SCHEMA_VERSION,
   buildSatpTrustPacket,
   validateSatpTrustPacket,
+  X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION: x402Discovery.X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION,
+  X402_DISCOVERY_SCHEMA_VERSION: x402Discovery.X402_DISCOVERY_SCHEMA_VERSION,
+  RUNTIME_POLICY_ACTION_DESCRIPTOR_SCHEMA_VERSION: x402Discovery.RUNTIME_POLICY_ACTION_DESCRIPTOR_SCHEMA_VERSION,
+  parseX402DiscoveryMetadata: x402Discovery.parseX402DiscoveryMetadata,
+  buildX402EvidenceLookup: x402Discovery.buildX402EvidenceLookup,
+  buildRuntimePolicyActionDescriptorFromX402: x402Discovery.buildRuntimePolicyActionDescriptorFromX402,
   WALLET_CONTROL_CHALLENGE_SCHEMA_VERSION: walletControlChallenge.WALLET_CONTROL_CHALLENGE_SCHEMA_VERSION,
   WALLET_CONTROL_CHALLENGE_TYPE: walletControlChallenge.WALLET_CONTROL_CHALLENGE_TYPE,
   DEFAULT_WALLET_CONTROL_DOMAIN: walletControlChallenge.DEFAULT_WALLET_CONTROL_DOMAIN,
