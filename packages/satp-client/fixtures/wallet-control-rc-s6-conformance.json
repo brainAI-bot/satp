@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "satp.walletControlRcS6ConformanceFixture.v1",
+  "description": "Offline RC-S6 wallet-control challenge conformance fixture. Deterministic seed labels are test-vector inputs only and are not production keys.",
+  "guardrail": {
+    "offlineOnly": true,
+    "signingIsLocalTestVectorOnly": true,
+    "noSolanaWrite": true,
+    "noKeypairReadOrMovement": true,
+    "noDeployOrRestart": true,
+    "noPublish": true,
+    "semanticRisk": "A valid fixture signature proves that the challenge verifier can bind wallet, agentId, domain, audience, nonce, expiry, and derived PDAs. It does not prove production wallet ownership unless the verifier controls nonce issuance/replay storage and obtains a wallet signature through an approved user flow."
+  },
+  "cases": [
+    {
+      "id": "rc-s6-pass-devnet-wallet-control",
+      "seedLabel": "satp-rc-s6-wallet-control-primary",
+      "expectedWallet": "45jG95c1wWFX1UmQJZfqMFFTFfNa4KMYXb6EeC2mkS83",
+      "challenge": {
+        "agentId": "brainChain-rc-s6",
+        "network": "devnet",
+        "domain": "satp.brainai.wallet-control",
+        "audience": "satp-rc-s6-conformance",
+        "nonce": "rc-s6-wallet-control-nonce-001",
+        "issuedAt": 1893456000,
+        "expiresAt": 1893456300
+      },
+      "verify": {
+        "expectedAgentId": "brainChain-rc-s6",
+        "expectedDomain": "satp.brainai.wallet-control",
+        "expectedAudience": "satp-rc-s6-conformance",
+        "now": 1893456100
+      },
+      "expect": {
+        "ok": true,
+        "errors": []
+      }
+    },
+    {
+      "id": "rc-s6-reject-wrong-wallet",
+      "seedLabel": "satp-rc-s6-wallet-control-primary",
+      "expectedWallet": "45jG95c1wWFX1UmQJZfqMFFTFfNa4KMYXb6EeC2mkS83",
+      "challengeFrom": "rc-s6-pass-devnet-wallet-control",
+      "verify": {
+        "expectedWallet": "HCATbbT6V3V5PsVajd4cJsu69ZYhDCvHdfDZqpXy7Lsq",
+        "now": 1893456100
+      },
+      "expect": {
+        "ok": false,
+        "errors": [
+          "wallet does not match expected wallet"
+        ]
+      }
+    },
+    {
+      "id": "rc-s6-reject-domain-confusion",
+      "challengeFrom": "rc-s6-pass-devnet-wallet-control",
+      "verify": {
+        "expectedDomain": "agentfolio.example.wallet-control",
+        "now": 1893456100
+      },
+      "expect": {
+        "ok": false,
+        "errors": [
+          "domain does not match expected domain"
+        ]
+      }
+    },
+    {
+      "id": "rc-s6-reject-replayed-nonce",
+      "challengeFrom": "rc-s6-pass-devnet-wallet-control",
+      "verify": {
+        "usedNonces": [
+          "rc-s6-wallet-control-nonce-001"
+        ],
+        "now": 1893456100
+      },
+      "expect": {
+        "ok": false,
+        "errors": [
+          "nonce has already been used"
+        ]
+      }
+    },
+    {
+      "id": "rc-s6-reject-expired-challenge",
+      "challengeFrom": "rc-s6-pass-devnet-wallet-control",
+      "verify": {
+        "now": 1893456300
+      },
+      "expect": {
+        "ok": false,
+        "errors": [
+          "challenge is expired"
+        ]
+      }
+    },
+    {
+      "id": "rc-s6-reject-derived-pda-tamper",
+      "challengeFrom": "rc-s6-pass-devnet-wallet-control",
+      "tamper": {
+        "linkedWalletPdaFrom": "genesisPda"
+      },
+      "verify": {
+        "now": 1893456100
+      },
+      "expect": {
+        "ok": false,
+        "errors": [
+          "linked wallet PDA does not match derived wallet-control challenge"
+        ]
+      }
+    }
+  ]
+}

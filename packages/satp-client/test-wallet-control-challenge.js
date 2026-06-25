@@ -4,6 +4,7 @@
 const assert = require('node:assert/strict');
 const crypto = require('crypto');
 const { Keypair } = require('@solana/web3.js');
+const rcS6Fixture = require('./fixtures/wallet-control-rc-s6-conformance.json');
 const {
   buildWalletControlChallenge,
   canonicalWalletControlChallenge,
@@ -28,6 +29,10 @@ function signChallenge(keypair, challenge) {
     Buffer.from(canonicalWalletControlChallenge(challenge), 'utf8'),
     privateKeyFromSolanaKeypair(keypair)
   );
+}
+
+function deterministicKeypair(seedLabel) {
+  return Keypair.fromSeed(crypto.createHash('sha256').update(seedLabel, 'utf8').digest());
 }
 
 const wallet = Keypair.generate();
@@ -131,5 +136,66 @@ const mainnetChallenge = buildWalletControlChallenge({
 assert.equal(mainnetChallenge.network, 'mainnet');
 assert.match(mainnetChallenge.genesisPda, /^[1-9A-HJ-NP-Za-km-z]+$/);
 assert.match(mainnetChallenge.linkedWalletPda, /^[1-9A-HJ-NP-Za-km-z]+$/);
+
+assert.equal(rcS6Fixture.guardrail.offlineOnly, true);
+assert.equal(rcS6Fixture.guardrail.noSolanaWrite, true);
+assert.equal(rcS6Fixture.guardrail.noKeypairReadOrMovement, true);
+assert.match(rcS6Fixture.guardrail.semanticRisk, /does not prove production wallet ownership/);
+
+const fixtureCases = new Map();
+for (const fixtureCase of rcS6Fixture.cases) {
+  const baseCase = fixtureCase.challengeFrom ? fixtureCases.get(fixtureCase.challengeFrom) : null;
+  assert.ok(!fixtureCase.challengeFrom || baseCase, `Missing RC-S6 base fixture: ${fixtureCase.challengeFrom}`);
+
+  const seedLabel = fixtureCase.seedLabel || baseCase.seedLabel;
+  const fixtureWallet = deterministicKeypair(seedLabel);
+  const challengeOptions = fixtureCase.challenge || baseCase.challengeOptions;
+  const fixtureChallenge = buildWalletControlChallenge({
+    ...challengeOptions,
+    wallet: fixtureWallet.publicKey,
+  });
+  const expectedWallet = fixtureCase.expectedWallet || baseCase.expectedWallet;
+  assert.equal(fixtureWallet.publicKey.toBase58(), expectedWallet);
+
+  const candidateChallenge = { ...fixtureChallenge };
+  if (fixtureCase.tamper?.linkedWalletPdaFrom) {
+    candidateChallenge.linkedWalletPda = candidateChallenge[fixtureCase.tamper.linkedWalletPdaFrom];
+  }
+
+  const verify = {
+    expectedWallet: fixtureCase.expectedWallet || fixtureChallenge.wallet,
+    expectedAgentId: challengeOptions.agentId,
+    expectedDomain: challengeOptions.domain,
+    expectedAudience: challengeOptions.audience,
+    now: challengeOptions.issuedAt,
+    ...(fixtureCase.verify || {}),
+  };
+
+  const result = verifyWalletControlChallengeSignature({
+    challenge: candidateChallenge,
+    signature: signChallenge(fixtureWallet, fixtureChallenge),
+    expectedWallet: verify.expectedWallet,
+    expectedAgentId: verify.expectedAgentId,
+    expectedDomain: verify.expectedDomain,
+    expectedAudience: verify.expectedAudience,
+    now: verify.now,
+    usedNonces: verify.usedNonces,
+  });
+
+  assert.equal(result.ok, fixtureCase.expect.ok, fixtureCase.id);
+  for (const expectedError of fixtureCase.expect.errors) {
+    assert.ok(
+      result.errors.includes(expectedError),
+      `${fixtureCase.id} missing expected error: ${expectedError}; got ${result.errors.join(', ')}`
+    );
+  }
+
+  fixtureCases.set(fixtureCase.id, {
+    seedLabel,
+    expectedWallet,
+    challengeOptions,
+    challenge: fixtureChallenge,
+  });
+}
 
 console.log('wallet-control challenge helper OK');
