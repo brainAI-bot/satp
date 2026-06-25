@@ -31,6 +31,7 @@ The executable conformance suite keeps fixtures under
 | `linked-account-positive.json` | pass | Valid linked account proof that is bound to the same SATP identity subject. |
 | `attestation-positive.json` | pass | Valid attestation with supported claim type, issuer trust class, metadata hash, PDA, and non-expired validity window. |
 | `trust-packet-positive.json` | pass | Valid offline read-only trust packet generated from deterministic SDK helpers. |
+| `trust-packet-negative-batch.json` | pass | Executable trust-packet case batch proving stale, revoked, malformed, and unsupported-issuer packets fail closed while preserving read-only/no-mutation checks. |
 | `identity-stale.json` | fail closed | Previously valid identity whose freshness window or compatibility version is no longer acceptable. |
 | `attestation-revoked.json` | fail closed | Attestation marked revoked by fixture state or revocation reference. |
 | `attestation-malformed.json` | fail closed | Record with missing required fields, invalid PDA/hash linkage, or invalid schema version. |
@@ -65,6 +66,7 @@ tests/conformance/
     linked-account-positive.json
     attestation-positive.json
     trust-packet-positive.json
+    trust-packet-negative-batch.json
     identity-stale.json
     attestation-revoked.json
     attestation-malformed.json

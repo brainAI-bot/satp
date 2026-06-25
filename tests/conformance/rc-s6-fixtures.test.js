@@ -63,6 +63,7 @@ const EXPECTED_FILES = [
   'linked-account-positive.json',
   'attestation-positive.json',
   'trust-packet-positive.json',
+  'trust-packet-negative-batch.json',
   'identity-stale.json',
   'attestation-revoked.json',
   'attestation-malformed.json',
@@ -95,6 +96,18 @@ function assertPublicKey(value, errors, details, code) {
 
 function sameJsonValue(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function deepMerge(base, patch) {
+  if (Array.isArray(patch)) return patch;
+  if (!patch || typeof patch !== 'object') return patch;
+  const output = { ...(base && typeof base === 'object' && !Array.isArray(base) ? base : {}) };
+  for (const [key, value] of Object.entries(patch)) {
+    output[key] = value && typeof value === 'object' && !Array.isArray(value)
+      ? deepMerge(output[key], value)
+      : value;
+  }
+  return output;
 }
 
 function checkSchema(record, expected, errors, details) {
@@ -288,34 +301,116 @@ function validateAttestation(record, errors, details) {
 
 function validateTrustPacket(record, errors, details) {
   checkSchema(record, 'satp.trustPacketFixture.v1', errors, details);
-  const result = validateSatpTrustPacket(record.packet);
+  const packet = record.packet;
+  const result = validateSatpTrustPacket(packet);
   if (!result.ok) {
     addError(errors, details, 'trustPacket', result.errors.join('; '));
   } else {
     addDetail(details, 'trustPacket');
   }
-  const expected = buildSatpTrustPacket({
-    subjectWallet: record.packet && record.packet.subjectWallet,
-    agentId: record.packet && record.packet.agentId,
-    claimType: record.packet && record.packet.claimType,
-    metadataHash: record.packet && record.packet.metadataHash,
-    attester: record.packet && record.packet.attester,
-    network: record.packet && record.packet.network,
-    expiresAt: record.packet && record.packet.expiresAt,
-  });
-  if (!sameJsonValue(record.packet, expected)) {
+  let expected = null;
+  try {
+    expected = buildSatpTrustPacket({
+      subjectWallet: packet && packet.subjectWallet,
+      agentId: packet && packet.agentId,
+      claimType: packet && packet.claimType,
+      metadataHash: packet && packet.metadataHash,
+      attester: packet && packet.attester,
+      network: packet && packet.network,
+      expiresAt: packet && packet.expiresAt,
+    });
+  } catch (err) {
+    addError(errors, details, 'trustPacket', 'packet cannot be re-derived: ' + err.message);
+  }
+  if (expected && !sameJsonValue(packet, expected)) {
     addError(errors, details, 'trustPacket', 'packet does not match deterministic SDK output');
   }
-  if (record.packet && record.packet.flags && record.packet.flags.signingRequired === false && record.packet.flags.transactionRequired === false && record.packet.flags.writesRequired === false && record.packet.flags.livePaymentRequired === false) {
+  if (packet && packet.flags && packet.flags.signingRequired === false && packet.flags.transactionRequired === false && packet.flags.writesRequired === false && packet.flags.livePaymentRequired === false) {
     addDetail(details, 'readOnlyFlags');
   } else {
     addError(errors, details, 'readOnlyFlags', 'packet flags are not read-only');
   }
-  checkNoMutationIndicators(record.packet, errors, details);
+  checkNoMutationIndicators(packet, errors, details);
   if (!details.has('noMutationIndicators')) {
     addDetail(details, 'noMutationIndicators');
   }
+  if (record.issuerTrustClass !== undefined) {
+    checkIssuerTrustClass(record, errors, details);
+  }
+  if (record.canonicalClaimType !== undefined) {
+    if (!SUPPORTED_CANONICAL_CLAIM_TYPES.has(record.canonicalClaimType)) {
+      addError(errors, details, 'claimType', 'unsupported canonical claim type');
+    } else if (packet && record.canonicalClaimType !== packet.claimType && !record.canonicalClaimType.endsWith('.' + packet.claimType)) {
+      addError(errors, details, 'claimType', 'canonical claim type does not match packet claimType');
+    } else {
+      addDetail(details, 'claimType');
+    }
+  }
+  if (record.status === 'revoked' || (record.revokedAt !== undefined && record.revokedAt !== null)) {
+    addError(errors, details, 'revoked', 'revoked trust packet must fail closed');
+  }
+  if (record.status !== undefined && record.status !== 'active') {
+    addError(errors, details, 'status', 'trust packet must be active');
+  }
+  checkFreshness({
+    ...record,
+    expiresAt: record.expiresAt === undefined && packet ? packet.expiresAt : record.expiresAt,
+  }, errors, details);
   addDetail(details, 'noNetwork');
+}
+
+function validateTrustPacketBatch(record, errors, details) {
+  checkSchema(record, 'satp.trustPacketCaseBatch.v1', errors, details);
+  if (!Array.isArray(record.cases) || record.cases.length === 0) {
+    addError(errors, details, 'trustPacketCaseBatch', 'cases are required');
+    return;
+  }
+  for (const testCase of record.cases) {
+    const caseErrors = [];
+    const caseDetails = new Set();
+    let packet = testCase.packet || null;
+    if (!packet) {
+      try {
+        packet = buildSatpTrustPacket({
+          ...record.basePacketOptions,
+          ...testCase.packetOptions,
+        });
+      } catch (err) {
+        addError(caseErrors, caseDetails, 'trustPacket', 'packet cannot be built: ' + err.message);
+      }
+    }
+    if (packet && testCase.packetPatch) {
+      packet = deepMerge(packet, testCase.packetPatch);
+    }
+    validateTrustPacket({
+      schemaVersion: 'satp.trustPacketFixture.v1',
+      recordType: 'trust-packet',
+      ...(record.commonSemantics || {}),
+      ...testCase,
+      packet,
+    }, caseErrors, caseDetails);
+    const verdict = caseErrors.length > 0 ? 'fail' : 'pass';
+    if (verdict !== testCase.expected.verdict) {
+      addError(
+        errors,
+        details,
+        'trustPacketCase.' + testCase.id,
+        'expected ' + testCase.expected.verdict + ' but got ' + verdict + ': ' + caseErrors.join('; ')
+      );
+      continue;
+    }
+    for (const expectedDetail of testCase.expected.details) {
+      if (!caseDetails.has(expectedDetail)) {
+        addError(
+          errors,
+          details,
+          'trustPacketCase.' + testCase.id,
+          'missing expected detail ' + expectedDetail + '; got ' + [...caseDetails].sort().join(', ')
+        );
+      }
+    }
+    addDetail(details, 'trustPacketCase.' + testCase.id + '.' + verdict);
+  }
 }
 
 function validateReviewBoundary(record, errors, details) {
@@ -393,6 +488,8 @@ function validateFixture(fixture) {
     validateAttestation(record, errors, details);
   } else if (record.recordType === 'trust-packet') {
     validateTrustPacket(record, errors, details);
+  } else if (record.recordType === 'trust-packet-case-batch') {
+    validateTrustPacketBatch(record, errors, details);
   } else if (record.recordType === 'review-weight-boundary') {
     boundaryVerdict = validateReviewBoundary(record, errors, details);
   } else if (record.recordType === 'escrow-reference-boundary') {
@@ -426,4 +523,3 @@ for (const file of EXPECTED_FILES) {
 
 assert.equal(networkAttempted, false, 'RC-S6 conformance suite attempted network access');
 console.log('RC-S6 offline conformance fixtures OK (' + EXPECTED_FILES.length + ' fixtures)');
-

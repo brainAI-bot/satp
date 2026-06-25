@@ -1,0 +1,119 @@
+{
+  "fixtureVersion": "satp.rc-s6.fixture.v1",
+  "specRefs": [
+    "SPEC.md:96-119",
+    "SPEC.md:141-183",
+    "SPEC.md:186-205",
+    "SPEC.md:333-350",
+    "SPEC.md:354-400",
+    "SPEC.md:478-493",
+    "idls/attestations.json"
+  ],
+  "id": "trust-packet-negative-batch",
+  "description": "Trust-packet-specific fail-closed cases for stale, revoked, malformed, and unsupported issuer inputs.",
+  "expected": {
+    "verdict": "pass",
+    "details": [
+      "schemaVersion",
+      "trustPacketCase.stale.fail",
+      "trustPacketCase.revoked.fail",
+      "trustPacketCase.malformed.fail",
+      "trustPacketCase.unsupported-issuer.fail"
+    ]
+  },
+  "record": {
+    "schemaVersion": "satp.trustPacketCaseBatch.v1",
+    "recordType": "trust-packet-case-batch",
+    "basePacketOptions": {
+      "subjectWallet": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG",
+      "agentId": "rc-s6-fixture-agent",
+      "claimType": "github_verified",
+      "metadataHash": "414f0c9b1ded7a0636e2215c93d37b91c247592f4319d3ff302cd1085bbac710",
+      "attester": "9xQeWvG816bUx9EPf3q2w7Sc4pTCK2n12u3Zmd4Mx2f",
+      "network": "devnet",
+      "expiresAt": 1893456000
+    },
+    "commonSemantics": {
+      "issuerTrustClass": "partner",
+      "canonicalClaimType": "identity.github_verified",
+      "status": "active",
+      "revokedAt": null
+    },
+    "cases": [
+      {
+        "id": "stale",
+        "description": "Deterministic packet with an expired attestation window must fail closed.",
+        "packetOptions": {
+          "expiresAt": 1704067200
+        },
+        "freshness": {
+          "notAfter": 1704067200
+        },
+        "expected": {
+          "verdict": "fail",
+          "details": [
+            "trustPacket",
+            "stale",
+            "readOnlyFlags",
+            "noMutationIndicators",
+            "claimType",
+            "issuerTrustClass"
+          ]
+        }
+      },
+      {
+        "id": "revoked",
+        "description": "Deterministic packet tied to revoked attestation state must fail closed.",
+        "status": "revoked",
+        "revokedAt": 1751328000,
+        "expected": {
+          "verdict": "fail",
+          "details": [
+            "trustPacket",
+            "revoked",
+            "readOnlyFlags",
+            "noMutationIndicators",
+            "claimType",
+            "issuerTrustClass"
+          ]
+        }
+      },
+      {
+        "id": "malformed",
+        "description": "Packet with invalid type and PDA linkage must fail deterministic validation.",
+        "packetPatch": {
+          "packetType": "not-satp-trust-packet",
+          "pda": {
+            "attestation": "3L1hQV51pJGbhv6ie1aYVZ8T719PUtNGxRMxUJLkc5cY"
+          },
+          "requestHash": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "expected": {
+          "verdict": "fail",
+          "details": [
+            "trustPacket",
+            "readOnlyFlags",
+            "noMutationIndicators",
+            "claimType",
+            "issuerTrustClass"
+          ]
+        }
+      },
+      {
+        "id": "unsupported-issuer",
+        "description": "Structurally valid packet from an unsupported issuer trust class must fail closed.",
+        "issuerTrustClass": "unknown-third-party",
+        "expected": {
+          "verdict": "fail",
+          "details": [
+            "trustPacket",
+            "issuerTrustClass",
+            "readOnlyFlags",
+            "noMutationIndicators",
+            "claimType"
+          ]
+        }
+      }
+    ]
+  }
+}
