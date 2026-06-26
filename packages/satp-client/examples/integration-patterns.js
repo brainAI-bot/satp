@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * SATP V3 SDK — Integration Patterns & Real-World Examples
+ * SATP V3 SDK - Integration Patterns & App-Agnostic Examples
  *
  * Practical patterns for integrating SATP V3 into applications.
  * Each example is self-contained and can be run against devnet.
@@ -29,7 +29,7 @@ const {
 
 // ═══════════════════════════════════════════════════════
 //  PATTERN 1: Agent Identity Lookup (Read-Only)
-//  Use case: AgentFolio profile page, marketplace listings
+//  Use case: downstream profile pages and app-owned listings
 // ═══════════════════════════════════════════════════════
 
 async function lookupAgent(agentId = 'brainChain') {
@@ -132,7 +132,7 @@ async function registerAgent(keypairPath) {
 
 // ═══════════════════════════════════════════════════════
 //  PATTERN 3: Review + Reputation Flow
-//  Use case: Post-job review, marketplace feedback
+//  Use case: post-engagement review and consumer-owned feedback
 // ═══════════════════════════════════════════════════════
 
 async function reviewAndReputationFlow() {

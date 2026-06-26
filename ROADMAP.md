@@ -2,7 +2,7 @@
 
 Schema: HQ roadmap v1
 Status: ACTIVE - PLANNING
-Last updated: 2026-05-30
+Last updated: 2026-06-26
 
 SATP is the Solana Agent Trust Protocol: an app-agnostic protocol and SDK
 surface for portable AI-agent identity, attestations, reputation, validation,
@@ -52,7 +52,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - Committed IDLs exist for identity registry, attestations, reputation,
   validation, reviews, and escrow. [shipped]
 - Repository documentation must stay app-agnostic and avoid treating AgentFolio
-  product logic as SATP core. [in flight]
+  product logic as SATP core. [#6777112a] [shipped]
 
 ## Phase 2 - SDK package and consumer boundary
 
