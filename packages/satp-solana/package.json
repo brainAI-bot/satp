@@ -18,6 +18,6 @@
     "README.md"
   ],
   "dependencies": {
-    "@brainai/satp-client": "0.1.0-rc.0"
+    "@brainai/satp-client": "2.0.2-rc.0"
   }
 }

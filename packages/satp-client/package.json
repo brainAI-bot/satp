@@ -1,6 +1,6 @@
 {
   "name": "@brainai/satp-client",
-  "version": "0.1.0-rc.0",
+  "version": "2.0.2-rc.0",
   "description": "SATP client SDK surface prepared for release-candidate review; publish only after the release packet passes.",
   "main": "src/index.js",
   "types": "src/index.d.ts",
