@@ -329,7 +329,9 @@ These use Cross-Program Invocation to update fields directly on the Genesis Reco
 
 ### Escrow Methods (10)
 
-Full escrow lifecycle for agent marketplace jobs.
+App-agnostic escrow builders for downstream applications that need unsigned
+SATP escrow transactions. Product-specific marketplace records, fees, job
+workflow, moderation, and display copy stay in the consuming application.
 
 | Method | Description |
 |--------|-------------|
@@ -357,13 +359,13 @@ Cancelled   Disputed     Closed (rent reclaimed)
 ```
 
 ```javascript
-// Create an escrow (0.5 SOL for a coding job)
+// Create an escrow (0.5 SOL for a generic work agreement)
 const tx = await sdk.buildCreateEscrow(
   clientPubkey,
   agentWallet,
   'brainChain',
   0.5 * 1e9,        // lamports
-  'Build SATP integration',
+  'Complete agreed work',
   Math.floor(Date.now()/1000) + 86400 * 7, // 7 day deadline
   0,                 // nonce (for multiple escrows with same description)
   { arbiter: arbiterPubkey }
@@ -424,17 +426,11 @@ const sig = await connection.sendRawTransaction(tx.serialize());
 await connection.confirmTransaction(sig);
 ```
 
-## REST API
+## Consumer APIs
 
-The SATP V3 API is available at `https://agentfolio.bot/api/v3/`:
-
-| Endpoint | Description |
-|----------|-------------|
-| `GET /api/v3/health` | API health + program IDs |
-| `GET /api/v3/escrow/by-client/:wallet` | Escrows by client wallet |
-| `GET /api/v3/escrow/by-agent/:wallet` | Escrows by agent wallet |
-| `GET /api/v3/escrow/by-agent-id/:agentId` | Escrows by SATP agent_id |
-| + 18 more | See OpenAPI spec in `docs/` |
+SATP core does not define or host an HTTP API. Downstream applications may wrap
+the SDK with their own read APIs, but those routes are consumer-owned adapters
+and must not be treated as SATP protocol authority.
 
 ## Testing
 

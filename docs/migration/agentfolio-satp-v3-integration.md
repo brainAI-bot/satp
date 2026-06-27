@@ -1,9 +1,21 @@
-# SATP V3 Integration Plan — P0
+# Archived AgentFolio SATP V3 Consumer Integration Notes
 
-**Goal:** Make SATP V3 (Genesis Record) the on-chain source of truth for AgentFolio. DB becomes cache, chain becomes authoritative.
+Status: archived consumer context. This document is not SATP core protocol
+authority and does not authorize AgentFolio product work, downstream deploys,
+database migration, Solana devnet/mainnet writes, keypair reads or changes, npm
+publish, production restart, public launch, or client commitments.
 
-## Phase 1: Client Update (brainChain)
-**Deadline: EOD March 17**
+AgentFolio is one downstream consumer of SATP. SATP owns protocol semantics,
+IDL/program references, PDA derivation helpers, unsigned transaction builders,
+and app-agnostic verification helpers. AgentFolio-owned routes, database cache
+behavior, profile UX, marketplace policy, and server deployment remain outside
+the SATP repo unless HQ assigns a separate consumer integration task.
+
+The notes below are retained only to explain historical AgentFolio integration
+expectations during extraction. Treat every path and deadline as consumer-owned
+context, not as a SATP execution plan.
+
+## Historical Phase 1: Client Update
 
 1. **Update AgentFolio SATP client** (`src/satp-client/src/constants.js` + `src/satp-identity-client.js`)
    - Replace V2 program IDs with V3 mainnet program IDs:
@@ -16,17 +28,16 @@
    - Update all account struct deserialization for GenesisRecord fields
    - Export new client functions: `createGenesisRecord()`, `burnToBecome()`, `getGenesisRecord()`
 
-2. **Deploy updated client to AgentFolio server** (16.16.78.208)
+2. **Consumer-owned deploy of updated client to AgentFolio server**
    - Copy V3 client lib to `/home/ubuntu/agentfolio/src/satp-client/`
    - Test: `node -e "const c = require('./src/satp-client'); console.log(c.PROGRAM_IDS)"` shows V3 IDs
 
-3. **Migrate existing agents** (5 team agents + any registered agents)
+3. **Consumer-owned migration of existing agents**
    - Use `migrate_v2_to_v3` instruction for each existing V2 identity
    - Map: old wallet-seeded PDA -> new agent_id-seeded GenesisRecord
    - Test each migration on devnet first, then mainnet
 
-## Phase 2: Backend Wiring (brainForge)
-**Deadline: EOD March 18**
+## Historical Phase 2: Backend Wiring
 
 1. **Registration flow**: When a profile is created in DB, also create V3 GenesisRecord on-chain
    - `src/routes/satp-auto-identity.js` — update to use V3 `create_identity` with `agent_id_hash`
@@ -51,8 +62,7 @@
    - Verification -> V3 `update_verification` (level)
    - Review -> V3 Reviews program
 
-## Phase 3: Frontend Display (brainForge)
-**Deadline: EOD March 19**
+## Historical Phase 3: Frontend Display
 
 1. **Profile page**: Show on-chain data section
    - GenesisRecord fields: birth timestamp, face image, authority, linked wallets
