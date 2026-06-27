@@ -2,6 +2,22 @@
   "name": "@brainai/satp-solana",
   "version": "0.0.0-extraction",
   "private": true,
-  "description": "SATP Solana helper scaffold for program IDs, IDLs, PDA helpers, account decoders, and transaction builders. Not published by SATP-EXTRACT-001.",
-  "main": "README.md"
+  "description": "SATP Solana package entrypoint for PR review. Not published by SATP-EXTRACT-001.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "dependencies": {
+    "@brainai/satp-client": "0.1.0-rc.0"
+  }
 }
