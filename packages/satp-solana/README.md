@@ -1,5 +1,9 @@
 # @brainai/satp-solana
 
-Extraction scaffold for Solana-specific SATP exports.
+Solana-specific SATP entrypoint for program IDs, PDA helpers, SDK builders, and
+account deserializers.
 
-Initial source-of-truth IDLs are in `../../idls/`. Existing PDA helpers and transaction builders are preserved in `../satp-client/src/` for this branch and should be split here during the follow-up build/package task.
+This package remains private during SATP-EXTRACT-001. It is importable inside
+the workspace and in PR review tests, but npm publishing, deploys, keypair
+actions, and install-ready consumer docs are explicitly out of scope. Initial
+source-of-truth IDLs remain in `../../idls/`.

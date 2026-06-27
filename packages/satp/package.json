@@ -2,6 +2,24 @@
   "name": "@brainai/satp",
   "version": "0.0.0-extraction",
   "private": true,
-  "description": "SATP umbrella package scaffold. Not published by SATP-EXTRACT-001.",
-  "main": "README.md"
+  "description": "SATP umbrella package entrypoint for PR review. Not published by SATP-EXTRACT-001.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "dependencies": {
+    "@brainai/satp-client": "0.1.0-rc.0",
+    "@brainai/satp-core": "0.0.0-extraction",
+    "@brainai/satp-solana": "0.0.0-extraction"
+  }
 }

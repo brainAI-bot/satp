@@ -1,5 +1,9 @@
 # @brainai/satp-core
 
-Extraction scaffold for app-agnostic SATP types, claim schemas, issuer trust classes, validation levels, reputation formula types, normalization helpers, and conformance helpers.
+Core SATP entrypoint for offline package-boundary helpers, including identity
+attestation request metadata, trust packets, x402 discovery metadata, and local
+runtime policy evaluation.
 
-SATP-EXTRACT-001 intentionally keeps this package as documentation/scaffold only. Follow-up build tasks should move pure helpers out of `packages/satp-client/src/` when splitting code.
+This package remains private during SATP-EXTRACT-001. It is importable inside
+the workspace and in PR review tests, but npm publishing and install-ready
+consumer docs are explicitly out of scope.
