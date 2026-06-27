@@ -69,7 +69,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - Umbrella packages for satp, satp-core, and satp-solana must receive real
   entrypoints and tests before they are described as install-ready. [#bd0618ef] [shipped]
 - Release-candidate package metadata must be reconciled with stable npm latest
-  before any promotion decision. [pending]
+  before any promotion decision. [#7ae6b71d] [shipped]
 
 ## Phase 3 - Runtime examples and conformance
 
