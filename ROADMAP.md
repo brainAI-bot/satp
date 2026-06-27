@@ -79,7 +79,7 @@ conformance, security, release, and mainnet authority gates remain open.
   integration reference. [shipped]
 - External conformance tests must prove a third-party app can verify SATP
   identity, attestation, and trust packet behavior without AgentFolio
-  infrastructure. [in flight]
+  infrastructure. [#f5421e4b] [shipped]
 - Runtime examples must remain offline and fixture-first by default, with RPC
   explicitly opt-in and no signing or transaction sending. [in flight]
 - Conformance fixtures must cover positive, stale, revoked, malformed, and
