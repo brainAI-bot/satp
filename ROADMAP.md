@@ -67,7 +67,7 @@ conformance, security, release, and mainnet authority gates remain open.
   signer, transaction, RPC write, live x402 payment, or package publish
   requirements. [shipped]
 - Umbrella packages for satp, satp-core, and satp-solana must receive real
-  entrypoints and tests before they are described as install-ready. [pending]
+  entrypoints and tests before they are described as install-ready. [#bd0618ef] [shipped]
 - Release-candidate package metadata must be reconciled with stable npm latest
   before any promotion decision. [pending]
 
