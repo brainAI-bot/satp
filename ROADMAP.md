@@ -81,7 +81,7 @@ conformance, security, release, and mainnet authority gates remain open.
   identity, attestation, and trust packet behavior without AgentFolio
   infrastructure. [#f5421e4b] [shipped]
 - Runtime examples must remain offline and fixture-first by default, with RPC
-  explicitly opt-in and no signing or transaction sending. [in flight]
+  explicitly opt-in and no signing or transaction sending. [#580c45a5] [shipped]
 - Conformance fixtures must cover positive, stale, revoked, malformed, and
   unsupported-issuer cases. [pending]
 
