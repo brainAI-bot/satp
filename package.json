@@ -51,6 +51,7 @@
   },
   "files": [
     "README.md",
+    "docs/agentfolio-consumption-readiness.md",
     "docs/package-boundary.md",
     "docs/runtime-policy-adapter-v0.md",
     "docs/satp-client-consumer-install.md",
