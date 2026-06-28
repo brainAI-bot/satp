@@ -1,15 +1,18 @@
 # SATP Client consumer install path
 
 `@brainai/satp-client` can be consumed from stable npm, the rc npm channel, or
-a reviewed SATP Git commit. Choose the source based on the artifact the
-downstream app needs to prove:
+a reviewed SATP Git commit. AgentFolio's default is stable npm. A reviewed SATP
+Git commit pin is allowed only when HQ assigns explicit AgentFolio/SATP
+branch/PR coordination work, and the consumer PR must record the exact commit
+SHA and reason for the temporary pin. Choose the source based on the artifact
+the downstream app needs to prove:
 
 | Channel | Use when | Dependency |
 | --- | --- | --- |
-| Stable npm | Production or default consumer installs should stay on the stable public package. | `@brainai/satp-client@2.0.1` or `@brainai/satp-client` |
+| Stable npm | Production or default AgentFolio and other consumer installs should stay on the stable public package. | `@brainai/satp-client@2.0.1` or `@brainai/satp-client` |
 | Release candidate npm | The app is validating the rc package metadata or needs reproducible rc manifests before promotion. | `@brainai/satp-client@0.1.0-rc.0` |
 | Release candidate tag | Short-lived rc opt-in where a moving dist-tag is acceptable. | `@brainai/satp-client@rc` |
-| Reviewed Git commit | PR coordination or source-review installs tied to an exact SATP commit. | `git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
+| Reviewed Git commit | HQ-assigned PR coordination or source-review installs tied to an exact reviewed SATP commit. | `git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
 The npm `latest` tag still resolves to `@brainai/satp-client@2.0.1`. The
 `rc` tag points at `@brainai/satp-client@0.1.0-rc.0`; downstream apps that
@@ -85,8 +88,9 @@ Verified TASK-2dfc2845 dependency string:
 }
 ```
 
-The branch form below is acceptable for active PR coordination, but the final
-merge-safe dependency should pin a commit hash:
+The branch form below is acceptable only for local active PR coordination. It is
+not merge-safe for AgentFolio; the final dependency must pin an exact reviewed
+commit hash and record the HQ reason for using a Git pin instead of stable npm:
 
 ```json
 {
@@ -205,6 +209,12 @@ npm install --ignore-scripts --no-audit --no-fund ../satp/dist/brainai-satp-clie
 
 Do not use the local tarball path as the merge dependency in AgentFolio.
 
+
+## AgentFolio consumption readiness
+
+For the AgentFolio-specific rule text, source-linked package boundary, allowed
+install forms, and offline readiness checks, see
+[`docs/agentfolio-consumption-readiness.md`](./agentfolio-consumption-readiness.md).
 
 ## Package-boundary hardening reference
 

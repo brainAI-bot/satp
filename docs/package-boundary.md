@@ -46,10 +46,16 @@ For active SATP branch/PR review, use a commit-addressed Git dependency:
 
 Rules:
 
+- AgentFolio defaults to stable npm; reviewed SATP Git commit pins are allowed
+  only for HQ-assigned AgentFolio/SATP branch or PR coordination, with the
+  exact SATP commit SHA and reason recorded in the consumer PR.
 - Pin a commit hash for mergeable consumer PRs; branch refs are only for temporary review.
 - Do not use sibling paths such as `file:../satp/...` in mergeable AgentFolio changes.
 - Do not publish to npm from this hardening phase.
 - Do not require consumer apps to copy SATP IDLs, PDA seeds, or private protocol logic.
+
+See [`docs/agentfolio-consumption-readiness.md`](./agentfolio-consumption-readiness.md)
+for the AgentFolio-specific readiness packet and allowed install forms.
 
 ## CI/build/test standard
 
