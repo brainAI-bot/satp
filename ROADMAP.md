@@ -89,13 +89,14 @@ conformance, security, release, and mainnet authority gates remain open.
 
 - Production private key material is forbidden from repo, HQ messages, reports,
   logs, screenshots, packages, and public PRs. [shipped]
-- Security review by brainShield remains inactive until HQ v4 is stable and an
-  HQ token exists. [blocked] · owner-gated
+- Security review by brainShield is driven through HQ tasking once tokened, with
+  independent evidence required before release promotion. [pending]
 - Mainnet authority, upgrade, fee-payer, escrow/funds authority, and issuer
   separation must be approved before any mainnet deploy or value-bearing action.
   [blocked] · owner-gated
 - Npm publish remains blocked until CI, package metadata, release notes,
-  ownership, and dist-tag strategy are verified. [blocked] · owner-gated
+  ownership, dist-tag strategy, and a separate publish approval are verified.
+  [blocked]
 - Release packet must include CI proof, package contents, secret-scan proof,
   consumer install proof, compatibility notes, and open risk list. [#3611a94d] [shipped]
 
@@ -126,7 +127,7 @@ conformance, security, release, and mainnet authority gates remain open.
   [#3653fd5a] [shipped]
 - RC-S6 core does not authorize mainnet deploys, signing flows, escrow
   activation, keypair movement, package publish, or production consumer
-  replacement. [blocked] · owner-gated
+  replacement. [blocked]
 
 ## Expansion · non-core
 
@@ -148,9 +149,9 @@ conformance, security, release, and mainnet authority gates remain open.
 - Decide whether the stable long-term consumer package is @brainai/satp,
   @brainai/satp-client, or a phased umbrella/client split. [#b3e7e7ce] [shipped]
 - Decide the release-candidate to stable npm promotion plan and dist-tag
-  ownership model. [pending] · owner-gated
+  ownership model. [pending]
 - Decide when brainShield becomes active for SATP security review after HQ v4
-  stabilizes. [blocked] · owner-gated
+  stabilizes. [pending]
 - Decide whether AgentFolio consumes only the current stable package until SATP
   core extraction is complete, or accepts reviewed commit-pinned updates earlier.
-  [pending] · owner-gated
+  [pending]
