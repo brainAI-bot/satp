@@ -8,7 +8,7 @@ Status: SATP S4 package-boundary hardening for branch/PR review. This document i
 | --- | --- | --- |
 | Git-installable root package | `package.json` is named `@brainai/satp-client`, `private: true`, and points `main`, `types`, and `exports["."]` at `packages/satp-client/src/index.js` and `packages/satp-client/src/index.d.ts`. | Keep this root shape only for branch/PR review consumers because clean Git install resolves `@brainai/satp-client` without a sibling tarball or review-branch publish. |
 | Workspaces | Root workspaces include `packages/satp-client`, `packages/satp-core`, `packages/satp-solana`, and `packages/satp`. | Keep workspace split as the target boundary; `packages/satp`, `packages/satp-core`, and `packages/satp-solana` expose PR-review entrypoints over the existing SDK implementation. |
-| Client package | `packages/satp-client/package.json` is named `@brainai/satp-client`, `main=src/index.js`, `types=src/index.d.ts`. The current stable consumer package is npm `@brainai/satp-client@2.0.1`; branch metadata is review-only and must not be described as npm latest. | Treat the client package as the SDK source surface while consumer docs point stable installs to npm `2.0.1`. |
+| Client package | `packages/satp-client/package.json` is named `@brainai/satp-client`, versioned as the reviewed RC-S6 artifact `2.0.2-rc.0`, with `main=src/index.js` and `types=src/index.d.ts`. The current stable consumer package remains npm `@brainai/satp-client@2.0.1`; historical rc-tag readback may still show `0.1.0-rc.0` until the rc channel is promoted. | Treat the client package as the SDK source surface while consumer docs keep stable installs on npm `2.0.1` and exact rc validation on `2.0.2-rc.0` after promotion. |
 | Umbrella package target | `packages/satp/package.json` is named `@brainai/satp`, private, version `0.0.0-extraction`, and exports `index.js`/`index.d.ts` for PR review. | Keep it private; do not expose it as install-ready until release review authorizes publish/install docs. |
 | Core/Solana packages | `@brainai/satp-core` and `@brainai/satp-solana` are private package entrypoints with explicit exports. | Keep them private; do not tell consumers to install them yet. |
 | Runtime dependencies | Root/client depend on `@solana/web3.js`, `borsh`, and `bs58`. | Keep dependencies explicit at the installable boundary; no undeclared `@brainai/satp-v3` dependency is allowed. |
@@ -17,6 +17,7 @@ Status: SATP S4 package-boundary hardening for branch/PR review. This document i
 ## Package naming and version proposal
 
 - Stable consumer package: use npm `@brainai/satp-client@2.0.1` unless a task explicitly requires branch-only review.
+- Reviewed RC-S6 package artifact: `@brainai/satp-client@2.0.2-rc.0`. Do not describe the older `0.1.0-rc.0` rc-tag readback as the current release-gate artifact.
 - Branch/PR phase: Git-install the SATP repo from a reviewed commit only for active development or review; extraction-branch labels such as `0.0.0-extraction` are not the current consumer package.
 - Pre-release SDK phase: use explicit rc/alpha versions only after CI is green, consumer docs are current, and brainKID/brainForge approve the boundary.
 - Future umbrella target: `@brainai/satp`, `@brainai/satp-core`, and `@brainai/satp-solana` now have PR-review entrypoints and package-boundary tests, but remain private until release review authorizes publish/install docs.
@@ -68,13 +69,22 @@ npm run ci
 
 `npm run ci` performs:
 
-1. `npm run validate:idls` — validates all committed IDL JSON files.
-2. `npm run check:js` - syntax-checks extracted client JS sources.
-3. `npm run check:exports` - verifies the Git-installable root export surface.
-4. `npm run test:package-entrypoints` - verifies workspace imports and execution for `@brainai/satp`, `@brainai/satp-core`, and `@brainai/satp-solana`.
-5. `npm run smoke:consumer-install` - installs the package into a clean temporary consumer and verifies `require('@brainai/satp-client')` from `node_modules`.
-6. `npm run test:v3` - runs offline SATP V3 PDA/SDK tests.
-7. `npm run test:borsh` - runs offline Borsh reader tests.
+1. `npm run lint:roadmap` - validates roadmap references.
+2. `npm run validate:idls` - validates all committed IDL JSON files.
+3. `npm run check:js` - syntax-checks extracted client JS sources.
+4. `npm run check:exports` - verifies the Git-installable root export surface.
+5. `npm run check:release-metadata` - verifies the local rc metadata is newer than stable latest and matches the release fixture.
+6. `npm run test:package-entrypoints` - verifies workspace imports and execution for `@brainai/satp`, `@brainai/satp-core`, and `@brainai/satp-solana`.
+7. `npm run smoke:consumer-install` - installs the package into a clean temporary consumer and verifies `require('@brainai/satp-client')` from `node_modules`.
+8. `npm run test:conformance:rc-s6` - runs the offline RC-S6 conformance fixtures.
+9. The remaining offline SDK, runtime-policy, wallet-control, x402 discovery, V3, and Borsh tests.
+
+GitHub Actions now runs the dedicated SATP release gate on relevant SATP
+source/package changes. The gate executes `npm run ci`,
+`npm run check:satp-client-health`, `npm run test:conformance:rc-s6`, and
+`npm run pack:satp-client`. Package health includes production audit,
+package metadata readback, dry-run pack-surface checks, require/import smoke,
+and packed-file secret-shape scans.
 
 This CI standard intentionally excludes deploy, publish, mainnet/devnet write, keypair, and production actions.
 
