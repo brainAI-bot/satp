@@ -104,7 +104,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - AgentFolio remains the first consumer but must not be imported by SATP
   packages or examples. [shipped]
 - AgentFolio consumption should use stable npm by default, or a reviewed SATP
-  Git commit only when HQ assigns branch/PR coordination work. [in flight]
+  Git commit only when HQ assigns branch/PR coordination work. [#eb22998c] [shipped]
 - AgentFolio adapter compatibility review must pass before replacing any
   production SATP dependency path. [pending]
 - Consumer-facing SATP copy in AgentFolio must not imply mainnet or escrow
