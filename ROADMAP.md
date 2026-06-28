@@ -97,7 +97,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - Npm publish remains blocked until CI, package metadata, release notes,
   ownership, and dist-tag strategy are verified. [blocked] · owner-gated
 - Release packet must include CI proof, package contents, secret-scan proof,
-  consumer install proof, compatibility notes, and open risk list. [pending]
+  consumer install proof, compatibility notes, and open risk list. [#3611a94d] [shipped]
 
 ## Phase 5 - AgentFolio consumption readiness
 
