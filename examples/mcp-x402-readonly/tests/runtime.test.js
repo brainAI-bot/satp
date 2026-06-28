@@ -83,6 +83,43 @@ test('default runtime paths do not use network, RPC, signing, or transaction sen
   assert.equal(restrictedActionAttempted, false);
 });
 
+test('runtime example loads conformance fixtures for required classifications', () => {
+  const runtime = createSatpReadonlyRuntime();
+  const result = runtime.getConformanceFixtures();
+  const classifications = new Set(result.cases.map((entry) => entry.classification));
+
+  assert.equal(result.mode, 'offline-conformance-fixtures');
+  assert.equal(result.allRequiredClassificationsCovered, true);
+  assert.equal(result.cases.every((entry) => entry.fixtureMatchesManifest), true);
+  for (const classification of ['positive', 'stale', 'revoked', 'malformed', 'unsupported-issuer']) {
+    assert.equal(classifications.has(classification), true, `${classification} fixture missing`);
+  }
+  assert.equal(restrictedActionAttempted, false);
+});
+
+test('MCP tool exposes conformance fixture classifications', async () => {
+  const server = createSatpMcpX402Server({ gate: createMockX402Gate() });
+  const response = await server.callTool(
+    'satp.getConformanceFixtures',
+    {},
+    { headers: { 'x-402-fixture': 'satp-fixture-pass' } }
+  );
+
+  assert.equal(response.ok, true);
+  assert.equal(response.result.allRequiredClassificationsCovered, true);
+  assert.deepEqual(
+    response.result.cases.map((entry) => [entry.fixture, entry.classification, entry.expectedVerdict]),
+    [
+      ['identity-positive.json', 'positive', 'pass'],
+      ['trust-packet-positive.json', 'positive', 'pass'],
+      ['identity-stale.json', 'stale', 'fail'],
+      ['attestation-revoked.json', 'revoked', 'fail'],
+      ['attestation-malformed.json', 'malformed', 'fail'],
+      ['issuer-unsupported.json', 'unsupported-issuer', 'fail'],
+    ]
+  );
+});
+
 test('satp.prepareAttestationRequest returns unsigned request metadata only', () => {
   const runtime = createSatpReadonlyRuntime();
   const result = runtime.prepareAttestationRequest({

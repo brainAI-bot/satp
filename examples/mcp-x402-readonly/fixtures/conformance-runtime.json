@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "satp.runtimeConformanceManifest.v1",
+  "description": "Runtime example manifest for offline SATP conformance fixture classifications.",
+  "source": "../../../tests/conformance/fixtures",
+  "cases": [
+    {
+      "classification": "positive",
+      "fixture": "identity-positive.json",
+      "expectedVerdict": "pass",
+      "requiredDetails": [
+        "identityPda",
+        "freshness",
+        "readOnly"
+      ]
+    },
+    {
+      "classification": "positive",
+      "fixture": "trust-packet-positive.json",
+      "expectedVerdict": "pass",
+      "requiredDetails": [
+        "trustPacket",
+        "readOnlyFlags",
+        "noMutationIndicators"
+      ]
+    },
+    {
+      "classification": "stale",
+      "fixture": "identity-stale.json",
+      "expectedVerdict": "fail",
+      "requiredDetails": [
+        "stale",
+        "schemaCompatibility"
+      ]
+    },
+    {
+      "classification": "revoked",
+      "fixture": "attestation-revoked.json",
+      "expectedVerdict": "fail",
+      "requiredDetails": [
+        "revoked"
+      ]
+    },
+    {
+      "classification": "malformed",
+      "fixture": "attestation-malformed.json",
+      "expectedVerdict": "fail",
+      "requiredDetails": [
+        "schemaVersion",
+        "subjectIdentity",
+        "attestationPda",
+        "evidenceHash"
+      ]
+    },
+    {
+      "classification": "unsupported-issuer",
+      "fixture": "issuer-unsupported.json",
+      "expectedVerdict": "fail",
+      "requiredDetails": [
+        "issuerTrustClass"
+      ]
+    }
+  ]
+}
