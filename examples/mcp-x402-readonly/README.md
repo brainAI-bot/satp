@@ -2,10 +2,11 @@
 
 This example is a repo-owned, offline-first sketch for exposing SATP read APIs through an MCP-style tool surface with a mock x402 verifier.
 
-It is intentionally **read-only by default**:
+It is intentionally **offline, fixture-first, and read-only by default**:
 
 - fixture data is used unless `mode: "rpc"` is requested;
-- RPC reads are disabled unless `SATP_EXAMPLE_ALLOW_RPC=1` is set;
+- RPC reads require both `SATP_EXAMPLE_ALLOW_RPC=1` and `rpcOptIn: { enabled: true, readOnly: true }`;
+- the RPC branch performs account-info lookup only and rejects signing, transaction, or write opt-ins;
 - it never signs transactions, sends transactions, reads keypairs, charges money, deploys programs, or publishes packages;
 - x402 behavior is represented by a mock verifier interface only.
 
@@ -16,7 +17,7 @@ The server in `src/server.js` exposes three read-only tools:
 | Tool | Purpose |
 | --- | --- |
 | `satp.getPrograms({ network })` | Return SATP v3 program IDs for `devnet` or `mainnet`. |
-| `satp.resolveIdentity({ wallet, network, mode })` | Resolve a wallet from local fixtures by default; optional read-only RPC lookup requires `SATP_EXAMPLE_ALLOW_RPC=1`. |
+| `satp.resolveIdentity({ wallet, network, mode, rpcOptIn })` | Resolve a wallet from local fixtures by default; optional read-only RPC lookup requires `SATP_EXAMPLE_ALLOW_RPC=1` and `rpcOptIn: { enabled: true, readOnly: true }`. |
 | `satp.prepareAttestationRequest({ subjectWallet, claimType, metadataHash })` | Prepare a validated read-only SATP trust packet with unsigned request metadata, program IDs, Genesis PDA, attestation PDA, and no-sign/no-transaction flags. |
 
 ## Usage
@@ -45,10 +46,10 @@ console.log(response.result);
 Fixture mode is the default and should be used for tests and examples. If a maintainer wants to demonstrate a live account lookup without writes:
 
 ```bash
-SATP_EXAMPLE_ALLOW_RPC=1 node -e "const {createSatpReadonlyRuntime}=require('./examples/mcp-x402-readonly/src/satpReadonly'); createSatpReadonlyRuntime().resolveIdentity({wallet:'7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG',mode:'rpc'}).then(console.log)"
+SATP_EXAMPLE_ALLOW_RPC=1 node -e "const {createSatpReadonlyRuntime}=require('./examples/mcp-x402-readonly/src/satpReadonly'); createSatpReadonlyRuntime().resolveIdentity({wallet:'7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG',mode:'rpc',rpcOptIn:{enabled:true,readOnly:true}}).then(console.log)"
 ```
 
-This performs a read-only account lookup. It does not create identities, submit attestations, or send any transaction.
+This performs a read-only account lookup. It does not create identities, submit attestations, sign, read keypairs, send any transaction, mutate chain state, deploy, publish packages, perform paid spend, launch publicly, mutate DNS/GitHub-org/admin settings, or perform client/business/Masthead work.
 
 ## Scope guardrails
 

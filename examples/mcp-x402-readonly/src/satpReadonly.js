@@ -10,6 +10,7 @@ const {
 
 const DEFAULT_NETWORK = 'devnet';
 const EXAMPLE_ATTESTER = '11111111111111111111111111111111';
+const RPC_OPT_IN_ENV = 'SATP_EXAMPLE_ALLOW_RPC';
 const ALLOWED_CLAIM_TYPES = new Set([
   'github_verified',
   'domain_verified',
@@ -50,7 +51,30 @@ function getPrograms({ network = DEFAULT_NETWORK } = {}) {
   };
 }
 
-async function resolveIdentity({ wallet, network = DEFAULT_NETWORK, mode = 'fixture' } = {}) {
+function assertRpcReadOnlyOptIn(rpcOptIn = {}) {
+  if (!rpcOptIn || rpcOptIn.enabled !== true || rpcOptIn.readOnly !== true) {
+    throw new Error('RPC mode requires explicit rpcOptIn: { enabled: true, readOnly: true }');
+  }
+  if (rpcOptIn.signing === true || rpcOptIn.transactions === true || rpcOptIn.writes === true) {
+    throw new Error('RPC mode is read-only only: signing, transactions, and writes must stay disabled');
+  }
+  return {
+    enabled: true,
+    readOnly: true,
+    accountLookupOnly: true,
+    signing: false,
+    transactions: false,
+    writes: false,
+  };
+}
+
+async function resolveIdentity({
+  wallet,
+  network = DEFAULT_NETWORK,
+  mode = 'fixture',
+  rpcOptIn,
+  connection,
+} = {}) {
   const selectedNetwork = normalizeNetwork(network);
   const selectedWallet = validateWallet(wallet);
   const fixtureIdentity = identitiesFixture[selectedNetwork]?.[selectedWallet] || null;
@@ -68,16 +92,19 @@ async function resolveIdentity({ wallet, network = DEFAULT_NETWORK, mode = 'fixt
   if (mode !== 'rpc') {
     throw new Error(`Unsupported resolve mode: ${mode}`);
   }
-  if (process.env.SATP_EXAMPLE_ALLOW_RPC !== '1') {
-    throw new Error('RPC mode is disabled; set SATP_EXAMPLE_ALLOW_RPC=1 to allow read-only account lookups');
+  const rpcReadOnly = assertRpcReadOnlyOptIn(rpcOptIn);
+  if (process.env[RPC_OPT_IN_ENV] !== '1') {
+    throw new Error(`RPC mode is disabled; set ${RPC_OPT_IN_ENV}=1 to allow read-only account lookups`);
   }
 
   const { Connection, clusterApiUrl } = require('@solana/web3.js');
-  const connection = new Connection(clusterApiUrl(selectedNetwork === 'mainnet' ? 'mainnet-beta' : 'devnet'), 'confirmed');
-  const account = await connection.getAccountInfo(new PublicKey(selectedWallet));
+  const readonlyConnection = connection ||
+    new Connection(clusterApiUrl(selectedNetwork === 'mainnet' ? 'mainnet-beta' : 'devnet'), 'confirmed');
+  const account = await readonlyConnection.getAccountInfo(new PublicKey(selectedWallet));
   return {
     network: selectedNetwork,
     mode: 'rpc-readonly',
+    rpcOptIn: rpcReadOnly,
     wallet: selectedWallet,
     account: account ? { lamports: account.lamports, owner: account.owner.toBase58(), executable: account.executable } : null,
     found: Boolean(account),
@@ -125,5 +152,6 @@ module.exports = {
   getPrograms,
   resolveIdentity,
   prepareAttestationRequest,
+  assertRpcReadOnlyOptIn,
   validateWallet,
 };
