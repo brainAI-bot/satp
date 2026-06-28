@@ -8,6 +8,7 @@ function createSatpMcpX402Server({ runtime = createSatpReadonlyRuntime(), gate =
     'satp.getPrograms': runtime.getPrograms,
     'satp.resolveIdentity': runtime.resolveIdentity,
     'satp.prepareAttestationRequest': runtime.prepareAttestationRequest,
+    'satp.getConformanceFixtures': runtime.getConformanceFixtures,
   };
 
   return {

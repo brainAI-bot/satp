@@ -1,8 +1,11 @@
 'use strict';
 
+const fs = require('node:fs');
+const path = require('node:path');
 const { PublicKey } = require('@solana/web3.js');
 const programsFixture = require('../fixtures/programs.json');
 const identitiesFixture = require('../fixtures/identities.json');
+const conformanceManifest = require('../fixtures/conformance-runtime.json');
 const {
   getV3ProgramIds,
   buildSatpTrustPacket,
@@ -11,6 +14,14 @@ const {
 const DEFAULT_NETWORK = 'devnet';
 const EXAMPLE_ATTESTER = '11111111111111111111111111111111';
 const RPC_OPT_IN_ENV = 'SATP_EXAMPLE_ALLOW_RPC';
+const RUNTIME_FIXTURE_DIR = path.join(__dirname, '..', 'fixtures');
+const REQUIRED_CONFORMANCE_CLASSIFICATIONS = Object.freeze([
+  'positive',
+  'stale',
+  'revoked',
+  'malformed',
+  'unsupported-issuer',
+]);
 const ALLOWED_CLAIM_TYPES = new Set([
   'github_verified',
   'domain_verified',
@@ -48,6 +59,65 @@ function getPrograms({ network = DEFAULT_NETWORK } = {}) {
     programs: programMapToStrings(getV3ProgramIds(selectedNetwork)),
     fixtureMatchesSdk: JSON.stringify(programMapToStrings(getV3ProgramIds(selectedNetwork))) ===
       JSON.stringify(programsFixture[selectedNetwork]),
+  };
+}
+
+function classifyConformanceFixture(fixture) {
+  const expected = fixture && fixture.expected ? fixture.expected : {};
+  const details = new Set(Array.isArray(expected.details) ? expected.details : []);
+
+  if (expected.verdict === 'pass') return 'positive';
+  if (details.has('stale') || details.has('schemaCompatibility')) return 'stale';
+  if (details.has('revoked')) return 'revoked';
+  if (details.has('issuerTrustClass')) return 'unsupported-issuer';
+  return 'malformed';
+}
+
+function getConformanceFixtures({
+  manifest = conformanceManifest,
+  manifestDir = RUNTIME_FIXTURE_DIR,
+} = {}) {
+  if (manifest.schemaVersion !== 'satp.runtimeConformanceManifest.v1') {
+    throw new Error('Unsupported conformance manifest schemaVersion');
+  }
+
+  const fixtureBase = path.resolve(manifestDir, manifest.source);
+  const cases = manifest.cases.map((entry) => {
+    const fixturePath = path.resolve(fixtureBase, entry.fixture);
+    if (!fixturePath.startsWith(fixtureBase + path.sep)) {
+      throw new Error(`Conformance fixture path escapes source: ${entry.fixture}`);
+    }
+    const fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+    const expectedDetails = Array.isArray(fixture.expected && fixture.expected.details)
+      ? fixture.expected.details
+      : [];
+    const classification = classifyConformanceFixture(fixture);
+
+    return {
+      fixture: entry.fixture,
+      id: fixture.id,
+      recordType: fixture.record && fixture.record.recordType,
+      classification,
+      expectedVerdict: fixture.expected && fixture.expected.verdict,
+      requiredDetails: entry.requiredDetails,
+      details: expectedDetails,
+      fixtureMatchesManifest: classification === entry.classification &&
+        fixture.expected &&
+        fixture.expected.verdict === entry.expectedVerdict &&
+        entry.requiredDetails.every((detail) => expectedDetails.includes(detail)),
+    };
+  });
+
+  const classifications = new Set(cases.map((entry) => entry.classification));
+  return {
+    mode: 'offline-conformance-fixtures',
+    schemaVersion: manifest.schemaVersion,
+    source: manifest.source,
+    requiredClassifications: REQUIRED_CONFORMANCE_CLASSIFICATIONS,
+    allRequiredClassificationsCovered: REQUIRED_CONFORMANCE_CLASSIFICATIONS.every((classification) =>
+      classifications.has(classification)
+    ),
+    cases,
   };
 }
 
@@ -144,6 +214,7 @@ function createSatpReadonlyRuntime() {
     getPrograms,
     resolveIdentity,
     prepareAttestationRequest,
+    getConformanceFixtures,
   };
 }
 
@@ -152,6 +223,8 @@ module.exports = {
   getPrograms,
   resolveIdentity,
   prepareAttestationRequest,
+  getConformanceFixtures,
+  classifyConformanceFixture,
   assertRpcReadOnlyOptIn,
   validateWallet,
 };
