@@ -10,15 +10,16 @@ the downstream app needs to prove:
 | Channel | Use when | Dependency |
 | --- | --- | --- |
 | Stable npm | Production or default AgentFolio and other consumer installs should stay on the stable public package. | `@brainai/satp-client@2.0.1` or `@brainai/satp-client` |
-| Release candidate npm | The app is validating the rc package metadata or needs reproducible rc manifests before promotion. | `@brainai/satp-client@0.1.0-rc.0` |
+| Release candidate npm | The app is validating the reviewed rc package metadata or needs reproducible rc manifests before promotion. | `@brainai/satp-client@2.0.2-rc.0` |
 | Release candidate tag | Short-lived rc opt-in where a moving dist-tag is acceptable. | `@brainai/satp-client@rc` |
 | Reviewed Git commit | HQ-assigned PR coordination or source-review installs tied to an exact reviewed SATP commit. | `git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
-The npm `latest` tag still resolves to `@brainai/satp-client@2.0.1`. The
-`rc` tag points at `@brainai/satp-client@0.1.0-rc.0`; downstream apps that
-need reproducible manifests for rc readback should pin
-`@brainai/satp-client@0.1.0-rc.0` exactly instead of relying on the moving
-`@rc` tag.
+The npm `latest` tag still resolves to `@brainai/satp-client@2.0.1`.
+Historical rc-tag readback may still show the older `0.1.0-rc.0` package until
+the rc channel is promoted. The reviewed RC-S6 artifact in this source tree is
+`@brainai/satp-client@2.0.2-rc.0`; downstream apps that need reproducible
+manifests for rc readback should pin that exact version after promotion instead
+of relying on the moving `@rc` tag.
 
 ## Stable npm dependency path
 
@@ -42,13 +43,13 @@ Pin the exact rc package when downstream reproducibility or lockfile readback is
 the auditable artifact:
 
 ```bash
-npm install @brainai/satp-client@0.1.0-rc.0
+npm install @brainai/satp-client@2.0.2-rc.0
 ```
 
 ```json
 {
   "dependencies": {
-    "@brainai/satp-client": "0.1.0-rc.0"
+    "@brainai/satp-client": "2.0.2-rc.0"
   }
 }
 ```
