@@ -123,7 +123,7 @@ conformance, security, release, and mainnet authority gates remain open.
   them. [#43394290] [shipped]
 - Semantic uncertainty outcomes must be captured in release notes and consumer
   compatibility notes before any release-candidate or stable package promotion.
-  [pending]
+  [#3653fd5a] [shipped]
 - RC-S6 core does not authorize mainnet deploys, signing flows, escrow
   activation, keypair movement, package publish, or production consumer
   replacement. [blocked] · owner-gated
