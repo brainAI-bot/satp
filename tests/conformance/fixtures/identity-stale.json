@@ -14,7 +14,8 @@
     "verdict": "fail",
     "details": [
       "stale",
-      "schemaCompatibility"
+      "schemaCompatibility",
+      "staleRevokedEvidenceUncertainty"
     ]
   },
   "record": {
@@ -45,7 +46,16 @@
     "programs": {
       "identity": "GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG"
     },
-    "stalenessReason": "fixture intentionally predates the RC-S6 compatibility window"
+    "stalenessReason": "fixture intentionally predates the RC-S6 compatibility window",
+    "uncertainty": {
+      "surface": "staleRevokedEvidence",
+      "status": "rc-s6-boundary",
+      "meaning": "A stale identity record can be parsed, but consumers must not use it as current verification evidence.",
+      "consumerBehavior": "fail-closed",
+      "mustNot": [
+        "aggregate-trust",
+        "verified-badge"
+      ]
+    }
   }
 }
-

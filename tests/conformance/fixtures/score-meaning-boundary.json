@@ -1,0 +1,47 @@
+{
+  "fixtureVersion": "satp.rc-s6.fixture.v1",
+  "specRefs": [
+    "SPEC.md:210-231",
+    "SPEC.md:247-260",
+    "SPEC.md:478-493"
+  ],
+  "id": "score-meaning-boundary",
+  "description": "Score input reaches an RC-S6 uncertainty boundary and must not be treated as release-approved trust meaning.",
+  "expected": {
+    "verdict": "warning",
+    "details": [
+      "scoreMeaningBoundaryExplicit",
+      "scoreMeaningUncertainty",
+      "noScorePromotion"
+    ]
+  },
+  "record": {
+    "schemaVersion": "satp.scoreMeaningInput.v1",
+    "recordType": "score-meaning-boundary",
+    "network": "devnet",
+    "subjectIdentity": {
+      "agentId": "rc-s6-fixture-agent",
+      "agentIdHash": "6dc0a0a47a40224b9dee426b29cf4b7842a907b005a1f23ecaf35e381e80294f",
+      "genesisPda": "3L1hQV51pJGbhv6ie1aYVZ8T719PUtNGxRMxUJLkc5cY"
+    },
+    "score": 87,
+    "scoreScale": "0-100-display-only",
+    "formulaVersion": "rc-s6-boundary",
+    "releaseApproved": false,
+    "trustPromotionAllowed": false,
+    "inputRefs": [
+      "attestation-positive",
+      "review-weight-boundary"
+    ],
+    "uncertainty": {
+      "surface": "scoreMeaning",
+      "status": "rc-s6-boundary",
+      "meaning": "The numeric score is deterministic fixture evidence only; RC-S6 does not define production ranking, eligibility, or trust-tier semantics for it.",
+      "consumerBehavior": "warning-only",
+      "mustNot": [
+        "trust-score-promotion",
+        "eligibility-unlock"
+      ]
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "fixtureVersion": "satp.rc-s6.fixture.v1",
+  "specRefs": [
+    "SPEC.md:408-432",
+    "docs/agentfolio-consumption-readiness.md",
+    "tests/agentfolio-consumer-copy-guard.test.js"
+  ],
+  "id": "agentfolio-consumer-copy-boundary",
+  "description": "AgentFolio-facing copy stays consumer-only and must not imply mainnet, escrow, npm promotion, launch, or payment readiness.",
+  "expected": {
+    "verdict": "warning",
+    "details": [
+      "agentfolioConsumerCopyBoundary",
+      "agentfolioConsumerCopyBoundaryUncertainty"
+    ]
+  },
+  "record": {
+    "schemaVersion": "satp.agentfolioConsumerCopyBoundary.v1",
+    "recordType": "agentfolio-consumer-copy-boundary",
+    "copySurfaces": [
+      "docs/agentfolio-consumption-readiness.md",
+      "docs/satp-client-consumer-install.md",
+      "examples/agentfolio-consumer-readonly/README.md"
+    ],
+    "requiredReadback": [
+      "SATP"
+    ],
+    "uncertainty": {
+      "surface": "agentfolioConsumerCopyBoundary",
+      "status": "rc-s6-boundary",
+      "meaning": "AgentFolio may describe SATP consumer and install boundaries, but RC-S6 conformance evidence cannot become product launch, mainnet, escrow, payment, or npm promotion copy.",
+      "consumerBehavior": "copy-boundary",
+      "mustNot": [
+        "mainnet-ready-copy",
+        "escrow-ready-copy",
+        "npm-latest-promotion"
+      ]
+    }
+  }
+}

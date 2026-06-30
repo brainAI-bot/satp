@@ -67,8 +67,23 @@ const EXPECTED_FILES = [
   'attestation-revoked.json',
   'attestation-malformed.json',
   'issuer-unsupported.json',
+  'score-meaning-boundary.json',
   'review-weight-boundary.json',
   'escrow-reference-boundary.json',
+  'agentfolio-consumer-copy-boundary.json',
+];
+
+const COPY_SURFACE_ROOT = path.join(__dirname, '..', '..');
+const COPY_BANNED_PATTERNS = [
+  /\bSATP\s+is\s+(?:mainnet|production|launch)[-\s]?ready\b/i,
+  /\bmainnet[-\s]?ready\s+SATP\b/i,
+  /\bescrow[-\s]?ready\s+SATP\b/i,
+  /\bSATP\s+escrow\s+is\s+(?:ready|live|active|enabled)\b/i,
+  /\bvalue[-\s]?bearing\s+(?:escrow|payments?)\s+(?:is|are)\s+(?:ready|live|active|enabled)\b/i,
+  /\breplace\s+AgentFolio(?:'s)?\s+production\s+dependency\b/i,
+  /\bpromote\s+@brainai\/satp-client\s+to\s+npm\s+latest\b/i,
+  /\bready\s+for\s+public\s+launch\b/i,
+  /\blive\s+(?:escrow|payment)\s+(?:is|are)\s+(?:ready|active|enabled)\b/i,
 ];
 
 function addError(errors, details, code, message) {
@@ -169,6 +184,39 @@ function checkFreshness(record, errors, details) {
   }
 }
 
+function checkUncertainty(record, expectedSurface, expectedBehavior, expectedMustNot, errors, details) {
+  const uncertainty = record.uncertainty;
+  const detailCode = expectedSurface + 'Uncertainty';
+  if (!uncertainty || typeof uncertainty !== 'object') {
+    addError(errors, details, detailCode, 'uncertainty note is required');
+    return;
+  }
+  if (uncertainty.surface !== expectedSurface) {
+    addError(errors, details, detailCode, 'unexpected uncertainty surface');
+  }
+  if (uncertainty.status !== 'rc-s6-boundary') {
+    addError(errors, details, detailCode, 'uncertainty status must be rc-s6-boundary');
+  }
+  if (uncertainty.consumerBehavior !== expectedBehavior) {
+    addError(errors, details, detailCode, 'unexpected consumer behavior');
+  }
+  if (typeof uncertainty.meaning !== 'string' || uncertainty.meaning.length < 24) {
+    addError(errors, details, detailCode, 'uncertainty meaning must be explicit');
+  }
+  if (!Array.isArray(uncertainty.mustNot)) {
+    addError(errors, details, detailCode, 'uncertainty mustNot list is required');
+  } else {
+    for (const expected of expectedMustNot) {
+      if (!uncertainty.mustNot.includes(expected)) {
+        addError(errors, details, detailCode, 'missing mustNot guard: ' + expected);
+      }
+    }
+  }
+  if (!errors.some((error) => error.startsWith(detailCode + ':'))) {
+    addDetail(details, detailCode);
+  }
+}
+
 function checkNoMutationIndicators(value, errors, details, location = 'record') {
   if (!value || typeof value !== 'object') return;
   for (const [key, child] of Object.entries(value)) {
@@ -214,6 +262,9 @@ function validateIdentity(record, errors, details) {
     addError(errors, details, 'status', 'identity must be active');
   }
   checkFreshness(record, errors, details);
+  if (record.uncertainty && record.uncertainty.surface === 'staleRevokedEvidence') {
+    checkUncertainty(record, 'staleRevokedEvidence', 'fail-closed', ['aggregate-trust', 'verified-badge'], errors, details);
+  }
   addDetail(details, 'readOnly');
 }
 
@@ -283,6 +334,22 @@ function validateAttestation(record, errors, details) {
       addError(errors, details, 'attestationPda', err.message);
     }
   }
+  if (record.issuerAuthority) {
+    if (record.issuerAuthority.trustClass !== record.issuerTrustClass || record.issuerAuthority.authorityResolved !== false) {
+      addError(errors, details, 'issuerTrustClassAuthority', 'issuer authority note must preserve RC-S6 fixture-only authority');
+    } else {
+      addDetail(details, 'issuerTrustClassAuthority');
+    }
+  }
+  if (record.uncertainty && record.uncertainty.surface === 'issuerTrustClassAuthority') {
+    checkUncertainty(record, 'issuerTrustClassAuthority', 'fixture-only', ['authority-promotion', 'mainnet-authority-inference'], errors, details);
+  }
+  if (record.uncertainty && record.uncertainty.surface === 'staleRevokedEvidence') {
+    checkUncertainty(record, 'staleRevokedEvidence', 'fail-closed', ['aggregate-trust', 'verified-badge'], errors, details);
+  }
+  if (record.uncertainty && record.uncertainty.surface === 'unsupportedIssuerBehavior') {
+    checkUncertainty(record, 'unsupportedIssuerBehavior', 'fail-closed', ['verified-badge', 'trust-promotion'], errors, details);
+  }
   checkFreshness(record, errors, details);
 }
 
@@ -337,11 +404,29 @@ function validateReviewBoundary(record, errors, details) {
   } else {
     addDetail(details, 'reviewWeightBoundaryExplicit');
   }
+  checkUncertainty(record, 'reviewWeight', 'warning-only', ['validation-promotion', 'ranking-boost'], errors, details);
   if (record.proposedValidationLevel > 2 && record.inputRefs.length < 2) {
     addDetail(details, 'noValidationPromotion');
     return 'warning';
   }
   return 'pass';
+}
+
+function validateScoreBoundary(record, errors, details) {
+  checkSchema(record, 'satp.scoreMeaningInput.v1', errors, details);
+  checkNetwork(record, errors, details);
+  checkSubjectIdentity(record.subjectIdentity, errors, details);
+  if (!Number.isInteger(record.score) || record.score < 0 || record.score > 100) {
+    addError(errors, details, 'scoreMeaningBoundaryExplicit', 'score must be an integer in the fixture display range');
+  }
+  if (record.formulaVersion !== 'rc-s6-boundary' || record.releaseApproved !== false || record.trustPromotionAllowed !== false) {
+    addError(errors, details, 'scoreMeaningBoundaryExplicit', 'score fixture must be explicit boundary-only evidence');
+  } else {
+    addDetail(details, 'scoreMeaningBoundaryExplicit');
+  }
+  checkUncertainty(record, 'scoreMeaning', 'warning-only', ['trust-score-promotion', 'eligibility-unlock'], errors, details);
+  addDetail(details, 'noScorePromotion');
+  return 'warning';
 }
 
 function validateEscrowBoundary(record, errors, details) {
@@ -363,10 +448,42 @@ function validateEscrowBoundary(record, errors, details) {
   } else {
     addDetail(details, 'escrowReferenceBoundaryExplicit');
   }
+  checkUncertainty(record, 'escrowReferenceMeaning', 'warning-only', ['funds-locked-copy', 'live-payment-copy'], errors, details);
   if (record.amount !== null || record.mint !== null || ['funded', 'released'].includes(record.state)) {
     addError(errors, details, 'noEscrowActivation', 'escrow reference must not imply value-bearing activation');
   } else {
     addDetail(details, 'noEscrowActivation');
+    return 'warning';
+  }
+  return 'fail';
+}
+
+function validateAgentFolioCopyBoundary(record, errors, details) {
+  checkSchema(record, 'satp.agentfolioConsumerCopyBoundary.v1', errors, details);
+  checkUncertainty(record, 'agentfolioConsumerCopyBoundary', 'copy-boundary', ['mainnet-ready-copy', 'escrow-ready-copy', 'npm-latest-promotion'], errors, details);
+  if (!Array.isArray(record.copySurfaces) || record.copySurfaces.length === 0) {
+    addError(errors, details, 'agentfolioConsumerCopyBoundary', 'copy surfaces are required');
+    return 'fail';
+  }
+  for (const surface of record.copySurfaces) {
+    if (typeof surface !== 'string' || surface.includes('..') || path.isAbsolute(surface)) {
+      addError(errors, details, 'agentfolioConsumerCopyBoundary', 'copy surface must be a repo-relative path');
+      continue;
+    }
+    const text = fs.readFileSync(path.join(COPY_SURFACE_ROOT, surface), 'utf8');
+    for (const required of record.requiredReadback || []) {
+      if (!text.toLowerCase().includes(required.toLowerCase())) {
+        addError(errors, details, 'agentfolioConsumerCopyBoundary', surface + ' missing required readback: ' + required);
+      }
+    }
+    for (const pattern of COPY_BANNED_PATTERNS) {
+      if (pattern.test(text)) {
+        addError(errors, details, 'agentfolioConsumerCopyBoundary', surface + ' contains banned readiness claim: ' + pattern);
+      }
+    }
+  }
+  if (!errors.some((error) => error.startsWith('agentfolioConsumerCopyBoundary:'))) {
+    addDetail(details, 'agentfolioConsumerCopyBoundary');
     return 'warning';
   }
   return 'fail';
@@ -393,10 +510,14 @@ function validateFixture(fixture) {
     validateAttestation(record, errors, details);
   } else if (record.recordType === 'trust-packet') {
     validateTrustPacket(record, errors, details);
+  } else if (record.recordType === 'score-meaning-boundary') {
+    boundaryVerdict = validateScoreBoundary(record, errors, details);
   } else if (record.recordType === 'review-weight-boundary') {
     boundaryVerdict = validateReviewBoundary(record, errors, details);
   } else if (record.recordType === 'escrow-reference-boundary') {
     boundaryVerdict = validateEscrowBoundary(record, errors, details);
+  } else if (record.recordType === 'agentfolio-consumer-copy-boundary') {
+    boundaryVerdict = validateAgentFolioCopyBoundary(record, errors, details);
   } else {
     addError(errors, details, 'recordType', 'unsupported recordType');
   }
@@ -426,4 +547,3 @@ for (const file of EXPECTED_FILES) {
 
 assert.equal(networkAttempted, false, 'RC-S6 conformance suite attempted network access');
 console.log('RC-S6 offline conformance fixtures OK (' + EXPECTED_FILES.length + ' fixtures)');
-

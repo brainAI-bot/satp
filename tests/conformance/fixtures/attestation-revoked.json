@@ -13,7 +13,8 @@
   "expected": {
     "verdict": "fail",
     "details": [
-      "revoked"
+      "revoked",
+      "staleRevokedEvidenceUncertainty"
     ]
   },
   "record": {
@@ -38,6 +39,16 @@
     "expiresAt": 1893456000,
     "revokedAt": 1751328000,
     "status": "revoked",
+    "uncertainty": {
+      "surface": "staleRevokedEvidence",
+      "status": "rc-s6-boundary",
+      "meaning": "A revoked attestation remains readable evidence, but consumers must fail closed and exclude it from current trust aggregation.",
+      "consumerBehavior": "fail-closed",
+      "mustNot": [
+        "aggregate-trust",
+        "verified-badge"
+      ]
+    },
     "pda": {
       "attestation": "FgUPnA4cQ2aLvFe7FFDT1DU2WU6A1EwodTDYFFqepUf4",
       "attestationBump": 255
@@ -47,4 +58,3 @@
     }
   }
 }
-

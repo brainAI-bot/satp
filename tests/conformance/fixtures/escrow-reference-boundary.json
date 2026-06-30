@@ -14,6 +14,7 @@
     "verdict": "warning",
     "details": [
       "escrowReferenceBoundaryExplicit",
+      "escrowReferenceMeaningUncertainty",
       "noEscrowActivation"
     ]
   },
@@ -37,9 +38,18 @@
     "mint": null,
     "uncertaintyStatus": "rc-s6-boundary",
     "uncertaintyNote": "Fixture is read-only evidence of PDA/reference semantics only.",
+    "uncertainty": {
+      "surface": "escrowReferenceMeaning",
+      "status": "rc-s6-boundary",
+      "meaning": "The escrow PDA is reference-only fixture evidence and does not prove funds are locked, released, payable, or live.",
+      "consumerBehavior": "warning-only",
+      "mustNot": [
+        "funds-locked-copy",
+        "live-payment-copy"
+      ]
+    },
     "programs": {
       "escrow": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C"
     }
   }
 }
-
