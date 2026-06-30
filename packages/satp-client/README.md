@@ -53,6 +53,15 @@ Mainnet program IDs are intentionally not enabled in this release candidate.
 Constructors and helpers fail closed for `network: 'mainnet'` until an approved
 mainnet decision packet provides production program IDs.
 
+RC-S6 semantic uncertainty outcomes are covered by the offline conformance gate
+merged in `93db1b3` (PR #53, `[#43394290]`) and runnable with
+`npm run test:conformance:rc-s6` from the repository root. Treat positive
+fixtures as deterministic SDK/schema compatibility only. Treat stale, revoked,
+malformed, unsupported-issuer, score-meaning, review-weight, escrow-reference,
+and AgentFolio copy-boundary fixtures as warning or fail-closed outcomes; do
+not convert them into verified badges, ranking, eligibility, payment state,
+escrow readiness, mainnet readiness, npm latest adoption, or product approval.
+
 **Runtime dependency:** `@solana/web3.js ^1.98.4`
 
 ## Quick Start

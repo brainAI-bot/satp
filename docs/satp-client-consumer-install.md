@@ -21,6 +21,31 @@ the rc channel is promoted. The reviewed RC-S6 artifact in this source tree is
 manifests for rc readback should pin that exact version after promotion instead
 of relying on the moving `@rc` tag.
 
+## RC-S6 semantic uncertainty compatibility
+
+The merged RC-S6 semantic uncertainty work in `93db1b3` (PR #53,
+`[#43394290]`) added executable offline conformance fixtures, and `a0252e8`
+records that work as shipped on `main`. Consumers can run the gate with:
+
+```bash
+npm run test:conformance:rc-s6
+```
+
+Treat this gate as a compatibility signal, not as release promotion or live
+network authority. Positive identity, linked-account, attestation, and trust
+packet fixtures prove deterministic offline SDK/schema compatibility for the
+reviewed RC-S6 artifact. Boundary fixtures for stale identity, revoked or
+malformed attestations, unsupported issuers, score meaning, review weight,
+escrow references, and AgentFolio consumer copy must remain warning or
+fail-closed outcomes.
+
+Consumers must not promote RC-S6 uncertainty outcomes into verified badges,
+ranking, eligibility, trust-score changes, payment state, escrow readiness,
+protected-action access, npm latest adoption, mainnet readiness, product launch
+copy, or AgentFolio product approval. Stable consumer installs should remain on
+`@brainai/satp-client@2.0.1` unless a separate promotion decision approves the
+RC package.
+
 ## Stable npm dependency path
 
 Use the current published npm package for stable consumer installs:
