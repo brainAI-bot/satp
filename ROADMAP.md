@@ -115,7 +115,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - RC-S6 core readiness requires a semantic review matrix tying identity, linked
   accounts, attestations, issuer trust classes, reputation, validation, reviews,
   escrow references, and version compatibility back to SPEC.md and committed
-  IDLs before release promotion. [in flight]
+  IDLs before release promotion. [#0da97436] [shipped]
 - Open SATP semantic uncertainty notes are explicit: issuer trust class
   authority, stale or revoked evidence handling, unsupported issuer behavior,
   score meaning, review weight, escrow reference meaning, and AgentFolio
