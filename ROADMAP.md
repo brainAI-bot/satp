@@ -106,7 +106,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - AgentFolio consumption should use stable npm by default, or a reviewed SATP
   Git commit only when HQ assigns branch/PR coordination work. [#eb22998c] [shipped]
 - AgentFolio adapter compatibility review must pass before replacing any
-  production SATP dependency path. [pending]
+  production SATP dependency path. [#204cd91f] [shipped]
 - Consumer-facing SATP copy in AgentFolio must not imply mainnet or escrow
   readiness before those gates are separately verified. [pending]
 
