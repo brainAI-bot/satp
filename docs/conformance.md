@@ -54,6 +54,24 @@ Executable tests should assert:
 6. Consumer examples can load conformance fixtures without importing AgentFolio
    product code or depending on AgentFolio APIs.
 
+## RC-S6 Semantic Uncertainty Review Matrix
+
+Source marker: `[#0da97436]`
+
+This matrix is the reviewer-facing semantic gate for RC-S6. It keeps consumer
+behavior deterministic when SATP records are structurally readable but their
+trust meaning is not yet release-approved.
+
+| Review surface | Positive semantic signal | Uncertainty state | Required downgrade or skip behavior | Consumer-facing impact |
+| --- | --- | --- | --- | --- |
+| Identity record | Active devnet identity with matching agent ID hash, Genesis PDA, authority, primary wallet, metadata hash, schema version, network, and freshness window. | Missing or mismatched subject linkage, stale freshness, inactive status, unsupported schema compatibility, or non-devnet fixture context. | Fail closed for identity verification; do not infer identity from wallet, display name, cached AgentFolio data, or partial PDA matches. | Consumers must show the agent as unverified or unavailable for SATP-gated actions and must not promote trust score, capability, or payment readiness from the record. |
+| Linked account | Enabled linked account proof bound to the same SATP identity subject with supported account kind, issuer, issuer trust class, proof hash, PDA, network, and freshness checks. | Account reference is valid-looking but not bound to the subject identity, is disabled, stale, unsupported, or carries an issuer class outside the RC-S6 allowlist. | Skip the linked account as evidence; fail closed if the consumer action requires that linked account, and never use it to repair or replace a failed identity record. | Consumers may display the account as not verified for this agent and must not unlock wallet-scoped claims, reputation import, or cross-account privileges from it. |
+| Attestation | Non-revoked attestation with supported canonical claim type, issuer trust class, evidence hash, metadata hash, attestation PDA, subject wallet, network, and validity window. | Revoked, expired, malformed, unsupported claim type, unsupported issuer class, mismatched subject, or unclear issuer authority. | Fail closed for the individual attestation; ignore it for aggregation and do not translate it into capability, review, risk, or work-history credit. | Consumers must omit the claim from verified badges, trust summaries, and policy decisions, or show it as unavailable/rejected when explanation UI is required. |
+| Issuer trust class | Issuer class is one of the RC-S6 supported classes: `self`, `platform`, `protocol`, `partner`, or `security`. | Structurally valid issuer uses any other class, issuer authority cannot be resolved from the fixture, or class semantics are ambiguous for the claim. | Treat the issuer as unsupported; fail closed for records whose trust meaning depends on that issuer class, even when hashes and PDAs validate. | Consumers must not convert unsupported issuer evidence into verified identity, linked account, reputation, risk, or capability signals. |
+| Review or reputation input | Boundary fixture produces deterministic warning or fail-closed output without silently inflating score meaning. | Review weight, score scale, reviewer authority, or aggregation semantics are not release-approved. | Downgrade to warning or fail closed; do not add to release-ready score, ranking, eligibility, or trust packet promotion. | Consumers may surface the item only as uncertain review evidence and must keep trust score, ordering, and eligibility unchanged unless separately approved. |
+| Escrow or value reference | Escrow reference is explicitly marked as a boundary fixture and contains no signer, transaction, RPC write, live payment, deploy, publish, keypair, or secret indicator. | Escrow status, value movement, or payment readiness is implied rather than directly proven by an approved live flow. | Skip value-bearing interpretation; reject any mutation indicator and keep the fixture read-only. | Consumers must not show funds as locked, released, payable, claimable, or production-ready from RC-S6 conformance evidence alone. |
+| Trust packet consumption | Offline trust packet validates read-only SATP identity and evidence references with mutation indicators absent. | Packet includes signer, transaction, RPC write, live x402 payment, deploy, publish, keypair, secret, stale evidence, or unsupported issuer semantics. | Reject the packet or downgrade to a warning that cannot unlock protected actions. | Consumers must keep protected actions gated by local policy; SATP evidence may inform policy but must not bypass host approval or payment authorization. |
+
 ## Test Layout
 
 The executable gate is offline and does not change this phase's non-actions:
