@@ -13,7 +13,9 @@
   "expected": {
     "verdict": "fail",
     "details": [
-      "issuerTrustClass"
+      "issuerTrustClass",
+      "issuerTrustClassAuthority",
+      "unsupportedIssuerBehaviorUncertainty"
     ]
   },
   "record": {
@@ -23,6 +25,21 @@
     "attestationId": "FgUPnA4cQ2aLvFe7FFDT1DU2WU6A1EwodTDYFFqepUf4",
     "issuer": "9xQeWvG816bUx9EPf3q2w7Sc4pTCK2n12u3Zmd4Mx2f",
     "issuerTrustClass": "unknown-third-party",
+    "issuerAuthority": {
+      "trustClass": "unknown-third-party",
+      "authoritySource": "unsupported by the RC-S6 fixture allowlist",
+      "authorityResolved": false
+    },
+    "uncertainty": {
+      "surface": "unsupportedIssuerBehavior",
+      "status": "rc-s6-boundary",
+      "meaning": "The record is structurally readable, but its issuer class is outside the RC-S6 supported set and cannot provide verified trust.",
+      "consumerBehavior": "fail-closed",
+      "mustNot": [
+        "verified-badge",
+        "trust-promotion"
+      ]
+    },
     "subjectIdentity": {
       "agentId": "rc-s6-fixture-agent",
       "agentIdHash": "6dc0a0a47a40224b9dee426b29cf4b7842a907b005a1f23ecaf35e381e80294f",
@@ -47,4 +64,3 @@
     }
   }
 }
-

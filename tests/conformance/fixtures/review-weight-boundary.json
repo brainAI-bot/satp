@@ -14,6 +14,7 @@
     "verdict": "warning",
     "details": [
       "reviewWeightBoundaryExplicit",
+      "reviewWeightUncertainty",
       "noValidationPromotion"
     ]
   },
@@ -38,10 +39,19 @@
     "proposedValidationLevel": 4,
     "uncertaintyStatus": "rc-s6-boundary",
     "uncertaintyNote": "Single review input is evidence, not a release-final trust promotion.",
+    "uncertainty": {
+      "surface": "reviewWeight",
+      "status": "rc-s6-boundary",
+      "meaning": "The review score and weight are readable fixture inputs, but RC-S6 has not approved aggregation semantics for ranking or validation promotion.",
+      "consumerBehavior": "warning-only",
+      "mustNot": [
+        "validation-promotion",
+        "ranking-boost"
+      ]
+    },
     "descriptionHash": "667e0e4dd58df2124755ac18c626d3b20a6ae82139967b369c601be94bd411ba",
     "programs": {
       "reviews": "r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4"
     }
   }
 }
-

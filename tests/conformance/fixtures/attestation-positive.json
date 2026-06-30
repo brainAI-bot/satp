@@ -18,6 +18,8 @@
       "subjectIdentity",
       "attestationPda",
       "issuerTrustClass",
+      "issuerTrustClassAuthority",
+      "issuerTrustClassAuthorityUncertainty",
       "claimType",
       "evidenceHash",
       "freshness"
@@ -30,6 +32,21 @@
     "attestationId": "FgUPnA4cQ2aLvFe7FFDT1DU2WU6A1EwodTDYFFqepUf4",
     "issuer": "9xQeWvG816bUx9EPf3q2w7Sc4pTCK2n12u3Zmd4Mx2f",
     "issuerTrustClass": "partner",
+    "issuerAuthority": {
+      "trustClass": "partner",
+      "authoritySource": "fixture allowlist only; no mainnet issuer registry authority is inferred",
+      "authorityResolved": false
+    },
+    "uncertainty": {
+      "surface": "issuerTrustClassAuthority",
+      "status": "rc-s6-boundary",
+      "meaning": "The issuer trust class is structurally supported for RC-S6 fixture validation, but it is not release-approved authority for production trust promotion.",
+      "consumerBehavior": "fixture-only",
+      "mustNot": [
+        "authority-promotion",
+        "mainnet-authority-inference"
+      ]
+    },
     "subjectIdentity": {
       "agentId": "rc-s6-fixture-agent",
       "agentIdHash": "6dc0a0a47a40224b9dee426b29cf4b7842a907b005a1f23ecaf35e381e80294f",
@@ -54,4 +71,3 @@
     }
   }
 }
-
