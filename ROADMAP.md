@@ -108,7 +108,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - AgentFolio adapter compatibility review must pass before replacing any
   production SATP dependency path. [#204cd91f] [shipped]
 - Consumer-facing SATP copy in AgentFolio must not imply mainnet or escrow
-  readiness before those gates are separately verified. [pending]
+  readiness before those gates are separately verified. [#53ffa5e3] [shipped]
 
 ## Phase 6 - RC-S6 semantic uncertainty review
 
