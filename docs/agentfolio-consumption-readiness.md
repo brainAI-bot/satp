@@ -8,6 +8,29 @@ AgentFolio consumes SATP from the stable npm package by default. A reviewed SATP
 
 Mergeable AgentFolio changes must not use SATP branch refs, local tarballs, sibling checkout paths, or unpublished workspace packages as the durable dependency.
 
+## Consumer-facing copy gate
+
+AgentFolio-facing SATP copy is limited to offline package-boundary, install-path,
+and read-only metadata behavior until separate shipped gates prove otherwise.
+Consumer copy must not claim or imply mainnet deploy, escrow or value-bearing
+readiness, production dependency replacement, npm promotion, signing, Solana
+writes, public launch readiness, or live payment handling.
+
+Required readback for copy reviews:
+
+- Mainnet: SATP has no mainnet-ready claim in AgentFolio-facing copy until a
+  separate owner-gated mainnet key-management and conformance task ships.
+- Escrow: escrow references are reference-only metadata; they are not
+  escrow-ready, value-bearing, or live payment paths.
+- Package: stable npm remains the default consumer dependency; reviewed Git
+  pins are temporary HQ-assigned coordination artifacts, not package promotion.
+- Runtime: examples and readiness checks are offline/read-only and must not
+  sign, send transactions, call Solana RPC, deploy programs, publish packages,
+  mutate AgentFolio production data, or restart production services.
+- AgentFolio: SATP docs may describe consumer boundaries, but must not replace
+  AgentFolio product code, production dependency policy, launch state, or
+  marketplace escrow policy without a separate AgentFolio-owned gate.
+
 ## Source-linked package boundary
 
 | Source | Current boundary |
