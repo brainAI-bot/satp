@@ -120,7 +120,7 @@ conformance, security, release, and mainnet authority gates remain open.
   authority, stale or revoked evidence handling, unsupported issuer behavior,
   score meaning, review weight, escrow reference meaning, and AgentFolio
   consumer copy boundaries are not release-final until conformance fixtures prove
-  them. [in flight]
+  them. [#43394290] [shipped]
 - Semantic uncertainty outcomes must be captured in release notes and consumer
   compatibility notes before any release-candidate or stable package promotion.
   [pending]
