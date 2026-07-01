@@ -16,11 +16,16 @@ Status: SATP S4 package-boundary hardening for branch/PR review. This document i
 
 ## Package naming and version proposal
 
+- Package naming decision: SATP uses a phased umbrella/client split. The stable
+  consumer install target today remains npm `@brainai/satp-client@2.0.1`; the
+  long-term umbrella target is `@brainai/satp` only after a separate public
+  release gate approves the package and install-ready docs. See
+  [`docs/package-naming-decision.md`](./package-naming-decision.md).
 - Stable consumer package: use npm `@brainai/satp-client@2.0.1` unless a task explicitly requires branch-only review.
 - Reviewed RC-S6 package artifact: `@brainai/satp-client@2.0.2-rc.0`. Do not describe the older `0.1.0-rc.0` rc-tag readback as the current release-gate artifact.
 - Branch/PR phase: Git-install the SATP repo from a reviewed commit only for active development or review; extraction-branch labels such as `0.0.0-extraction` are not the current consumer package.
 - Pre-release SDK phase: use explicit rc/alpha versions only after CI is green, consumer docs are current, and brainKID/brainForge approve the boundary.
-- Future umbrella target: `@brainai/satp`, `@brainai/satp-core`, and `@brainai/satp-solana` now have PR-review entrypoints and package-boundary tests, but remain private until release review authorizes publish/install docs.
+- Future umbrella target: `@brainai/satp`, `@brainai/satp-core`, and `@brainai/satp-solana` now have PR-review entrypoints and package-boundary tests, but remain private until release review authorizes publish/install docs. Do not replace the stable `@brainai/satp-client` consumer path with `@brainai/satp` until that release review lands.
 - Version guidance here must not imply mainnet readiness unless the mainnet authority/deploy process is separately approved in HQ.
 
 ## Consumer install path

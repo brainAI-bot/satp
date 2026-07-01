@@ -5,6 +5,12 @@ identity, reputation, attestation, validation, review, and escrow helpers.
 
 ## Install Path
 
+Package naming decision `[#b3e7e7ce]`: SATP uses a phased umbrella/client split.
+Use `@brainai/satp-client` for stable consumers today. Reserve `@brainai/satp`
+as the future umbrella package until a separate release gate publishes it and
+updates install-ready docs. See
+[`docs/package-naming-decision.md`](./docs/package-naming-decision.md).
+
 Choose the dependency source by release channel:
 
 | Channel | Use when | Dependency |

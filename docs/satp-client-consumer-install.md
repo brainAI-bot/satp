@@ -7,6 +7,12 @@ branch/PR coordination work, and the consumer PR must record the exact commit
 SHA and reason for the temporary pin. Choose the source based on the artifact
 the downstream app needs to prove:
 
+Package naming decision `[#b3e7e7ce]`: SATP uses a phased umbrella/client split.
+`@brainai/satp-client` is the stable consumer install path today. `@brainai/satp`
+is reserved as the long-term umbrella package only after a separate release gate
+publishes it and updates install-ready docs. See
+[`docs/package-naming-decision.md`](./package-naming-decision.md).
+
 | Channel | Use when | Dependency |
 | --- | --- | --- |
 | Stable npm | Production or default AgentFolio and other consumer installs should stay on the stable public package. | `@brainai/satp-client@2.0.1` or `@brainai/satp-client` |
