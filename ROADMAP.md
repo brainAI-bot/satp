@@ -146,8 +146,7 @@ conformance, security, release, and mainnet authority gates remain open.
 ## Deferred decisions
 
 - Decide whether the stable long-term consumer package is @brainai/satp,
-  @brainai/satp-client, or a phased umbrella/client split. [pending] ·
-  owner-gated
+  @brainai/satp-client, or a phased umbrella/client split. [#b3e7e7ce] [shipped]
 - Decide the release-candidate to stable npm promotion plan and dist-tag
   ownership model. [pending] · owner-gated
 - Decide when brainShield becomes active for SATP security review after HQ v4
