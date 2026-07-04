@@ -152,6 +152,7 @@ conformance, security, release, and mainnet authority gates remain open.
   ownership model. [#c6ac139d] [shipped]
 - Decide when brainShield becomes active for SATP security review after HQ v4
   stabilizes. [#4d07e4ce] [shipped]
-- Decide whether AgentFolio consumes only the current stable package until SATP
-  core extraction is complete, or accepts reviewed commit-pinned updates earlier.
-  [pending]
+- AgentFolio consumption policy is stable npm by default; reviewed
+  commit-pinned updates are allowed only when HQ assigns explicit branch/PR
+  coordination work. This closes the duplicate deferred decision in favor of the
+  shipped Phase 5 consumer-boundary policy. [#4a8988f4] [shipped]
