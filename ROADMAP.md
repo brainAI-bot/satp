@@ -149,7 +149,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - Decide whether the stable long-term consumer package is @brainai/satp,
   @brainai/satp-client, or a phased umbrella/client split. [#b3e7e7ce] [shipped]
 - Decide the release-candidate to stable npm promotion plan and dist-tag
-  ownership model. [pending]
+  ownership model. [#c6ac139d] [shipped]
 - Decide when brainShield becomes active for SATP security review after HQ v4
   stabilizes. [pending]
 - Decide whether AgentFolio consumes only the current stable package until SATP
