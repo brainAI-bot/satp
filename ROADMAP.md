@@ -151,7 +151,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - Decide the release-candidate to stable npm promotion plan and dist-tag
   ownership model. [#c6ac139d] [shipped]
 - Decide when brainShield becomes active for SATP security review after HQ v4
-  stabilizes. [pending]
+  stabilizes. [#4d07e4ce] [shipped]
 - Decide whether AgentFolio consumes only the current stable package until SATP
   core extraction is complete, or accepts reviewed commit-pinned updates earlier.
   [pending]
