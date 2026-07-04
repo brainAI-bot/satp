@@ -2,7 +2,7 @@
 
 Schema: HQ roadmap v1
 Status: ACTIVE - PLANNING
-Last updated: 2026-06-26
+Last updated: 2026-07-04
 
 SATP is the Solana Agent Trust Protocol: an app-agnostic protocol and SDK
 surface for portable AI-agent identity, attestations, reputation, validation,
@@ -90,7 +90,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - Production private key material is forbidden from repo, HQ messages, reports,
   logs, screenshots, packages, and public PRs. [shipped]
 - Security review by brainShield is driven through HQ tasking once tokened, with
-  independent evidence required before release promotion. [pending]
+  independent evidence required before release promotion. [#feb0ea11] [shipped]
 - Mainnet authority, upgrade, fee-payer, escrow/funds authority, and issuer
   separation must be approved before any mainnet deploy or value-bearing action.
   [blocked] · owner-gated
