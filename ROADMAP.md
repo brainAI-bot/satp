@@ -96,7 +96,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - Security review by brainShield is driven through HQ tasking once tokened, with
   independent evidence required before release promotion. [#feb0ea11] [shipped]
 - brainShield independent review of the mainnet-authority readiness doc
-  (delivered 2026-07-05), with cross-host-auditable evidence. [pending]
+  (delivered 2026-07-05), with cross-host-auditable evidence. [#dd682623] [shipped]
 - Assemble the single Owner mainnet-authority decision packet: public authority
   inventory, upgrade-custody choice, fee-payer separation, issuer registry and
   trust-class boundary, escrow/funds authority and dispute model,
