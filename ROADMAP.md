@@ -16,8 +16,12 @@ conformance, security, release, and mainnet authority gates remain open.
   documentation.
 - in flight: active implementation or verification work is underway.
 - pending: accepted roadmap work not started in this cycle.
-- blocked: cannot be completed without an external decision, credential,
-  production dependency, or verified runtime behavior.
+- blocked: waiting on a NON-fleet actor only — an Owner decision or signature,
+  an external credential/account, or a third party. Blocked items carry
+  · owner-gated (or name the external wait). Any work the fleet can do before
+  a gate is its own pending item placed before it (litmus test: if the Owner
+  said yes right now, could the fleet act immediately?). Convention:
+  brainAI-bot/hq docs/ROADMAP_AUTHORING.md.
 - deferred: intentionally postponed until core release gates pass.
 - withdrawn: removed from the active plan.
 
@@ -91,14 +95,19 @@ conformance, security, release, and mainnet authority gates remain open.
   logs, screenshots, packages, and public PRs. [shipped]
 - Security review by brainShield is driven through HQ tasking once tokened, with
   independent evidence required before release promotion. [#feb0ea11] [shipped]
+- brainShield independent review of the mainnet-authority readiness doc
+  (delivered 2026-07-05), with cross-host-auditable evidence. [pending]
+- Assemble the single Owner mainnet-authority decision packet: public authority
+  inventory, upgrade-custody choice, fee-payer separation, issuer registry and
+  trust-class boundary, escrow/funds authority and dispute model,
+  emergency/freeze plan, and the conformance/build evidence. [pending]
 - Mainnet authority, upgrade, fee-payer, escrow/funds authority, and issuer
-  separation remains blocked; no Owner signature or decision is ripe while
-  readiness documentation and review are in progress, and approval is required
-  before any mainnet deploy or value-bearing action. [#e0556f1f] [blocked] ·
+  separation: Owner signature on the decision packet above is required before
+  any mainnet deploy or value-bearing action. [#e0556f1f] [blocked] · owner-gated
+- Verify npm publish readiness with evidence in the release packet: CI proof,
+  package metadata, release notes, ownership, and dist-tag strategy. [pending]
+- Npm publish itself: waits on a separate Owner publish approval. [blocked] ·
   owner-gated
-- Npm publish remains blocked until CI, package metadata, release notes,
-  ownership, dist-tag strategy, and a separate publish approval are verified.
-  [blocked]
 - Release packet must include CI proof, package contents, secret-scan proof,
   consumer install proof, compatibility notes, and open risk list. [#3611a94d] [shipped]
 
@@ -127,9 +136,9 @@ conformance, security, release, and mainnet authority gates remain open.
 - Semantic uncertainty outcomes must be captured in release notes and consumer
   compatibility notes before any release-candidate or stable package promotion.
   [#3653fd5a] [shipped]
-- RC-S6 core does not authorize mainnet deploys, signing flows, escrow
-  activation, keypair movement, package publish, or production consumer
-  replacement. [blocked]
+- INVARIANT: RC-S6 core does not authorize mainnet deploys, signing flows,
+  escrow activation, keypair movement, package publish, or production consumer
+  replacement. [pending]
 
 ## Expansion · non-core
 
