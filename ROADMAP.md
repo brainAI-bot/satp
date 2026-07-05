@@ -100,7 +100,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - Assemble the single Owner mainnet-authority decision packet: public authority
   inventory, upgrade-custody choice, fee-payer separation, issuer registry and
   trust-class boundary, escrow/funds authority and dispute model,
-  emergency/freeze plan, and the conformance/build evidence. [pending]
+  emergency/freeze plan, and the conformance/build evidence. [#6c8a5545] [shipped]
 - Mainnet authority, upgrade, fee-payer, escrow/funds authority, and issuer
   separation: Owner signature on the decision packet above is required before
   any mainnet deploy or value-bearing action. [#e0556f1f] [blocked] · owner-gated
