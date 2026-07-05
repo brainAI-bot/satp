@@ -92,8 +92,10 @@ conformance, security, release, and mainnet authority gates remain open.
 - Security review by brainShield is driven through HQ tasking once tokened, with
   independent evidence required before release promotion. [#feb0ea11] [shipped]
 - Mainnet authority, upgrade, fee-payer, escrow/funds authority, and issuer
-  separation must be approved before any mainnet deploy or value-bearing action.
-  [blocked] · owner-gated
+  separation remains blocked; no Owner signature or decision is ripe while
+  readiness documentation and review are in progress, and approval is required
+  before any mainnet deploy or value-bearing action. [#e0556f1f] [blocked] ·
+  owner-gated
 - Npm publish remains blocked until CI, package metadata, release notes,
   ownership, dist-tag strategy, and a separate publish approval are verified.
   [blocked]
