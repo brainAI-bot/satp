@@ -105,7 +105,7 @@ conformance, security, release, and mainnet authority gates remain open.
   separation: Owner signature on the decision packet above is required before
   any mainnet deploy or value-bearing action. [#e0556f1f] [blocked] · owner-gated
 - Verify npm publish readiness with evidence in the release packet: CI proof,
-  package metadata, release notes, ownership, and dist-tag strategy. [pending]
+  package metadata, release notes, ownership, and dist-tag strategy. [#d7b0e5f9] [shipped]
 - Npm publish itself: waits on a separate Owner publish approval. [blocked] ·
   owner-gated
 - Release packet must include CI proof, package contents, secret-scan proof,
