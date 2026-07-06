@@ -15,6 +15,7 @@
     "pack:satp-client": "mkdir -p dist && npm pack ./packages/satp-client --pack-destination dist",
     "check:satp-client-health": "node scripts/check-satp-client-package-health.js",
     "check:release-metadata": "node scripts/check-satp-release-metadata.js",
+    "verify:escrow-source-idl": "node scripts/verify-escrow-source-idl.mjs",
     "check:js": "find packages/satp-client/src -name '*.js' -type f -print0 | xargs -0 -n1 node --check",
     "check:exports": "node scripts/check-exports.js",
     "test:package-entrypoints": "node tests/package-entrypoints.test.js",
@@ -29,7 +30,7 @@
     "test:borsh": "node packages/satp-client/test-borsh-reader.js",
     "test:examples": "npm --prefix examples/mcp-x402-readonly test && npm --prefix examples/agentfolio-consumer-readonly test && npm --prefix examples/third-party-runtime-conformance test",
     "ci:offline-with-examples": "npm run ci && npm run check:examples && npm run test:examples",
-    "ci": "npm run lint:roadmap && npm run validate:idls && npm run check:js && npm run check:exports && npm run check:release-metadata && npm run test:package-entrypoints && npm run smoke:consumer-install && npm run test:attestation-request && npm run test:runtime-policy && npm run test:wallet-control && npm run test:x402-discovery && npm run test:conformance:rc-s6 && npm run test:v3 && npm run test:borsh"
+    "ci": "npm run lint:roadmap && npm run validate:idls && npm run verify:escrow-source-idl && npm run check:js && npm run check:exports && npm run check:release-metadata && npm run test:package-entrypoints && npm run smoke:consumer-install && npm run test:attestation-request && npm run test:runtime-policy && npm run test:wallet-control && npm run test:x402-discovery && npm run test:conformance:rc-s6 && npm run test:v3 && npm run test:borsh"
   },
   "main": "packages/satp-client/src/index.js",
   "types": "packages/satp-client/src/index.d.ts",
