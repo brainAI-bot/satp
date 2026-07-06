@@ -39,7 +39,7 @@
     {
       "name": "close_escrow",
       "docs": [
-        "Close a settled escrow (Released, Cancelled, or Disputed)",
+        "Close a settled escrow (Released or Cancelled)",
         "Returns rent to client. Can only be called by client."
       ],
       "discriminator": [
