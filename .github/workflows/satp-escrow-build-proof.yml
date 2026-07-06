@@ -1,0 +1,60 @@
+name: SATP Escrow Build Proof
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/satp-escrow-build-proof.yml"
+      - "Anchor.toml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "programs/satp_escrow/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-proof:
+    name: Anchor build proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    env:
+      ANCHOR_VERSION: "0.31.1"
+      SOLANA_VERSION: "2.1.21"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust 1.86.0
+        uses: dtolnay/rust-toolchain@1.86.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Install Solana/SBF tooling
+        run: |
+          set -euxo pipefail
+          sh -c "$(curl -sSfL https://release.anza.xyz/v${SOLANA_VERSION}/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+
+      - name: Install Anchor CLI
+        run: |
+          set -euxo pipefail
+          cargo install --git https://github.com/coral-xyz/anchor --tag "v${ANCHOR_VERSION}" anchor-cli --locked
+
+      - name: Verify pinned tooling
+        run: |
+          set -euxo pipefail
+          rustc --version
+          cargo --version
+          solana --version
+          anchor --version
+
+      - name: Build satp_escrow program
+        run: |
+          set -euxo pipefail
+          anchor build --program-name satp_escrow
+          test -f target/deploy/satp_escrow.so
+          sha256sum target/deploy/satp_escrow.so | tee target/deploy/satp_escrow.so.sha256
