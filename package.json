@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0-extraction",
   "description": "SATP client SDK package root for commit-pinned Git consumption; npm publish remains blocked until the release packet passes.",
+  "license": "Apache-2.0",
   "workspaces": [
     "packages/satp-client",
     "packages/satp-core",
