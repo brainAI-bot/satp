@@ -57,6 +57,12 @@ conformance, security, release, and mainnet authority gates remain open.
   validation, reviews, and escrow. [shipped]
 - Repository documentation must stay app-agnostic and avoid treating AgentFolio
   product logic as SATP core. [#6777112a] [shipped]
+- Apache-2.0 LICENSE file present at repo root with package.json license set to
+  match, per the locked license decision (currently MIT/absent). [pending]
+- Program source for all 6 V3 Anchor programs extracted from clawd-brainchain
+  into this repo under programs/ after a secret/agent-memory scrub and anchor
+  verify src==deployed, so third parties can verify independently (open-core;
+  ARCHITECTURE section 5 mandate; approved 2026-07-06). [pending]
 
 ## Phase 2 - SDK package and consumer boundary
 
@@ -139,6 +145,20 @@ conformance, security, release, and mainnet authority gates remain open.
 - INVARIANT: RC-S6 core does not authorize mainnet deploys, signing flows,
   escrow activation, keypair movement, package publish, or production consumer
   replacement. [pending]
+
+## Phase 7 - On-chain program completion (open-core)
+
+- V3 IDLs generated from the extracted source are committed under idls/v3/, the
+  dead V2 escrow IDL and hand-rolled discriminators are retired, and CI runs
+  validate:idls against them. [pending]
+- USDC escrow support in the escrow program and dual-currency SDK builders (SPL
+  vault PDA, ATAs, transfer_checked); SOL-first is fine to launch, USDC is v2. [pending]
+- D1 SDK wiring: V3_MAINNET_PROGRAM_IDS populated behind the approved
+  mainnet-authority decision packet and the V2 path fenced, so the published
+  client resolves mainnet rather than a hand-patch. [pending]
+- Burn-to-Become verified end-to-end on devnet against the deployed identity
+  program: free mint, the 3-per-identity cap enforced on-chain, wallet rotation
+  carrying the cap, and a soulbound transfer that fails. [pending]
 
 ## Expansion · non-core
 
