@@ -3,6 +3,7 @@
   "version": "0.0.0-extraction",
   "private": true,
   "description": "SATP Solana package entrypoint for PR review. Not published by SATP-EXTRACT-001.",
+  "license": "Apache-2.0",
   "main": "index.js",
   "types": "index.d.ts",
   "exports": {
