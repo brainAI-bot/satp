@@ -58,7 +58,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - Repository documentation must stay app-agnostic and avoid treating AgentFolio
   product logic as SATP core. [#6777112a] [shipped]
 - Apache-2.0 LICENSE file present at repo root with package.json license set to
-  match, per the locked license decision (currently MIT/absent). [pending]
+  match, per the locked license decision (currently MIT/absent). [#638f976b] [shipped]
 - Program source for all 6 V3 Anchor programs extracted from clawd-brainchain
   into this repo under programs/ after a secret/agent-memory scrub and anchor
   verify src==deployed, so third parties can verify independently (open-core;
