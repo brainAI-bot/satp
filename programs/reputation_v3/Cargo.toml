@@ -1,0 +1,19 @@
+[package]
+name = "reputation_v3"
+version = "0.1.0"
+description = "SATP Reputation V3 — computes reputation from V3 reviews, CPI to V3 identity"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "1.0.0"
