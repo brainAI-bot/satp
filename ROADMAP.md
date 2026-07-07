@@ -54,7 +54,9 @@ conformance, security, release, and mainnet authority gates remain open.
 - Security and key-management policy defines authority inventory rules, storage
   classes, signer boundaries, and forbidden secret handling. [shipped]
 - Committed IDLs exist for identity registry, attestations, reputation,
-  validation, reviews, and escrow. [shipped]
+  validation, reviews, and escrow; escrow IDL was atomically deflated from
+  shipped while pinned to dead UpJ7 and re-shipped after regenerating from
+  deployed HXCU. [shipped]
 - Repository documentation must stay app-agnostic and avoid treating AgentFolio
   product logic as SATP core. [#6777112a] [shipped]
 - Apache-2.0 LICENSE file present at repo root with package.json license set to
