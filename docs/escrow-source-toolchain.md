@@ -8,7 +8,10 @@ The committed IDL is `idls/satp_escrow.json`; the source lives under
 
 Toolchain lock notes:
 
-- Anchor CLI/version target: `0.31.1` as recorded in `Anchor.toml`.
+- Anchor CLI/version target for `programs/satp_escrow`: `0.31.1`.
+  The repository-level `Anchor.toml` may default to a newer V3 program
+  toolchain; the escrow build-proof workflow pins the checked-out `Anchor.toml`
+  to `0.31.1` inside the GitHub runner before running the legacy escrow build.
 - Rust channel target: `1.86.0` as recorded in `rust-toolchain.toml`.
 - Rust edition: `2021` as recorded in `programs/satp_escrow/Cargo.toml`.
 - Program ID: `UpJ7jmUzHkQ7EdBKiBv3zq8Dr1fVh6GVWKa7nYtwQ22`, matching the

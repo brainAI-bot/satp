@@ -69,6 +69,23 @@ jobs:
           cargo build-sbf --version
           anchor --version
 
+      - name: Pin Anchor.toml for legacy escrow build
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = 'Anchor.toml';
+          const input = fs.readFileSync(path, 'utf8');
+          const output = input.replace(
+            'anchor_version = "1.0.0"',
+            'anchor_version = "0.31.1"',
+          );
+          if (output === input) {
+            throw new Error('Anchor.toml toolchain version not found');
+          }
+          fs.writeFileSync(path, output);
+          NODE
+          grep 'anchor_version = "0.31.1"' Anchor.toml
+
       - name: Build SATP escrow program
         run: anchor build --program-name satp_escrow
 
