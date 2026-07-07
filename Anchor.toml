@@ -6,6 +6,11 @@ seeds = false
 skip-lint = false
 
 [programs.devnet]
+identity_registry = "EJtQh4Gyg88zXvSmFpxYkkeZsPwTsjfm4LvjmPQX1FD3"
+attestations = "9xT3eNcndkmnqZtJqDQ1ggckHK7Dxo5EsAt5mHqsPBhP"
+reputation = "4y4W2Mdfpu91C4iVowiDyJTmdKSjo8bmSDQrX2c84WQF"
+reviews = "D8HsSpK3JtAN7tVcA1yfgxScju7KcG6skEfaShSKojki"
+validation = "8jLaqodAzfM7oCxP7aedFeszeNjnJ5ik56dzhDU2HQgc"
 satp_escrow = "UpJ7jmUzHkQ7EdBKiBv3zq8Dr1fVh6GVWKa7nYtwQ22"
 
 [registry]

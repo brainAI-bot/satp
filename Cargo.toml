@@ -1,5 +1,10 @@
 [workspace]
 members = [
+  "programs/identity_registry",
+  "programs/attestations",
+  "programs/reputation",
+  "programs/reviews",
+  "programs/validation",
   "programs/satp_escrow"
 ]
 resolver = "2"
