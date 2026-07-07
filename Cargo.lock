@@ -924,6 +924,7 @@ name = "identity_v3"
 version = "0.1.0"
 dependencies = [
  "anchor-lang 1.0.0",
+ "bincode",
  "solana-hash 4.2.0",
  "solana-sha256-hasher 3.1.0",
 ]

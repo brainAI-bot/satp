@@ -35,6 +35,30 @@ fn is_program_upgrade_authority<'info>(
     program_data: &UncheckedAccount<'info>,
     upgrade_authority: &Signer<'info>,
 ) -> Result<bool> {
+    is_program_upgrade_authority_info(
+        &program.to_account_info(),
+        &program_data.to_account_info(),
+        &upgrade_authority.to_account_info(),
+    )
+}
+
+fn decode_loader_state(data: &[u8], metadata_len: usize) -> Option<UpgradeableLoaderState> {
+    if data.len() < metadata_len {
+        return None;
+    }
+
+    bincode::deserialize::<UpgradeableLoaderState>(&data[..metadata_len]).ok()
+}
+
+fn is_program_upgrade_authority_info<'info>(
+    program: &AccountInfo<'info>,
+    program_data: &AccountInfo<'info>,
+    upgrade_authority: &AccountInfo<'info>,
+) -> Result<bool> {
+    if !upgrade_authority.is_signer {
+        return Ok(false);
+    }
+
     if program.key() != crate::ID
         || !program.executable
         || program.owner != &bpf_loader_upgradeable::ID
@@ -49,30 +73,29 @@ fn is_program_upgrade_authority<'info>(
     }
 
     let program_data_bytes = program.try_borrow_data()?;
-    if program_data_bytes.len() < UpgradeableLoaderState::size_of_program() {
-        return Ok(false);
-    }
-    let program_state =
-        match UpgradeableLoaderState::try_deserialize_unchecked(&mut &program_data_bytes[..]) {
-            Ok(state) => state,
-            Err(_) => return Ok(false),
-        };
+    let program_state = match decode_loader_state(
+        &program_data_bytes,
+        UpgradeableLoaderState::size_of_program(),
+    ) {
+        Some(state) => state,
+        None => return Ok(false),
+    };
     match program_state {
-        UpgradeableLoaderState::Program { programdata_address }
-            if programdata_address == program_data.key() => {}
+        UpgradeableLoaderState::Program {
+            programdata_address,
+        } if programdata_address == program_data.key() => {}
         _ => return Ok(false),
     }
     drop(program_data_bytes);
 
     let loader_data_bytes = program_data.try_borrow_data()?;
-    if loader_data_bytes.len() < UpgradeableLoaderState::size_of_programdata_metadata() {
-        return Ok(false);
-    }
-    let loader_state =
-        match UpgradeableLoaderState::try_deserialize_unchecked(&mut &loader_data_bytes[..]) {
-            Ok(state) => state,
-            Err(_) => return Ok(false),
-        };
+    let loader_state = match decode_loader_state(
+        &loader_data_bytes,
+        UpgradeableLoaderState::size_of_programdata_metadata(),
+    ) {
+        Some(state) => state,
+        None => return Ok(false),
+    };
 
     Ok(matches!(
         loader_state,
@@ -81,6 +104,183 @@ fn is_program_upgrade_authority<'info>(
             ..
         } if authority == upgrade_authority.key()
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anchor_lang::solana_program::account_info::AccountInfo;
+
+    fn account_info<'a>(
+        key: &'a Pubkey,
+        owner: &'a Pubkey,
+        data: &'a mut [u8],
+        lamports: &'a mut u64,
+        executable: bool,
+        is_signer: bool,
+    ) -> AccountInfo<'a> {
+        AccountInfo::new(key, is_signer, false, lamports, data, owner, executable)
+    }
+
+    fn program_state(program_data_address: Pubkey) -> Vec<u8> {
+        bincode::serialize(&UpgradeableLoaderState::Program {
+            programdata_address: program_data_address,
+        })
+        .unwrap()
+    }
+
+    fn program_data_state(upgrade_authority: Option<Pubkey>) -> Vec<u8> {
+        bincode::serialize(&UpgradeableLoaderState::ProgramData {
+            slot: 1,
+            upgrade_authority_address: upgrade_authority,
+        })
+        .unwrap()
+    }
+
+    #[test]
+    fn accepts_real_upgradeable_loader_relationship() {
+        let authority_key = Pubkey::new_unique();
+        let program_key = crate::ID;
+        let program_data_key = bpf_loader_upgradeable::get_program_data_address(&program_key);
+        let loader_owner = bpf_loader_upgradeable::ID;
+
+        let mut program_data = program_state(program_data_key);
+        let mut loader_data = program_data_state(Some(authority_key));
+        let mut authority_data = [];
+        let mut program_lamports = 1;
+        let mut program_data_lamports = 1;
+        let mut authority_lamports = 1;
+
+        let program_info = account_info(
+            &program_key,
+            &loader_owner,
+            &mut program_data,
+            &mut program_lamports,
+            true,
+            false,
+        );
+        let program_data_info = account_info(
+            &program_data_key,
+            &loader_owner,
+            &mut loader_data,
+            &mut program_data_lamports,
+            false,
+            false,
+        );
+        let authority_info = account_info(
+            &authority_key,
+            &crate::ID,
+            &mut authority_data,
+            &mut authority_lamports,
+            false,
+            true,
+        );
+
+        assert!(is_program_upgrade_authority_info(
+            &program_info,
+            &program_data_info,
+            &authority_info
+        )
+        .unwrap());
+    }
+
+    #[test]
+    fn rejects_forged_programdata_without_program_link() {
+        let authority_key = Pubkey::new_unique();
+        let program_key = crate::ID;
+        let program_data_key = bpf_loader_upgradeable::get_program_data_address(&program_key);
+        let loader_owner = bpf_loader_upgradeable::ID;
+
+        let mut program_data = vec![0u8; UpgradeableLoaderState::size_of_program()];
+        let mut loader_data = program_data_state(Some(authority_key));
+        let mut authority_data = [];
+        let mut program_lamports = 1;
+        let mut program_data_lamports = 1;
+        let mut authority_lamports = 1;
+
+        let program_info = account_info(
+            &program_key,
+            &loader_owner,
+            &mut program_data,
+            &mut program_lamports,
+            true,
+            false,
+        );
+        let program_data_info = account_info(
+            &program_data_key,
+            &loader_owner,
+            &mut loader_data,
+            &mut program_data_lamports,
+            false,
+            false,
+        );
+        let authority_info = account_info(
+            &authority_key,
+            &crate::ID,
+            &mut authority_data,
+            &mut authority_lamports,
+            false,
+            true,
+        );
+
+        assert!(!is_program_upgrade_authority_info(
+            &program_info,
+            &program_data_info,
+            &authority_info
+        )
+        .unwrap());
+    }
+
+    #[test]
+    fn rejects_programdata_with_wrong_loader_state() {
+        let authority_key = Pubkey::new_unique();
+        let program_key = crate::ID;
+        let program_data_key = bpf_loader_upgradeable::get_program_data_address(&program_key);
+        let loader_owner = bpf_loader_upgradeable::ID;
+
+        let mut program_data = program_state(program_data_key);
+        let mut loader_data = bincode::serialize(&UpgradeableLoaderState::Buffer {
+            authority_address: Some(authority_key),
+        })
+        .unwrap();
+        loader_data.resize(UpgradeableLoaderState::size_of_programdata_metadata(), 0);
+        let mut authority_data = [];
+        let mut program_lamports = 1;
+        let mut program_data_lamports = 1;
+        let mut authority_lamports = 1;
+
+        let program_info = account_info(
+            &program_key,
+            &loader_owner,
+            &mut program_data,
+            &mut program_lamports,
+            true,
+            false,
+        );
+        let program_data_info = account_info(
+            &program_data_key,
+            &loader_owner,
+            &mut loader_data,
+            &mut program_data_lamports,
+            false,
+            false,
+        );
+        let authority_info = account_info(
+            &authority_key,
+            &crate::ID,
+            &mut authority_data,
+            &mut authority_lamports,
+            false,
+            true,
+        );
+
+        assert!(!is_program_upgrade_authority_info(
+            &program_info,
+            &program_data_info,
+            &authority_info
+        )
+        .unwrap());
+    }
 }
 
 #[program]
