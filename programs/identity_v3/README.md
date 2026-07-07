@@ -1,8 +1,8 @@
 # identity_v3 — SATP Identity Registry
 
-**Program ID:** `GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG`  
-**Network:** Solana Mainnet  
-**Framework:** Anchor v0.30+  
+**Program ID:** `GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG`
+**Network:** Solana Mainnet
+**Framework:** Anchor v0.30+
 **Last Deploy:** 2026-03-31 (hardened build — admin backdoors removed)
 
 ---
@@ -40,7 +40,7 @@ Think of it as an on-chain passport for AI agents.
 
 The primary identity account. One per agent.
 
-**PDA Seeds:** `["genesis", agent_id_hash]`  
+**PDA Seeds:** `["genesis", agent_id_hash]`
 - `agent_id_hash` = SHA-256 of the agent's string ID (e.g., `sha256("brainkid")`)
 
 | Field | Type | Size | Description |
@@ -102,7 +102,7 @@ Rate-limits free mints per identity (max 3).
 
 Unique, case-insensitive agent name reservation.
 
-**PDA Seeds:** `["name_registry", name_hash]`  
+**PDA Seeds:** `["name_registry", name_hash]`
 - `name_hash` = SHA-256 of lowercase name
 
 | Field | Type | Size | Description |
@@ -133,8 +133,8 @@ Create a new agent identity.
 | `capabilities` | `Vec<String>` | Up to 10 capabilities (max 32 chars each) |
 | `metadata_uri` | `String` | Metadata URI (max 200 chars) |
 
-**Signer:** `creator` (becomes initial `authority`)  
-**Creates:** GenesisRecord PDA  
+**Signer:** `creator` (becomes initial `authority`)
+**Creates:** GenesisRecord PDA
 **Emits:** `IdentityCreated`
 
 #### `burn_to_become`
@@ -146,9 +146,9 @@ Permanently bind a face NFT to the identity (the "birth" event).
 | `face_mint` | `Pubkey` | BOA NFT mint address (burned) |
 | `face_burn_tx` | `String` | Burn transaction signature |
 
-**Signer:** `authority`  
-**Guard:** Can only be called once (`genesis_record` must be 0)  
-**Emits:** `AgentBorn`  
+**Signer:** `authority`
+**Guard:** Can only be called once (`genesis_record` must be 0)
+**Emits:** `AgentBorn`
 **Effect:** Sets `genesis_record` to current timestamp. Face data is permanent.
 
 #### `update_identity`
@@ -162,23 +162,23 @@ Update mutable identity fields.
 | `capabilities` | `Option<Vec<String>>` | New capabilities |
 | `metadata_uri` | `Option<String>` | New metadata URI |
 
-**Signer:** `authority`  
-**Guard:** Name cannot be changed after `genesis_record > 0` (agent is born)  
-**Guard:** Identity must be active (`is_active == true`)  
+**Signer:** `authority`
+**Guard:** Name cannot be changed after `genesis_record > 0` (agent is born)
+**Guard:** Identity must be active (`is_active == true`)
 **Emits:** `IdentityUpdated`
 
 #### `deactivate_identity`
 Soft-delete an identity. Scores cannot be updated while deactivated.
 
-**Signer:** `authority`  
-**Guard:** Must be active  
+**Signer:** `authority`
+**Guard:** Must be active
 **Emits:** `IdentityDeactivated`
 
 #### `reactivate_identity`
 Restore a deactivated identity.
 
-**Signer:** `authority`  
-**Guard:** Must be deactivated  
+**Signer:** `authority`
+**Guard:** Must be deactivated
 **Emits:** `IdentityReactivated`
 
 ---
@@ -194,14 +194,14 @@ Propose a new authority. Does NOT transfer immediately.
 |-----------|------|-------------|
 | `new_authority` | `Pubkey` | Proposed new authority |
 
-**Signer:** current `authority`  
-**Guard:** New authority must differ from current  
+**Signer:** current `authority`
+**Guard:** New authority must differ from current
 **Emits:** `AuthorityProposed`
 
 #### `accept_authority`
 Accept a pending authority proposal. Completes the transfer.
 
-**Signer:** `new_authority` (the proposed authority must sign)  
+**Signer:** `new_authority` (the proposed authority must sign)
 **Emits:** `AuthorityTransferred`
 
 #### `cancel_authority_transfer`
@@ -222,8 +222,8 @@ Update the agent's reputation score.
 |-----------|------|-------------|
 | `score` | `u64` | New reputation score (0–1,000,000) |
 
-**CPI Caller:** PDA derived from `["reputation_v3_authority"]` under program `2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ`  
-**Guard:** Score must be ≤ 1,000,000. Identity must be active.  
+**CPI Caller:** PDA derived from `["reputation_v3_authority"]` under program `2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ`
+**Guard:** Score must be ≤ 1,000,000. Identity must be active.
 **Emits:** `ReputationUpdated`
 
 #### `update_verification`
@@ -233,8 +233,8 @@ Update the agent's verification level.
 |-----------|------|-------------|
 | `level` | `u8` | New verification level (0–5) |
 
-**CPI Caller:** PDA derived from `["validation_v3_authority"]` under program `6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV`  
-**Guard:** Level must be ≤ 5. Identity must be active.  
+**CPI Caller:** PDA derived from `["validation_v3_authority"]` under program `6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV`
+**Guard:** Level must be ≤ 5. Identity must be active.
 **Emits:** `VerificationUpdated`
 
 **Verification Levels:**
@@ -260,15 +260,15 @@ Link an external wallet to the identity.
 | `chain` | `String` | Chain identifier (max 16 chars) |
 | `label` | `String` | Label (max 32 chars) |
 
-**Signer:** `authority`  
-**Creates:** LinkedWallet PDA  
+**Signer:** `authority`
+**Creates:** LinkedWallet PDA
 **Emits:** `WalletLinked`
 
 #### `unlink_wallet`
 Deactivate a linked wallet (soft delete).
 
-**Signer:** `authority`  
-**Guard:** Wallet must be currently active  
+**Signer:** `authority`
+**Guard:** Wallet must be currently active
 **Emits:** `WalletUnlinked`
 
 ---
@@ -278,14 +278,14 @@ Deactivate a linked wallet (soft delete).
 #### `init_mint_tracker`
 Initialize the mint tracker for an identity.
 
-**Signer:** `authority`  
+**Signer:** `authority`
 **Creates:** MintTracker PDA
 
 #### `record_mint`
 Record a new mint against the identity (max 3 free mints).
 
-**Signer:** `authority`  
-**Guard:** `mint_count < 3`  
+**Signer:** `authority`
+**Guard:** `mint_count < 3`
 **Emits:** `MintRecorded`
 
 ---
@@ -300,16 +300,16 @@ Register a unique agent name.
 | `name` | `String` | Display name (2-32 chars) |
 | `name_hash` | `[u8; 32]` | SHA-256 of lowercase name |
 
-**Signer:** `authority`  
-**Guard:** `name_hash` must match `sha256(name.to_lowercase())`  
-**Creates:** NameRegistry PDA  
+**Signer:** `authority`
+**Guard:** `name_hash` must match `sha256(name.to_lowercase())`
+**Creates:** NameRegistry PDA
 **Emits:** `NameRegistered`
 
 #### `release_name`
 Release a registered name.
 
-**Signer:** `authority`  
-**Guard:** Name must be owned by signer's identity  
+**Signer:** `authority`
+**Guard:** Name must be owned by signer's identity
 **Emits:** `NameReleased`
 
 ---
@@ -319,8 +319,8 @@ Release a registered name.
 #### `admin_set_born`
 Set the birth timestamp for an agent (admin override for non-standard birth flows).
 
-**Signer:** Program upgrade authority (verified via BPFLoaderUpgradeable programdata)  
-**Guard:** `genesis_record` must be 0 (not already born)  
+**Signer:** Program upgrade authority (verified via BPFLoaderUpgradeable programdata)
+**Guard:** `genesis_record` must be 0 (not already born)
 **Emits:** `AgentBorn`
 
 ### Migration Instructions (Legacy)
@@ -337,8 +337,8 @@ Create a V3 genesis record from a V2 identity. The V2 authority must sign.
 | `capabilities` | `Vec<String>` | Capabilities |
 | `metadata_uri` | `String` | Metadata URI |
 
-**Signer:** V2 authority wallet  
-**Creates:** New GenesisRecord PDA  
+**Signer:** V2 authority wallet
+**Creates:** New GenesisRecord PDA
 **Note:** V2 account is NOT closed (stays as historical reference)
 
 ---
