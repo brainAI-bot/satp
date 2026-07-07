@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::bpf_loader_upgradeable::{self, UpgradeableLoaderState};
 use solana_sha256_hasher::hash;
 
 declare_id!("7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ");
@@ -28,6 +29,59 @@ const ATTESTATIONS_PROGRAM_ID: Pubkey = Pubkey::new_from_array([
     0xe6, 0x00, 0xff, 0x21, 0x1c, 0x41, 0xf7, 0x6b,
     0x3a, 0xaa, 0x1d, 0x2e, 0xce, 0x71, 0x80, 0x3c,
 ]); // 55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw (devnet)
+
+fn is_program_upgrade_authority<'info>(
+    program: &UncheckedAccount<'info>,
+    program_data: &UncheckedAccount<'info>,
+    upgrade_authority: &Signer<'info>,
+) -> Result<bool> {
+    if program.key() != crate::ID
+        || !program.executable
+        || program.owner != &bpf_loader_upgradeable::ID
+        || program_data.owner != &bpf_loader_upgradeable::ID
+    {
+        return Ok(false);
+    }
+
+    let expected_program_data = bpf_loader_upgradeable::get_program_data_address(&crate::ID);
+    if program_data.key() != expected_program_data {
+        return Ok(false);
+    }
+
+    let program_data_bytes = program.try_borrow_data()?;
+    if program_data_bytes.len() < UpgradeableLoaderState::size_of_program() {
+        return Ok(false);
+    }
+    let program_state =
+        match UpgradeableLoaderState::try_deserialize_unchecked(&mut &program_data_bytes[..]) {
+            Ok(state) => state,
+            Err(_) => return Ok(false),
+        };
+    match program_state {
+        UpgradeableLoaderState::Program { programdata_address }
+            if programdata_address == program_data.key() => {}
+        _ => return Ok(false),
+    }
+    drop(program_data_bytes);
+
+    let loader_data_bytes = program_data.try_borrow_data()?;
+    if loader_data_bytes.len() < UpgradeableLoaderState::size_of_programdata_metadata() {
+        return Ok(false);
+    }
+    let loader_state =
+        match UpgradeableLoaderState::try_deserialize_unchecked(&mut &loader_data_bytes[..]) {
+            Ok(state) => state,
+            Err(_) => return Ok(false),
+        };
+
+    Ok(matches!(
+        loader_state,
+        UpgradeableLoaderState::ProgramData {
+            upgrade_authority_address: Some(authority),
+            ..
+        } if authority == upgrade_authority.key()
+    ))
+}
 
 #[program]
 pub mod identity_v3 {
@@ -1033,16 +1087,13 @@ pub struct AdminSetBorn<'info> {
     pub genesis: Account<'info, GenesisRecord>,
     /// The upgrade authority of this program — must be signer
     pub upgrade_authority: Signer<'info>,
+    /// The executable identity_v3 program account.
+    /// CHECK: Verified via upgradeable loader state constraint
+    pub program: UncheckedAccount<'info>,
     /// The program's programdata account — used to verify upgrade authority
     /// CHECK: Verified via constraint
     #[account(
-        constraint = {
-            let data = program_data.try_borrow_data()?;
-            // ProgramData layout: 4 (state) + 8 (slot) + 1 (has_authority) + 32 (authority)
-            let has_auth = data[12] == 1;
-            let auth_bytes = &data[13..45];
-            has_auth && auth_bytes == upgrade_authority.key().as_ref()
-        } @ IdentityError::Unauthorized
+        constraint = is_program_upgrade_authority(&program, &program_data, &upgrade_authority)? @ IdentityError::Unauthorized
     )]
     pub program_data: UncheckedAccount<'info>,
 }
@@ -1055,14 +1106,12 @@ pub struct AdminUnbirth<'info> {
     #[account(mut)]
     pub genesis: Account<'info, GenesisRecord>,
     pub upgrade_authority: Signer<'info>,
+    /// The executable identity_v3 program account.
+    /// CHECK: Verified via upgradeable loader state constraint
+    pub program: UncheckedAccount<'info>,
     /// CHECK: Verified via constraint
     #[account(
-        constraint = {
-            let data = program_data.try_borrow_data()?;
-            let has_auth = data[12] == 1;
-            let auth_bytes = &data[13..45];
-            has_auth && auth_bytes == upgrade_authority.key().as_ref()
-        } @ IdentityError::Unauthorized
+        constraint = is_program_upgrade_authority(&program, &program_data, &upgrade_authority)? @ IdentityError::Unauthorized
     )]
     pub program_data: UncheckedAccount<'info>,
 }
@@ -1085,15 +1134,13 @@ pub struct AdminCloseStale<'info> {
     pub rent_recipient: UncheckedAccount<'info>,
     /// The upgrade authority of this program — must be signer
     pub upgrade_authority: Signer<'info>,
+    /// The executable identity_v3 program account.
+    /// CHECK: Verified via upgradeable loader state constraint
+    pub program: UncheckedAccount<'info>,
     /// The program's programdata account — used to verify upgrade authority
     /// CHECK: Verified via constraint
     #[account(
-        constraint = {
-            let data = program_data.try_borrow_data()?;
-            let has_auth = data[12] == 1;
-            let auth_bytes = &data[13..45];
-            has_auth && auth_bytes == upgrade_authority.key().as_ref()
-        } @ IdentityError::Unauthorized
+        constraint = is_program_upgrade_authority(&program, &program_data, &upgrade_authority)? @ IdentityError::Unauthorized
     )]
     pub program_data: UncheckedAccount<'info>,
 }
@@ -1115,15 +1162,13 @@ pub struct AdminDeleteIdentity<'info> {
     pub rent_recipient: UncheckedAccount<'info>,
     /// The upgrade authority of this program — must be signer
     pub upgrade_authority: Signer<'info>,
+    /// The executable identity_v3 program account.
+    /// CHECK: Verified via upgradeable loader state constraint
+    pub program: UncheckedAccount<'info>,
     /// The program's programdata account — used to verify upgrade authority
     /// CHECK: Verified via constraint
     #[account(
-        constraint = {
-            let data = program_data.try_borrow_data()?;
-            let has_auth = data[12] == 1;
-            let auth_bytes = &data[13..45];
-            has_auth && auth_bytes == upgrade_authority.key().as_ref()
-        } @ IdentityError::Unauthorized
+        constraint = is_program_upgrade_authority(&program, &program_data, &upgrade_authority)? @ IdentityError::Unauthorized
     )]
     pub program_data: UncheckedAccount<'info>,
 }
@@ -1136,14 +1181,12 @@ pub struct AdminSetAuthority<'info> {
     pub genesis: Account<'info, GenesisRecord>,
     /// The upgrade authority of this program — must be signer
     pub upgrade_authority: Signer<'info>,
+    /// The executable identity_v3 program account.
+    /// CHECK: Verified via upgradeable loader state constraint
+    pub program: UncheckedAccount<'info>,
     /// CHECK: Verified via constraint
     #[account(
-        constraint = {
-            let data = program_data.try_borrow_data()?;
-            let has_auth = data[12] == 1;
-            let auth_bytes = &data[13..45];
-            has_auth && auth_bytes == upgrade_authority.key().as_ref()
-        } @ IdentityError::Unauthorized
+        constraint = is_program_upgrade_authority(&program, &program_data, &upgrade_authority)? @ IdentityError::Unauthorized
     )]
     pub program_data: UncheckedAccount<'info>,
 }
@@ -1156,14 +1199,12 @@ pub struct AdminSetScore<'info> {
     pub genesis: Account<'info, GenesisRecord>,
     /// The upgrade authority of this program — must be signer
     pub upgrade_authority: Signer<'info>,
+    /// The executable identity_v3 program account.
+    /// CHECK: Verified via upgradeable loader state constraint
+    pub program: UncheckedAccount<'info>,
     /// CHECK: Verified via constraint
     #[account(
-        constraint = {
-            let data = program_data.try_borrow_data()?;
-            let has_auth = data[12] == 1;
-            let auth_bytes = &data[13..45];
-            has_auth && auth_bytes == upgrade_authority.key().as_ref()
-        } @ IdentityError::Unauthorized
+        constraint = is_program_upgrade_authority(&program, &program_data, &upgrade_authority)? @ IdentityError::Unauthorized
     )]
     pub program_data: UncheckedAccount<'info>,
 }
@@ -1183,15 +1224,13 @@ pub struct AdminSetFace<'info> {
     /// The upgrade authority of this program — must be signer
     #[account(mut)]
     pub upgrade_authority: Signer<'info>,
+    /// The executable identity_v3 program account.
+    /// CHECK: Verified via upgradeable loader state constraint
+    pub program: UncheckedAccount<'info>,
     /// The program's programdata account — used to verify upgrade authority
     /// CHECK: Verified via constraint
     #[account(
-        constraint = {
-            let data = program_data.try_borrow_data()?;
-            let has_auth = data[12] == 1;
-            let auth_bytes = &data[13..45];
-            has_auth && auth_bytes == upgrade_authority.key().as_ref()
-        } @ IdentityError::Unauthorized
+        constraint = is_program_upgrade_authority(&program, &program_data, &upgrade_authority)? @ IdentityError::Unauthorized
     )]
     pub program_data: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
