@@ -393,7 +393,7 @@ export function anchorDiscriminator(ixName: string): Buffer;
 
 // ─── V3 PDA Helpers ─────────────────────────────────────
 
-export { getV3ProgramIds, hashAgentId, hashName, getGenesisPDA, getV3ReputationAuthorityPDA, getV3ValidationAuthorityPDA, getV3MintTrackerPDA, getNameRegistryPDA, getLinkedWalletPDA, getV3ReviewPDA, getV3ReviewCounterPDA, getV3AttestationPDA, getV3EscrowPDA } from './v3-pda';
+export { getV3ProgramIds, hashAgentId, hashName, getGenesisPDA, getV3ReputationAuthorityPDA, getV3ValidationAuthorityPDA, getV3MintTrackerPDA, getNameRegistryPDA, getLinkedWalletPDA, getV3ReviewPDA, getV3ReviewCounterPDA, getV3AttestationPDA, getV3EscrowPDA, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenPDA, getV3EscrowTokenVaultPDA } from './v3-pda';
 
 export function prepareIdentityAttestationRequest(
   opts: IdentityAttestationRequestOptions

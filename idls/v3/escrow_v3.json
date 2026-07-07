@@ -124,6 +124,110 @@
       ]
     },
     {
+      "name": "create_token_escrow",
+      "docs": [
+        "Create an SPL/USDC escrow between a client and a verified SATP V3 agent.",
+        "",
+        "The escrow account remains the authority for an associated token vault.",
+        "Clients fund the vault with `transfer_checked`, so mint decimals are",
+        "bound to the on-chain mint rather than inferred by the SDK."
+      ],
+      "discriminator": [
+        2,
+        244,
+        224,
+        50,
+        222,
+        248,
+        182,
+        62
+      ],
+      "accounts": [
+        {
+          "name": "client",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "agent_wallet",
+          "docs": [
+            "The agent's wallet that will receive funds"
+          ]
+        },
+        {
+          "name": "agent_identity",
+          "docs": [
+            "The agent's SATP V3 Genesis Record"
+          ]
+        },
+        {
+          "name": "arbiter",
+          "docs": [
+            "Arbiter for dispute resolution — must be a third party (not client or agent)"
+          ]
+        },
+        {
+          "name": "escrow",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "client_token_account",
+          "writable": true
+        },
+        {
+          "name": "escrow_token_vault",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "description_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "deadline",
+          "type": "i64"
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "min_verification_level",
+          "type": "u8"
+        },
+        {
+          "name": "require_born",
+          "type": "bool"
+        }
+      ]
+    },
+    {
       "name": "submit_work",
       "docs": [
         "Agent submits work proof. Only callable before deadline."
@@ -230,6 +334,99 @@
       ]
     },
     {
+      "name": "release_token",
+      "docs": [
+        "Client releases full remaining SPL/USDC funds to the agent token account."
+      ],
+      "discriminator": [
+        192,
+        176,
+        15,
+        44,
+        67,
+        107,
+        96,
+        143
+      ],
+      "accounts": [
+        {
+          "name": "escrow",
+          "writable": true
+        },
+        {
+          "name": "client",
+          "signer": true
+        },
+        {
+          "name": "agent"
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "escrow_token_vault",
+          "writable": true
+        },
+        {
+          "name": "agent_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "partial_release_token",
+      "docs": [
+        "Client releases a partial SPL/USDC milestone amount."
+      ],
+      "discriminator": [
+        31,
+        144,
+        189,
+        233,
+        165,
+        147,
+        174,
+        249
+      ],
+      "accounts": [
+        {
+          "name": "escrow",
+          "writable": true
+        },
+        {
+          "name": "client",
+          "signer": true
+        },
+        {
+          "name": "agent"
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "escrow_token_vault",
+          "writable": true
+        },
+        {
+          "name": "agent_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "cancel",
       "docs": [
         "Client cancels escrow and gets refund of unreleased funds.",
@@ -254,6 +451,47 @@
           "name": "client",
           "writable": true,
           "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel_token",
+      "docs": [
+        "Client cancels SPL/USDC escrow after deadline and receives unreleased funds."
+      ],
+      "discriminator": [
+        218,
+        217,
+        51,
+        106,
+        130,
+        11,
+        150,
+        226
+      ],
+      "accounts": [
+        {
+          "name": "escrow",
+          "writable": true
+        },
+        {
+          "name": "client",
+          "signer": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "escrow_token_vault",
+          "writable": true
+        },
+        {
+          "name": "client_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
         }
       ],
       "args": []
@@ -346,6 +584,66 @@
       ]
     },
     {
+      "name": "resolve_token_dispute",
+      "docs": [
+        "Arbiter resolves SPL/USDC dispute by splitting vault funds."
+      ],
+      "discriminator": [
+        42,
+        3,
+        244,
+        169,
+        158,
+        178,
+        251,
+        10
+      ],
+      "accounts": [
+        {
+          "name": "escrow",
+          "writable": true
+        },
+        {
+          "name": "arbiter",
+          "signer": true
+        },
+        {
+          "name": "agent"
+        },
+        {
+          "name": "client_wallet"
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "escrow_token_vault",
+          "writable": true
+        },
+        {
+          "name": "agent_token_account",
+          "writable": true
+        },
+        {
+          "name": "client_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "agent_amount",
+          "type": "u64"
+        },
+        {
+          "name": "client_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "extend_deadline",
       "docs": [
         "Client extends the escrow deadline. Only when Active.",
@@ -424,6 +722,20 @@
     }
   ],
   "types": [
+    {
+      "name": "escrow_v3::EscrowCurrency",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Sol"
+          },
+          {
+            "name": "SplToken"
+          }
+        ]
+      }
+    },
     {
       "name": "escrow_v3::EscrowStatus",
       "type": {
@@ -531,6 +843,42 @@
                 "name": "escrow_v3::EscrowStatus"
               }
             }
+          },
+          {
+            "name": "currency",
+            "docs": [
+              "Currency rail used by this escrow"
+            ],
+            "type": {
+              "defined": {
+                "name": "escrow_v3::EscrowCurrency"
+              }
+            }
+          },
+          {
+            "name": "mint",
+            "docs": [
+              "SPL mint for token escrows; None for SOL escrows"
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "token_vault",
+            "docs": [
+              "Escrow-owned associated token vault for SPL escrows; None for SOL"
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "token_decimals",
+            "docs": [
+              "Mint decimals captured for transfer_checked; zero for SOL"
+            ],
+            "type": "u8"
           },
           {
             "name": "min_verification_level",

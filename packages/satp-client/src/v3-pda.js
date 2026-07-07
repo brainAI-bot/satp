@@ -16,6 +16,9 @@ const V3_DEVNET_PROGRAM_IDS = {
 
 const V3_MAINNET_PROGRAM_IDS = null;
 
+const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+
 // ═══════════════════════════════════════════════════
 //  V3 PDA Seeds — must match on-chain programs
 // ═══════════════════════════════════════════════════
@@ -256,10 +259,50 @@ function getV3EscrowPDA(client, descriptionHash, nonce, network = 'devnet') {
   );
 }
 
+/**
+ * Derive an associated token account address.
+ * Seeds: [owner, token_program, mint] under the Associated Token Program.
+ * @param {PublicKey|string} owner
+ * @param {PublicKey|string} mint
+ * @param {boolean} allowOwnerOffCurve
+ * @param {PublicKey|string} tokenProgramId
+ * @returns {[PublicKey, number]}
+ */
+function getAssociatedTokenPDA(owner, mint, allowOwnerOffCurve = false, tokenProgramId = TOKEN_PROGRAM_ID) {
+  const ownerKey = new PublicKey(owner);
+  if (!allowOwnerOffCurve && !PublicKey.isOnCurve(ownerKey.toBuffer())) {
+    throw new Error('Owner is off curve; pass allowOwnerOffCurve=true for PDA-owned token accounts');
+  }
+  const mintKey = new PublicKey(mint);
+  const tokenProgramKey = new PublicKey(tokenProgramId);
+  return PublicKey.findProgramAddressSync(
+    [ownerKey.toBuffer(), tokenProgramKey.toBuffer(), mintKey.toBuffer()],
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  );
+}
+
+/**
+ * Derive the escrow-owned SPL token vault ATA for a V3 escrow PDA.
+ * @param {PublicKey|string} client
+ * @param {Buffer} descriptionHash
+ * @param {number|bigint} nonce
+ * @param {PublicKey|string} mint
+ * @param {'mainnet'|'devnet'} network
+ * @param {PublicKey|string} tokenProgramId
+ * @returns {[PublicKey, number, PublicKey]} [vaultPDA, bump, escrowPDA]
+ */
+function getV3EscrowTokenVaultPDA(client, descriptionHash, nonce, mint, network = 'devnet', tokenProgramId = TOKEN_PROGRAM_ID) {
+  const [escrowPDA] = getV3EscrowPDA(client, descriptionHash, nonce, network);
+  const [vaultPDA, bump] = getAssociatedTokenPDA(escrowPDA, mint, true, tokenProgramId);
+  return [vaultPDA, bump, escrowPDA];
+}
+
 module.exports = {
   // Program IDs
   V3_DEVNET_PROGRAM_IDS,
   V3_MAINNET_PROGRAM_IDS,
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
   getV3ProgramIds,
   V3_SEEDS,
 
@@ -278,4 +321,6 @@ module.exports = {
   getV3ReviewCounterPDA,
   getV3AttestationPDA,
   getV3EscrowPDA,
+  getAssociatedTokenPDA,
+  getV3EscrowTokenVaultPDA,
 };

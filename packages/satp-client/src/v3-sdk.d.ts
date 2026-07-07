@@ -126,14 +126,25 @@ export interface UpdateReviewFields {
 export type EscrowStatus = 'Active' | 'WorkSubmitted' | 'Released' | 'Cancelled' | 'Disputed' | 'Resolved';
 
 export interface CreateEscrowOpts {
+  currency?: 'sol' | 'usdc' | 'spl-token' | 'spl' | 'token';
   minVerificationLevel?: number;
   requireBorn?: boolean;
   arbiter?: PublicKey | string;
+  mint?: PublicKey | string;
+  tokenMint?: PublicKey | string;
+  usdcMint?: PublicKey | string;
+  tokenProgram?: PublicKey | string;
+  clientTokenAccount?: PublicKey | string;
+  agentTokenAccount?: PublicKey | string;
 }
 
 export interface CreateEscrowResult extends TransactionResult {
   escrowPDA: PublicKey;
   descriptionHash: Buffer;
+  currency?: string;
+  mint?: PublicKey;
+  clientTokenAccount?: PublicKey;
+  escrowTokenVault?: PublicKey;
 }
 
 export interface SubmitWorkResult extends TransactionResult {
@@ -150,6 +161,13 @@ export interface EscrowPDAResult {
   descriptionHash: string;
 }
 
+export interface TokenEscrowAccountResult extends TransactionResult {
+  mint: PublicKey;
+  escrowTokenVault: PublicKey;
+  clientTokenAccount?: PublicKey;
+  agentTokenAccount?: PublicKey;
+}
+
 export interface V3Escrow {
   pda: string;
   client: string;
@@ -163,6 +181,11 @@ export interface V3Escrow {
   nonce: number;
   status: EscrowStatus;
   statusCode: number;
+  currency: string;
+  currencyCode: number;
+  mint: string | null;
+  tokenVault: string | null;
+  tokenDecimals: number;
   minVerificationLevel: number;
   requireBorn: boolean;
   createdAt: number;
@@ -413,6 +436,18 @@ export class SATPV3SDK {
     opts?: CreateEscrowOpts
   ): Promise<CreateEscrowResult>;
 
+  /** Build createTokenEscrow transaction (SPL/USDC). */
+  buildCreateTokenEscrow(
+    client: PublicKey | string,
+    agentWallet: PublicKey | string,
+    agentId: string,
+    amount: number,
+    descriptionOrHash: string | Buffer,
+    deadline: number,
+    nonce?: number,
+    opts?: CreateEscrowOpts
+  ): Promise<CreateEscrowResult>;
+
   /** Build submitWork transaction (agent submits work proof). */
   buildSubmitWork(
     agent: PublicKey | string,
@@ -424,22 +459,49 @@ export class SATPV3SDK {
   buildEscrowRelease(
     client: PublicKey | string,
     agent: PublicKey | string,
-    escrowPDA: PublicKey | string
+    escrowPDA: PublicKey | string,
+    opts?: CreateEscrowOpts
   ): Promise<TransactionResult>;
+
+  /** Build releaseToken transaction (SPL/USDC). */
+  buildTokenEscrowRelease(
+    client: PublicKey | string,
+    agent: PublicKey | string,
+    escrowPDA: PublicKey | string,
+    opts: CreateEscrowOpts
+  ): Promise<TokenEscrowAccountResult>;
 
   /** Build partialRelease transaction (milestone payment). */
   buildPartialRelease(
     client: PublicKey | string,
     agent: PublicKey | string,
     escrowPDA: PublicKey | string,
-    amount: number
+    amount: number,
+    opts?: CreateEscrowOpts
   ): Promise<TransactionResult>;
+
+  /** Build partialReleaseToken transaction (SPL/USDC). */
+  buildTokenPartialRelease(
+    client: PublicKey | string,
+    agent: PublicKey | string,
+    escrowPDA: PublicKey | string,
+    amount: number,
+    opts: CreateEscrowOpts
+  ): Promise<TokenEscrowAccountResult>;
 
   /** Build cancel transaction (client cancels after deadline). */
   buildCancelEscrow(
     client: PublicKey | string,
-    escrowPDA: PublicKey | string
+    escrowPDA: PublicKey | string,
+    opts?: CreateEscrowOpts
   ): Promise<TransactionResult>;
+
+  /** Build cancelToken transaction (SPL/USDC). */
+  buildTokenCancelEscrow(
+    client: PublicKey | string,
+    escrowPDA: PublicKey | string,
+    opts: CreateEscrowOpts
+  ): Promise<TokenEscrowAccountResult>;
 
   /** Build raiseDispute transaction (either client or agent). */
   buildRaiseDispute(
@@ -455,8 +517,20 @@ export class SATPV3SDK {
     clientWallet: PublicKey | string,
     escrowPDA: PublicKey | string,
     agentAmount: number,
-    clientAmount: number
+    clientAmount: number,
+    opts?: CreateEscrowOpts
   ): Promise<TransactionResult>;
+
+  /** Build resolveTokenDispute transaction (SPL/USDC). */
+  buildTokenResolveDispute(
+    arbiter: PublicKey | string,
+    agent: PublicKey | string,
+    clientWallet: PublicKey | string,
+    escrowPDA: PublicKey | string,
+    agentAmount: number,
+    clientAmount: number,
+    opts: CreateEscrowOpts
+  ): Promise<TokenEscrowAccountResult>;
 
   /** Build extendDeadline transaction (client extends escrow deadline). */
   buildExtendDeadline(

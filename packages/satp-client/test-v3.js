@@ -4,7 +4,7 @@
  * No on-chain calls — just verifies PDAs match the on-chain program seeds.
  */
 
-const { PublicKey } = require('@solana/web3.js');
+const { Keypair, PublicKey } = require('@solana/web3.js');
 const {
   SATPV3SDK,
   hashAgentId,
@@ -17,7 +17,9 @@ const {
   getLinkedWalletPDA,
   getV3ReviewPDA,
   getV3AttestationPDA,
+  getAssociatedTokenPDA,
   getV3ProgramIds,
+  getV3EscrowTokenVaultPDA,
 } = require('./src/index');
 
 let passed = 0;
@@ -233,6 +235,11 @@ assert(typeof sdk.buildPartialRelease === 'function', 'SDK has buildPartialRelea
 assert(typeof sdk.buildCancelEscrow === 'function', 'SDK has buildCancelEscrow');
 assert(typeof sdk.buildRaiseDispute === 'function', 'SDK has buildRaiseDispute');
 assert(typeof sdk.buildResolveDispute === 'function', 'SDK has buildResolveDispute');
+assert(typeof sdk.buildCreateTokenEscrow === 'function', 'SDK has buildCreateTokenEscrow');
+assert(typeof sdk.buildTokenEscrowRelease === 'function', 'SDK has buildTokenEscrowRelease');
+assert(typeof sdk.buildTokenPartialRelease === 'function', 'SDK has buildTokenPartialRelease');
+assert(typeof sdk.buildTokenCancelEscrow === 'function', 'SDK has buildTokenCancelEscrow');
+assert(typeof sdk.buildTokenResolveDispute === 'function', 'SDK has buildTokenResolveDispute');
 assert(typeof sdk.buildCloseEscrow === 'function', 'SDK has buildCloseEscrow');
 assert(typeof sdk.buildExtendDeadline === 'function', 'SDK has buildExtendDeadline');
 assert(typeof sdk.getEscrow === 'function', 'SDK has getEscrow');
@@ -251,9 +258,65 @@ assert(escrowResult.escrowPDA === escrowPDA1.toBase58(), 'getEscrowPDA(string) m
 const escrowResult2 = sdk.getEscrowPDA(fakeClient, 'Build me an AI agent', 1);
 assert(escrowResult.escrowPDA !== escrowResult2.escrowPDA, 'Different nonce produces different escrowPDA via helper');
 
-// ─── Summary ─────────────────────────────────────────
-console.log(`\n${'='.repeat(40)}`);
-console.log(`Results: ${passed} passed, ${failed} failed, ${passed + failed} total`);
-console.log(`${'='.repeat(40)}\n`);
+async function runAsyncEscrowCurrencyTests() {
+  console.log('\n=== Escrow V3 SOL/USDC Builders ===');
 
-process.exit(failed > 0 ? 1 : 0);
+  sdk.connection.getLatestBlockhash = async () => ({
+    blockhash: '11111111111111111111111111111111',
+  });
+
+  const agentWallet = Keypair.generate().publicKey;
+  const arbiter = new PublicKey('SysvarC1ock11111111111111111111111111111111');
+  const usdcMint = new PublicKey('EPjFWdd5AufqSSqeM2qjCnSvpCtn5v8og9smaA2z3sos');
+  const deadline = 4102444800; // 2100-01-01
+  const tokenNonce = 7;
+  const [expectedVault] = getV3EscrowTokenVaultPDA(fakeClient, descHash, tokenNonce, usdcMint, 'devnet');
+  const [expectedAgentAta] = getAssociatedTokenPDA(agentWallet, usdcMint, false);
+
+  const solBuild = await sdk.buildCreateEscrow(
+    fakeClient,
+    agentWallet,
+    'brainChain',
+    1_000_000,
+    'Build me an AI agent',
+    deadline,
+    0,
+    { currency: 'sol', arbiter }
+  );
+  assert(solBuild.transaction.instructions[0].keys.length === 6, 'SOL create builder keeps legacy account shape');
+
+  const usdcBuild = await sdk.buildCreateEscrow(
+    fakeClient,
+    agentWallet,
+    'brainChain',
+    1_000_000,
+    descHash,
+    deadline,
+    tokenNonce,
+    { currency: 'usdc', mint: usdcMint, arbiter }
+  );
+  assert(usdcBuild.currency === 'spl-token', 'USDC create builder selects SPL token instruction');
+  assert(usdcBuild.escrowTokenVault.equals(expectedVault), 'USDC create builder derives escrow vault ATA');
+  assert(usdcBuild.transaction.instructions[0].keys.length === 11, 'USDC create builder includes token and ATA accounts');
+
+  const releaseBuild = await sdk.buildEscrowRelease(fakeClient, agentWallet, usdcBuild.escrowPDA, {
+    currency: 'usdc',
+    mint: usdcMint,
+  });
+  assert(releaseBuild.escrowTokenVault.equals(expectedVault), 'USDC release builder derives same escrow vault ATA');
+  assert(releaseBuild.agentTokenAccount.equals(expectedAgentAta), 'USDC release builder derives agent ATA');
+}
+
+runAsyncEscrowCurrencyTests()
+  .catch((err) => {
+    failed++;
+    console.log(`  ❌ Escrow V3 SOL/USDC builders failed: ${err.message}`);
+  })
+  .finally(() => {
+    // ─── Summary ─────────────────────────────────────────
+    console.log(`\n${'='.repeat(40)}`);
+    console.log(`Results: ${passed} passed, ${failed} failed, ${passed + failed} total`);
+    console.log(`${'='.repeat(40)}\n`);
+
+    process.exit(failed > 0 ? 1 : 0);
+  });

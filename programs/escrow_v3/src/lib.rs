@@ -1,4 +1,6 @@
 use anchor_lang::prelude::*;
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 use solana_sha256_hasher::hash as sol_hash;
 
 declare_id!("B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg");
@@ -56,7 +58,10 @@ pub mod escrow_v3 {
             EscrowV3Error::DeadlinePassed
         );
         require!(agent_id.len() <= 64, EscrowV3Error::AgentIdTooLong);
-        require!(min_verification_level <= 5, EscrowV3Error::InvalidVerificationLevel);
+        require!(
+            min_verification_level <= 5,
+            EscrowV3Error::InvalidVerificationLevel
+        );
 
         // Security: arbiter must be a third party (not client or agent)
         // Prevents client self-arbitration (dispute → resolve 100% to self)
@@ -89,10 +94,8 @@ pub mod escrow_v3 {
 
         // Verify PDA derivation matches
         let agent_id_hash = compute_sha256(agent_id.as_bytes());
-        let (expected_pda, _bump) = Pubkey::find_program_address(
-            &[b"genesis", &agent_id_hash],
-            &IDENTITY_V3_PROGRAM_ID,
-        );
+        let (expected_pda, _bump) =
+            Pubkey::find_program_address(&[b"genesis", &agent_id_hash], &IDENTITY_V3_PROGRAM_ID);
         require!(
             identity_account.key() == expected_pda,
             EscrowV3Error::InvalidIdentityPda
@@ -116,10 +119,7 @@ pub mod escrow_v3 {
         let parsed = parse_genesis_tail(&data)?;
 
         // TD-004: Verify identity is active (not deactivated)
-        require!(
-            parsed.is_active,
-            EscrowV3Error::AgentIdentityDeactivated
-        );
+        require!(parsed.is_active, EscrowV3Error::AgentIdentityDeactivated);
 
         // TD-002: Verify agent_wallet matches the Genesis Record authority
         // Prevents funds going to unintended recipient
@@ -130,10 +130,7 @@ pub mod escrow_v3 {
 
         // Check born status if required
         if require_born {
-            require!(
-                parsed.genesis_record > 0,
-                EscrowV3Error::AgentNotBorn
-            );
+            require!(parsed.genesis_record > 0, EscrowV3Error::AgentNotBorn);
         }
 
         // Check minimum verification level
@@ -158,6 +155,10 @@ pub mod escrow_v3 {
         escrow.deadline = deadline;
         escrow.nonce = nonce;
         escrow.status = EscrowStatus::Active;
+        escrow.currency = EscrowCurrency::Sol;
+        escrow.mint = None;
+        escrow.token_vault = None;
+        escrow.token_decimals = 0;
         escrow.min_verification_level = min_verification_level;
         escrow.require_born = require_born;
         escrow.created_at = Clock::get()?.unix_timestamp;
@@ -187,6 +188,87 @@ pub mod escrow_v3 {
             amount,
             deadline,
             arbiter: escrow.arbiter,
+            currency: escrow.currency,
+            mint: escrow.mint,
+            token_vault: escrow.token_vault,
+        });
+
+        Ok(())
+    }
+
+    /// Create an SPL/USDC escrow between a client and a verified SATP V3 agent.
+    ///
+    /// The escrow account remains the authority for an associated token vault.
+    /// Clients fund the vault with `transfer_checked`, so mint decimals are
+    /// bound to the on-chain mint rather than inferred by the SDK.
+    pub fn create_token_escrow(
+        ctx: Context<CreateTokenEscrow>,
+        agent_id: String,
+        amount: u64,
+        description_hash: [u8; 32],
+        deadline: i64,
+        nonce: u64,
+        min_verification_level: u8,
+        require_born: bool,
+    ) -> Result<()> {
+        validate_create_escrow_identity(
+            &ctx.accounts.client.key(),
+            &ctx.accounts.agent_wallet.key(),
+            &ctx.accounts.agent_identity,
+            &ctx.accounts.arbiter.key(),
+            &agent_id,
+            amount,
+            deadline,
+            min_verification_level,
+            require_born,
+        )?;
+
+        let agent_id_hash = compute_sha256(agent_id.as_bytes());
+        let escrow = &mut ctx.accounts.escrow;
+        escrow.client = ctx.accounts.client.key();
+        escrow.agent = ctx.accounts.agent_wallet.key();
+        escrow.agent_id_hash = agent_id_hash;
+        escrow.amount = amount;
+        escrow.released_amount = 0;
+        escrow.description_hash = description_hash;
+        escrow.deadline = deadline;
+        escrow.nonce = nonce;
+        escrow.status = EscrowStatus::Active;
+        escrow.currency = EscrowCurrency::SplToken;
+        escrow.mint = Some(ctx.accounts.mint.key());
+        escrow.token_vault = Some(ctx.accounts.escrow_token_vault.key());
+        escrow.token_decimals = ctx.accounts.mint.decimals;
+        escrow.min_verification_level = min_verification_level;
+        escrow.require_born = require_born;
+        escrow.created_at = Clock::get()?.unix_timestamp;
+        escrow.arbiter = ctx.accounts.arbiter.key();
+        escrow.bump = ctx.bumps.escrow;
+
+        token_interface::transfer_checked(
+            CpiContext::new(
+                ctx.accounts.token_program.key(),
+                TransferChecked {
+                    from: ctx.accounts.client_token_account.to_account_info(),
+                    mint: ctx.accounts.mint.to_account_info(),
+                    to: ctx.accounts.escrow_token_vault.to_account_info(),
+                    authority: ctx.accounts.client.to_account_info(),
+                },
+            ),
+            amount,
+            ctx.accounts.mint.decimals,
+        )?;
+
+        emit!(EscrowCreated {
+            escrow: escrow.key(),
+            client: escrow.client,
+            agent: escrow.agent,
+            agent_id_hash,
+            amount,
+            deadline,
+            arbiter: escrow.arbiter,
+            currency: escrow.currency,
+            mint: escrow.mint,
+            token_vault: escrow.token_vault,
         });
 
         Ok(())
@@ -195,7 +277,10 @@ pub mod escrow_v3 {
     /// Agent submits work proof. Only callable before deadline.
     pub fn submit_work(ctx: Context<SubmitWork>, work_hash: [u8; 32]) -> Result<()> {
         let escrow = &mut ctx.accounts.escrow;
-        require!(escrow.status == EscrowStatus::Active, EscrowV3Error::NotActive);
+        require!(
+            escrow.status == EscrowStatus::Active,
+            EscrowV3Error::NotActive
+        );
 
         let clock = Clock::get()?;
         require!(
@@ -226,7 +311,9 @@ pub mod escrow_v3 {
             EscrowV3Error::NotReleasable
         );
 
-        let remaining = escrow.amount.checked_sub(escrow.released_amount)
+        let remaining = escrow
+            .amount
+            .checked_sub(escrow.released_amount)
             .ok_or(EscrowV3Error::ArithmeticOverflow)?;
         require!(remaining > 0, EscrowV3Error::NothingToRelease);
 
@@ -235,7 +322,11 @@ pub mod escrow_v3 {
 
         // Transfer remaining SOL to agent
         **escrow.to_account_info().try_borrow_mut_lamports()? -= remaining;
-        **ctx.accounts.agent.to_account_info().try_borrow_mut_lamports()? += remaining;
+        **ctx
+            .accounts
+            .agent
+            .to_account_info()
+            .try_borrow_mut_lamports()? += remaining;
 
         emit!(EscrowReleased {
             escrow: escrow.key(),
@@ -257,19 +348,114 @@ pub mod escrow_v3 {
         );
         require!(amount > 0, EscrowV3Error::ZeroAmount);
 
-        let remaining = escrow.amount.checked_sub(escrow.released_amount)
+        let remaining = escrow
+            .amount
+            .checked_sub(escrow.released_amount)
             .ok_or(EscrowV3Error::ArithmeticOverflow)?;
         require!(amount <= remaining, EscrowV3Error::InsufficientFunds);
 
-        escrow.released_amount = escrow.released_amount
+        escrow.released_amount = escrow
+            .released_amount
             .checked_add(amount)
             .ok_or(EscrowV3Error::ArithmeticOverflow)?;
 
         // Transfer partial amount to agent
         **escrow.to_account_info().try_borrow_mut_lamports()? -= amount;
-        **ctx.accounts.agent.to_account_info().try_borrow_mut_lamports()? += amount;
+        **ctx
+            .accounts
+            .agent
+            .to_account_info()
+            .try_borrow_mut_lamports()? += amount;
 
         // If fully released, mark as Released
+        if escrow.released_amount == escrow.amount {
+            escrow.status = EscrowStatus::Released;
+        }
+
+        emit!(PartialRelease {
+            escrow: escrow.key(),
+            agent: escrow.agent,
+            amount,
+            total_released: escrow.released_amount,
+            remaining: escrow.amount.saturating_sub(escrow.released_amount),
+        });
+
+        Ok(())
+    }
+
+    /// Client releases full remaining SPL/USDC funds to the agent token account.
+    pub fn release_token(ctx: Context<TokenRelease>) -> Result<()> {
+        let escrow = &mut ctx.accounts.escrow;
+        require!(
+            escrow.status == EscrowStatus::Active || escrow.status == EscrowStatus::WorkSubmitted,
+            EscrowV3Error::NotReleasable
+        );
+        require!(
+            escrow.currency == EscrowCurrency::SplToken,
+            EscrowV3Error::CurrencyMismatch
+        );
+
+        let remaining = escrow
+            .amount
+            .checked_sub(escrow.released_amount)
+            .ok_or(EscrowV3Error::ArithmeticOverflow)?;
+        require!(remaining > 0, EscrowV3Error::NothingToRelease);
+
+        escrow.released_amount = escrow.amount;
+        escrow.status = EscrowStatus::Released;
+
+        transfer_checked_from_vault(
+            escrow,
+            &ctx.accounts.escrow_token_vault,
+            &ctx.accounts.agent_token_account,
+            &ctx.accounts.mint,
+            &ctx.accounts.token_program,
+            remaining,
+        )?;
+
+        emit!(EscrowReleased {
+            escrow: escrow.key(),
+            agent: escrow.agent,
+            amount: remaining,
+            total_released: escrow.released_amount,
+        });
+
+        Ok(())
+    }
+
+    /// Client releases a partial SPL/USDC milestone amount.
+    pub fn partial_release_token(ctx: Context<TokenRelease>, amount: u64) -> Result<()> {
+        let escrow = &mut ctx.accounts.escrow;
+        require!(
+            escrow.status == EscrowStatus::Active || escrow.status == EscrowStatus::WorkSubmitted,
+            EscrowV3Error::NotReleasable
+        );
+        require!(
+            escrow.currency == EscrowCurrency::SplToken,
+            EscrowV3Error::CurrencyMismatch
+        );
+        require!(amount > 0, EscrowV3Error::ZeroAmount);
+
+        let remaining = escrow
+            .amount
+            .checked_sub(escrow.released_amount)
+            .ok_or(EscrowV3Error::ArithmeticOverflow)?;
+        require!(amount <= remaining, EscrowV3Error::InsufficientFunds);
+
+        escrow.released_amount = escrow
+            .released_amount
+            .checked_add(amount)
+            .ok_or(EscrowV3Error::ArithmeticOverflow)?;
+
+        transfer_checked_from_vault(
+            escrow,
+            &ctx.accounts.escrow_token_vault,
+            &ctx.accounts.agent_token_account,
+            &ctx.accounts.mint,
+            &ctx.accounts.token_program,
+            amount,
+        )?;
+
         if escrow.released_amount == escrow.amount {
             escrow.status = EscrowStatus::Released;
         }
@@ -289,7 +475,10 @@ pub mod escrow_v3 {
     /// Only if deadline passed AND status is Active (no work submitted).
     pub fn cancel(ctx: Context<Cancel>) -> Result<()> {
         let escrow = &mut ctx.accounts.escrow;
-        require!(escrow.status == EscrowStatus::Active, EscrowV3Error::NotCancellable);
+        require!(
+            escrow.status == EscrowStatus::Active,
+            EscrowV3Error::NotCancellable
+        );
 
         let clock = Clock::get()?;
         require!(
@@ -302,7 +491,52 @@ pub mod escrow_v3 {
 
         if remaining > 0 {
             **escrow.to_account_info().try_borrow_mut_lamports()? -= remaining;
-            **ctx.accounts.client.to_account_info().try_borrow_mut_lamports()? += remaining;
+            **ctx
+                .accounts
+                .client
+                .to_account_info()
+                .try_borrow_mut_lamports()? += remaining;
+        }
+
+        emit!(EscrowCancelled {
+            escrow: escrow.key(),
+            client: escrow.client,
+            refunded: remaining,
+        });
+
+        Ok(())
+    }
+
+    /// Client cancels SPL/USDC escrow after deadline and receives unreleased funds.
+    pub fn cancel_token(ctx: Context<TokenCancel>) -> Result<()> {
+        let escrow = &mut ctx.accounts.escrow;
+        require!(
+            escrow.status == EscrowStatus::Active,
+            EscrowV3Error::NotCancellable
+        );
+        require!(
+            escrow.currency == EscrowCurrency::SplToken,
+            EscrowV3Error::CurrencyMismatch
+        );
+
+        let clock = Clock::get()?;
+        require!(
+            clock.unix_timestamp > escrow.deadline,
+            EscrowV3Error::DeadlineNotReached
+        );
+
+        let remaining = escrow.amount.saturating_sub(escrow.released_amount);
+        escrow.status = EscrowStatus::Cancelled;
+
+        if remaining > 0 {
+            transfer_checked_from_vault(
+                escrow,
+                &ctx.accounts.escrow_token_vault,
+                &ctx.accounts.client_token_account,
+                &ctx.accounts.mint,
+                &ctx.accounts.token_program,
+                remaining,
+            )?;
         }
 
         emit!(EscrowCancelled {
@@ -360,7 +594,9 @@ pub mod escrow_v3 {
             EscrowV3Error::NotDisputed
         );
 
-        let remaining = escrow.amount.checked_sub(escrow.released_amount)
+        let remaining = escrow
+            .amount
+            .checked_sub(escrow.released_amount)
             .ok_or(EscrowV3Error::ArithmeticOverflow)?;
         require!(
             agent_amount.checked_add(client_amount) == Some(remaining),
@@ -368,20 +604,92 @@ pub mod escrow_v3 {
         );
 
         escrow.status = EscrowStatus::Resolved;
-        escrow.released_amount = escrow.released_amount
+        escrow.released_amount = escrow
+            .released_amount
             .checked_add(agent_amount)
             .ok_or(EscrowV3Error::ArithmeticOverflow)?;
 
         // Transfer to agent
         if agent_amount > 0 {
             **escrow.to_account_info().try_borrow_mut_lamports()? -= agent_amount;
-            **ctx.accounts.agent.to_account_info().try_borrow_mut_lamports()? += agent_amount;
+            **ctx
+                .accounts
+                .agent
+                .to_account_info()
+                .try_borrow_mut_lamports()? += agent_amount;
         }
 
         // Refund to client
         if client_amount > 0 {
             **escrow.to_account_info().try_borrow_mut_lamports()? -= client_amount;
-            **ctx.accounts.client_wallet.to_account_info().try_borrow_mut_lamports()? += client_amount;
+            **ctx
+                .accounts
+                .client_wallet
+                .to_account_info()
+                .try_borrow_mut_lamports()? += client_amount;
+        }
+
+        emit!(DisputeResolved {
+            escrow: escrow.key(),
+            agent_amount,
+            client_amount,
+            resolved_by: ctx.accounts.arbiter.key(),
+        });
+
+        Ok(())
+    }
+
+    /// Arbiter resolves SPL/USDC dispute by splitting vault funds.
+    pub fn resolve_token_dispute(
+        ctx: Context<TokenResolveDispute>,
+        agent_amount: u64,
+        client_amount: u64,
+    ) -> Result<()> {
+        let escrow = &mut ctx.accounts.escrow;
+        require!(
+            escrow.status == EscrowStatus::Disputed,
+            EscrowV3Error::NotDisputed
+        );
+        require!(
+            escrow.currency == EscrowCurrency::SplToken,
+            EscrowV3Error::CurrencyMismatch
+        );
+
+        let remaining = escrow
+            .amount
+            .checked_sub(escrow.released_amount)
+            .ok_or(EscrowV3Error::ArithmeticOverflow)?;
+        require!(
+            agent_amount.checked_add(client_amount) == Some(remaining),
+            EscrowV3Error::ResolutionAmountMismatch
+        );
+
+        escrow.status = EscrowStatus::Resolved;
+        escrow.released_amount = escrow
+            .released_amount
+            .checked_add(agent_amount)
+            .ok_or(EscrowV3Error::ArithmeticOverflow)?;
+
+        if agent_amount > 0 {
+            transfer_checked_from_vault(
+                escrow,
+                &ctx.accounts.escrow_token_vault,
+                &ctx.accounts.agent_token_account,
+                &ctx.accounts.mint,
+                &ctx.accounts.token_program,
+                agent_amount,
+            )?;
+        }
+
+        if client_amount > 0 {
+            transfer_checked_from_vault(
+                escrow,
+                &ctx.accounts.escrow_token_vault,
+                &ctx.accounts.client_token_account,
+                &ctx.accounts.mint,
+                &ctx.accounts.token_program,
+                client_amount,
+            )?;
         }
 
         emit!(DisputeResolved {
@@ -398,7 +706,10 @@ pub mod escrow_v3 {
     /// New deadline must be strictly after the current deadline.
     pub fn extend_deadline(ctx: Context<ExtendDeadline>, new_deadline: i64) -> Result<()> {
         let escrow = &mut ctx.accounts.escrow;
-        require!(escrow.status == EscrowStatus::Active, EscrowV3Error::NotActive);
+        require!(
+            escrow.status == EscrowStatus::Active,
+            EscrowV3Error::NotActive
+        );
         require!(
             new_deadline > escrow.deadline,
             EscrowV3Error::NewDeadlineMustBeLater
@@ -433,10 +744,8 @@ pub mod escrow_v3 {
 /// GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG (mainnet)
 const IDENTITY_V3_PROGRAM_ID: Pubkey = Pubkey::new_from_array([
     // 7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ
-    0x65, 0xa4, 0x81, 0x5a, 0x60, 0xf7, 0x0f, 0x90,
-    0x9a, 0xec, 0xa2, 0x2d, 0xe5, 0xac, 0x74, 0xec,
-    0xd9, 0xf1, 0x16, 0x29, 0xc1, 0x27, 0x41, 0x5e,
-    0xe9, 0xed, 0xc2, 0x11, 0x52, 0xbf, 0xf0, 0xeb,
+    0x65, 0xa4, 0x81, 0x5a, 0x60, 0xf7, 0x0f, 0x90, 0x9a, 0xec, 0xa2, 0x2d, 0xe5, 0xac, 0x74, 0xec,
+    0xd9, 0xf1, 0x16, 0x29, 0xc1, 0x27, 0x41, 0x5e, 0xe9, 0xed, 0xc2, 0x11, 0x52, 0xbf, 0xf0, 0xeb,
 ]);
 
 // ═══════════════════════════════════════════════
@@ -483,43 +792,63 @@ fn parse_genesis_tail(data: &[u8]) -> Result<GenesisTail> {
 
     // Skip variable-length strings: agent_name, description, category
     for _ in 0..3 {
-        require!(offset + 4 <= data.len(), EscrowV3Error::InvalidIdentityAccount);
+        require!(
+            offset + 4 <= data.len(),
+            EscrowV3Error::InvalidIdentityAccount
+        );
         let len = u32::from_le_bytes(
-            data[offset..offset + 4].try_into()
-                .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?
+            data[offset..offset + 4]
+                .try_into()
+                .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?,
         ) as usize;
         offset += 4 + len;
     }
 
     // capabilities: Vec<String>
-    require!(offset + 4 <= data.len(), EscrowV3Error::InvalidIdentityAccount);
+    require!(
+        offset + 4 <= data.len(),
+        EscrowV3Error::InvalidIdentityAccount
+    );
     let count = u32::from_le_bytes(
-        data[offset..offset + 4].try_into()
-            .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?
+        data[offset..offset + 4]
+            .try_into()
+            .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?,
     ) as usize;
     offset += 4;
     for _ in 0..count {
-        require!(offset + 4 <= data.len(), EscrowV3Error::InvalidIdentityAccount);
+        require!(
+            offset + 4 <= data.len(),
+            EscrowV3Error::InvalidIdentityAccount
+        );
         let len = u32::from_le_bytes(
-            data[offset..offset + 4].try_into()
-                .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?
+            data[offset..offset + 4]
+                .try_into()
+                .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?,
         ) as usize;
         offset += 4 + len;
     }
 
     // metadata_uri: String
-    require!(offset + 4 <= data.len(), EscrowV3Error::InvalidIdentityAccount);
+    require!(
+        offset + 4 <= data.len(),
+        EscrowV3Error::InvalidIdentityAccount
+    );
     let len = u32::from_le_bytes(
-        data[offset..offset + 4].try_into()
-            .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?
+        data[offset..offset + 4]
+            .try_into()
+            .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?,
     ) as usize;
     offset += 4 + len;
 
     // face_image: String
-    require!(offset + 4 <= data.len(), EscrowV3Error::InvalidIdentityAccount);
+    require!(
+        offset + 4 <= data.len(),
+        EscrowV3Error::InvalidIdentityAccount
+    );
     let len = u32::from_le_bytes(
-        data[offset..offset + 4].try_into()
-            .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?
+        data[offset..offset + 4]
+            .try_into()
+            .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?,
     ) as usize;
     offset += 4 + len;
 
@@ -527,34 +856,51 @@ fn parse_genesis_tail(data: &[u8]) -> Result<GenesisTail> {
     offset += 32;
 
     // face_burn_tx: String
-    require!(offset + 4 <= data.len(), EscrowV3Error::InvalidIdentityAccount);
+    require!(
+        offset + 4 <= data.len(),
+        EscrowV3Error::InvalidIdentityAccount
+    );
     let len = u32::from_le_bytes(
-        data[offset..offset + 4].try_into()
-            .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?
+        data[offset..offset + 4]
+            .try_into()
+            .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?,
     ) as usize;
     offset += 4 + len;
 
     // genesis_record: i64
-    require!(offset + 8 <= data.len(), EscrowV3Error::InvalidIdentityAccount);
+    require!(
+        offset + 8 <= data.len(),
+        EscrowV3Error::InvalidIdentityAccount
+    );
     let genesis_record = i64::from_le_bytes(
-        data[offset..offset + 8].try_into()
-            .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?
+        data[offset..offset + 8]
+            .try_into()
+            .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?,
     );
     offset += 8;
 
     // is_active: bool (1 byte) — TD-004
-    require!(offset + 1 <= data.len(), EscrowV3Error::InvalidIdentityAccount);
+    require!(
+        offset + 1 <= data.len(),
+        EscrowV3Error::InvalidIdentityAccount
+    );
     let is_active = data[offset] != 0;
     offset += 1;
 
     // authority: Pubkey (32 bytes) — TD-002
-    require!(offset + 32 <= data.len(), EscrowV3Error::InvalidIdentityAccount);
+    require!(
+        offset + 32 <= data.len(),
+        EscrowV3Error::InvalidIdentityAccount
+    );
     let authority = Pubkey::try_from(&data[offset..offset + 32])
         .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?;
     offset += 32;
 
     // pending_authority: Option<Pubkey> (1 byte tag + 0|32 bytes)
-    require!(offset + 1 <= data.len(), EscrowV3Error::InvalidIdentityAccount);
+    require!(
+        offset + 1 <= data.len(),
+        EscrowV3Error::InvalidIdentityAccount
+    );
     let tag = data[offset];
     offset += 1;
     if tag == 1 {
@@ -562,15 +908,22 @@ fn parse_genesis_tail(data: &[u8]) -> Result<GenesisTail> {
     }
 
     // reputation_score: u64 (8 bytes)
-    require!(offset + 8 <= data.len(), EscrowV3Error::InvalidIdentityAccount);
+    require!(
+        offset + 8 <= data.len(),
+        EscrowV3Error::InvalidIdentityAccount
+    );
     let _reputation_score = u64::from_le_bytes(
-        data[offset..offset + 8].try_into()
-            .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?
+        data[offset..offset + 8]
+            .try_into()
+            .map_err(|_| error!(EscrowV3Error::InvalidIdentityAccount))?,
     );
     offset += 8;
 
     // verification_level: u8
-    require!(offset + 1 <= data.len(), EscrowV3Error::InvalidIdentityAccount);
+    require!(
+        offset + 1 <= data.len(),
+        EscrowV3Error::InvalidIdentityAccount
+    );
     let verification_level = data[offset];
 
     Ok(GenesisTail {
@@ -579,6 +932,109 @@ fn parse_genesis_tail(data: &[u8]) -> Result<GenesisTail> {
         authority,
         verification_level,
     })
+}
+
+fn validate_create_escrow_identity<'info>(
+    client: &Pubkey,
+    agent_wallet: &Pubkey,
+    identity_account: &UncheckedAccount<'info>,
+    arbiter: &Pubkey,
+    agent_id: &str,
+    amount: u64,
+    deadline: i64,
+    min_verification_level: u8,
+    require_born: bool,
+) -> Result<()> {
+    require!(amount > 0, EscrowV3Error::ZeroAmount);
+    require!(
+        deadline > Clock::get()?.unix_timestamp,
+        EscrowV3Error::DeadlinePassed
+    );
+    require!(agent_id.len() <= 64, EscrowV3Error::AgentIdTooLong);
+    require!(
+        min_verification_level <= 5,
+        EscrowV3Error::InvalidVerificationLevel
+    );
+    require!(arbiter != client, EscrowV3Error::ClientCannotBeArbiter);
+    require!(arbiter != agent_wallet, EscrowV3Error::AgentCannotBeArbiter);
+    require!(
+        identity_account.owner == &IDENTITY_V3_PROGRAM_ID,
+        EscrowV3Error::InvalidIdentityOwner
+    );
+
+    let agent_id_hash = compute_sha256(agent_id.as_bytes());
+    let (expected_pda, _bump) =
+        Pubkey::find_program_address(&[b"genesis", &agent_id_hash], &IDENTITY_V3_PROGRAM_ID);
+    require!(
+        identity_account.key() == expected_pda,
+        EscrowV3Error::InvalidIdentityPda
+    );
+
+    let data = identity_account.try_borrow_data()?;
+    require!(data.len() > 8, EscrowV3Error::InvalidIdentityAccount);
+    let parsed = parse_genesis_tail(&data)?;
+
+    require!(parsed.is_active, EscrowV3Error::AgentIdentityDeactivated);
+    require!(
+        agent_wallet == &parsed.authority,
+        EscrowV3Error::AgentWalletMismatch
+    );
+
+    if require_born {
+        require!(parsed.genesis_record > 0, EscrowV3Error::AgentNotBorn);
+    }
+
+    if min_verification_level > 0 {
+        require!(
+            parsed.verification_level >= min_verification_level,
+            EscrowV3Error::InsufficientVerificationLevel
+        );
+    }
+
+    Ok(())
+}
+
+fn transfer_checked_from_vault<'info>(
+    escrow: &Account<'info, EscrowV3>,
+    source: &InterfaceAccount<'info, TokenAccount>,
+    destination: &InterfaceAccount<'info, TokenAccount>,
+    mint: &InterfaceAccount<'info, Mint>,
+    token_program: &Interface<'info, TokenInterface>,
+    amount: u64,
+) -> Result<()> {
+    require!(
+        escrow.mint == Some(mint.key()),
+        EscrowV3Error::InvalidTokenMint
+    );
+    require!(
+        escrow.token_vault == Some(source.key()),
+        EscrowV3Error::InvalidTokenVault
+    );
+
+    let nonce_bytes = escrow.nonce.to_le_bytes();
+    let bump = [escrow.bump];
+    let signer_seeds: &[&[u8]] = &[
+        b"escrow_v3",
+        escrow.client.as_ref(),
+        escrow.description_hash.as_ref(),
+        nonce_bytes.as_ref(),
+        bump.as_ref(),
+    ];
+
+    token_interface::transfer_checked(
+        CpiContext::new_with_signer(
+            token_program.key(),
+            TransferChecked {
+                from: source.to_account_info(),
+                mint: mint.to_account_info(),
+                to: destination.to_account_info(),
+                authority: escrow.to_account_info(),
+            },
+            &[signer_seeds],
+        ),
+        amount,
+        escrow.token_decimals,
+    )
 }
 
 // ═══════════════════════════════════════════════
@@ -627,6 +1083,68 @@ pub struct CreateEscrow<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(
+    agent_id: String,
+    amount: u64,
+    description_hash: [u8; 32],
+    deadline: i64,
+    nonce: u64,
+)]
+pub struct CreateTokenEscrow<'info> {
+    #[account(mut)]
+    pub client: Signer<'info>,
+
+    /// The agent's wallet that will receive funds
+    /// CHECK: Validated against Genesis Record authority
+    pub agent_wallet: UncheckedAccount<'info>,
+
+    /// The agent's SATP V3 Genesis Record
+    /// CHECK: Verified manually — owner check + PDA derivation
+    pub agent_identity: UncheckedAccount<'info>,
+
+    /// Arbiter for dispute resolution — must be a third party (not client or agent)
+    /// CHECK: Stored in escrow, validated != client and != agent in instruction logic
+    pub arbiter: UncheckedAccount<'info>,
+
+    #[account(
+        init,
+        payer = client,
+        space = 8 + EscrowV3::INIT_SPACE,
+        seeds = [
+            b"escrow_v3",
+            client.key().as_ref(),
+            description_hash.as_ref(),
+            &nonce.to_le_bytes(),
+        ],
+        bump,
+    )]
+    pub escrow: Account<'info, EscrowV3>,
+
+    pub mint: InterfaceAccount<'info, Mint>,
+
+    #[account(
+        mut,
+        token::mint = mint,
+        token::authority = client,
+        token::token_program = token_program,
+    )]
+    pub client_token_account: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(
+        init,
+        payer = client,
+        associated_token::mint = mint,
+        associated_token::authority = escrow,
+        associated_token::token_program = token_program,
+    )]
+    pub escrow_token_vault: InterfaceAccount<'info, TokenAccount>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 pub struct SubmitWork<'info> {
     #[account(
         mut,
@@ -656,6 +1174,43 @@ pub struct Release<'info> {
 }
 
 #[derive(Accounts)]
+pub struct TokenRelease<'info> {
+    #[account(
+        mut,
+        constraint = escrow.client == client.key() @ EscrowV3Error::Unauthorized,
+        constraint = escrow.agent == agent.key() @ EscrowV3Error::WrongAgent,
+        constraint = escrow.mint == Some(mint.key()) @ EscrowV3Error::InvalidTokenMint,
+        constraint = escrow.token_vault == Some(escrow_token_vault.key()) @ EscrowV3Error::InvalidTokenVault,
+    )]
+    pub escrow: Account<'info, EscrowV3>,
+
+    pub client: Signer<'info>,
+
+    /// CHECK: Agent receiving funds, validated against escrow.agent
+    pub agent: UncheckedAccount<'info>,
+
+    pub mint: InterfaceAccount<'info, Mint>,
+
+    #[account(
+        mut,
+        token::mint = mint,
+        token::authority = escrow,
+        token::token_program = token_program,
+    )]
+    pub escrow_token_vault: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        token::mint = mint,
+        token::authority = agent,
+        token::token_program = token_program,
+    )]
+    pub agent_token_account: InterfaceAccount<'info, TokenAccount>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+}
+
+#[derive(Accounts)]
 pub struct Cancel<'info> {
     #[account(
         mut,
@@ -665,6 +1220,39 @@ pub struct Cancel<'info> {
 
     #[account(mut)]
     pub client: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct TokenCancel<'info> {
+    #[account(
+        mut,
+        constraint = escrow.client == client.key() @ EscrowV3Error::Unauthorized,
+        constraint = escrow.mint == Some(mint.key()) @ EscrowV3Error::InvalidTokenMint,
+        constraint = escrow.token_vault == Some(escrow_token_vault.key()) @ EscrowV3Error::InvalidTokenVault,
+    )]
+    pub escrow: Account<'info, EscrowV3>,
+
+    pub client: Signer<'info>,
+
+    pub mint: InterfaceAccount<'info, Mint>,
+
+    #[account(
+        mut,
+        token::mint = mint,
+        token::authority = escrow,
+        token::token_program = token_program,
+    )]
+    pub escrow_token_vault: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        token::mint = mint,
+        token::authority = client,
+        token::token_program = token_program,
+    )]
+    pub client_token_account: InterfaceAccount<'info, TokenAccount>,
+
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 #[derive(Accounts)]
@@ -698,6 +1286,55 @@ pub struct ResolveDispute<'info> {
         constraint = escrow.client == client_wallet.key() @ EscrowV3Error::Unauthorized,
     )]
     pub client_wallet: UncheckedAccount<'info>,
+}
+
+#[derive(Accounts)]
+pub struct TokenResolveDispute<'info> {
+    #[account(
+        mut,
+        constraint = escrow.arbiter == arbiter.key() @ EscrowV3Error::NotArbiter,
+        constraint = escrow.agent == agent.key() @ EscrowV3Error::WrongAgent,
+        constraint = escrow.client == client_wallet.key() @ EscrowV3Error::Unauthorized,
+        constraint = escrow.mint == Some(mint.key()) @ EscrowV3Error::InvalidTokenMint,
+        constraint = escrow.token_vault == Some(escrow_token_vault.key()) @ EscrowV3Error::InvalidTokenVault,
+    )]
+    pub escrow: Account<'info, EscrowV3>,
+
+    pub arbiter: Signer<'info>,
+
+    /// CHECK: Agent receiving funds, validated against escrow.agent
+    pub agent: UncheckedAccount<'info>,
+
+    /// CHECK: Client receiving refund, validated against escrow.client
+    pub client_wallet: UncheckedAccount<'info>,
+
+    pub mint: InterfaceAccount<'info, Mint>,
+
+    #[account(
+        mut,
+        token::mint = mint,
+        token::authority = escrow,
+        token::token_program = token_program,
+    )]
+    pub escrow_token_vault: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        token::mint = mint,
+        token::authority = agent,
+        token::token_program = token_program,
+    )]
+    pub agent_token_account: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        token::mint = mint,
+        token::authority = client_wallet,
+        token::token_program = token_program,
+    )]
+    pub client_token_account: InterfaceAccount<'info, TokenAccount>,
+
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 #[derive(Accounts)]
@@ -735,65 +1372,77 @@ pub struct CloseEscrow<'info> {
 #[derive(InitSpace)]
 pub struct EscrowV3 {
     /// Client who created the escrow
-    pub client: Pubkey,                      // 32
+    pub client: Pubkey, // 32
 
     /// Agent wallet that receives funds
-    pub agent: Pubkey,                       // 32
+    pub agent: Pubkey, // 32
 
     /// SHA-256 of agent_id (links to Genesis Record)
-    pub agent_id_hash: [u8; 32],             // 32
+    pub agent_id_hash: [u8; 32], // 32
 
     /// Total escrowed amount in lamports
-    pub amount: u64,                         // 8
+    pub amount: u64, // 8
 
     /// Amount already released (for partial/milestone releases)
-    pub released_amount: u64,                // 8
+    pub released_amount: u64, // 8
 
     /// SHA-256 of job description
-    pub description_hash: [u8; 32],          // 32
+    pub description_hash: [u8; 32], // 32
 
     /// Deadline for work submission (Unix timestamp)
-    pub deadline: i64,                       // 8
+    pub deadline: i64, // 8
 
     /// Nonce for uniqueness (same client+agent can have multiple escrows)
-    pub nonce: u64,                          // 8
+    pub nonce: u64, // 8
 
     /// Current escrow status
-    pub status: EscrowStatus,                // 1
+    pub status: EscrowStatus, // 1
+
+    /// Currency rail used by this escrow
+    pub currency: EscrowCurrency, // 1
+
+    /// SPL mint for token escrows; None for SOL escrows
+    pub mint: Option<Pubkey>, // 1 + 32 = 33
+
+    /// Escrow-owned associated token vault for SPL escrows; None for SOL
+    pub token_vault: Option<Pubkey>, // 1 + 32 = 33
+
+    /// Mint decimals captured for transfer_checked; zero for SOL
+    pub token_decimals: u8, // 1
 
     /// Minimum verification level required at creation
-    pub min_verification_level: u8,          // 1
+    pub min_verification_level: u8, // 1
 
     /// Whether born status was required at creation
-    pub require_born: bool,                  // 1
+    pub require_born: bool, // 1
 
     /// Creation timestamp
-    pub created_at: i64,                     // 8
+    pub created_at: i64, // 8
 
     /// Designated arbiter for dispute resolution
-    pub arbiter: Pubkey,                     // 32
+    pub arbiter: Pubkey, // 32
 
     /// Work proof hash (set on submit_work)
     #[max_len(32)]
-    pub work_hash: Option<[u8; 32]>,         // 1 + 32 = 33
+    pub work_hash: Option<[u8; 32]>, // 1 + 32 = 33
 
     /// When work was submitted
-    pub work_submitted_at: Option<i64>,      // 1 + 8 = 9
+    pub work_submitted_at: Option<i64>, // 1 + 8 = 9
 
     /// Dispute reason hash (set on raise_dispute)
     #[max_len(32)]
     pub dispute_reason_hash: Option<[u8; 32]>, // 1 + 32 = 33
 
     /// When dispute was raised
-    pub disputed_at: Option<i64>,            // 1 + 8 = 9
+    pub disputed_at: Option<i64>, // 1 + 8 = 9
 
     /// Who raised the dispute
-    pub disputed_by: Option<Pubkey>,         // 1 + 32 = 33
+    pub disputed_by: Option<Pubkey>, // 1 + 32 = 33
 
     /// PDA bump seed
-    pub bump: u8,                            // 1
+    pub bump: u8, // 1
 }
-// Total: 32+32+32+8+8+32+8+8+1+1+1+8+32+33+9+33+9+33+1 = 331 bytes + 8 discriminator = 339
+// Total with token metadata: 399 bytes + 8 discriminator = 407
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
 pub enum EscrowStatus {
@@ -803,6 +1452,12 @@ pub enum EscrowStatus {
     Cancelled,
     Disputed,
     Resolved,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub enum EscrowCurrency {
+    Sol,
+    SplToken,
 }
 
 // ═══════════════════════════════════════════════
@@ -894,6 +1549,15 @@ pub enum EscrowV3Error {
 
     #[msg("Agent wallet does not match identity authority — funds would go to wrong recipient")]
     AgentWalletMismatch,
+
+    #[msg("Escrow currency does not match the requested instruction")]
+    CurrencyMismatch,
+
+    #[msg("Invalid SPL token mint for escrow")]
+    InvalidTokenMint,
+
+    #[msg("Invalid SPL token vault for escrow")]
+    InvalidTokenVault,
 }
 
 // ═══════════════════════════════════════════════
@@ -909,6 +1573,9 @@ pub struct EscrowCreated {
     pub amount: u64,
     pub deadline: i64,
     pub arbiter: Pubkey,
+    pub currency: EscrowCurrency,
+    pub mint: Option<Pubkey>,
+    pub token_vault: Option<Pubkey>,
 }
 
 #[event]
