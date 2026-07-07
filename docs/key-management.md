@@ -24,7 +24,7 @@ Every network deployment must maintain an authority inventory with public values
 | Network | Program/module | Authority class | Public key | Storage class | Rotation status | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | devnet | TBD | upgrade authority | `<public key only>` | local/dev only or multisig | active/planned/rotated | no private material |
-| mainnet | TBD | upgrade authority | `<public key only>` | hardware/multisig/governed | active/planned/rotated | no private material |
+| mainnet | TBD | upgrade authority | `<public key only>` | sole Owner-held key | active/planned/rotated | no private material; no multisig; no agent co-signer |
 
 Forbidden inventory fields:
 
@@ -49,10 +49,10 @@ Allowed storage classes by risk level:
 | Ephemeral local dev key | Local tests only | Not production, not shared, replaceable. |
 | Limited fee-payer key | Dev/test fee payment | Minimal balance; no protocol authority. |
 | Hardware wallet | Production authority signing | Preferred for high-value authority. |
-| Multisig/governance | Production upgrade/admin authority | Preferred before mainnet or value-bearing protocol use. |
+| Multisig/governance | Production admin authority, excluding the SATP upgrade authority after the 2026-07-06 Owner decision | Still appropriate for non-upgrade governance or admin roles when approved. |
 | Managed secret store | Server signer for limited scoped actions | Requires documented signer boundary and audit logs. |
 
-Production upgrade/funds authority should prefer hardware wallet or multisig/governance over hot keys.
+SATP upgrade authority exception, Owner decision 2026-07-06: the upgrade-authority key remains a sole Owner-held key, with no multisig and no agent co-signer. The prior audit recommendation for upgrade-authority multisig is declined and risk-accepted. Production funds authority should still prefer hardware wallet, multisig/governance, or program-derived custody over hot keys.
 
 ---
 
@@ -66,6 +66,7 @@ upgrade authority != escrow/funds authority
 issuer authority != funds authority
 consumer app key != SATP root protocol authority
 local dev key != production authority
+agent signer != upgrade authority
 ```
 
 Any exception must be time-limited, documented, approved in HQ, and reviewed by brainShield.
@@ -154,6 +155,7 @@ Before any future SATP mainnet deployment or authority change:
 
 - authority inventory exists with public keys only;
 - no production key material exists in repo/package artifacts;
+- the SATP upgrade authority is the Owner-approved sole Owner-held public key, with no multisig and no agent co-signer;
 - upgrade and funds authorities are separated;
 - signer boundaries are documented;
 - emergency/pause authority is documented if present;

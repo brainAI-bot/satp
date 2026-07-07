@@ -9,6 +9,8 @@ Date: 2026-07-05
 
 This packet covers the SATP V3 program suite and authority model needed before any Owner mainnet decision. The current live deploy truth is manual Anchor deployment, devnet today, with no push-to-ship pipeline and no V3 mainnet program IDs enabled.
 
+Owner decision update, 2026-07-06: the SATP upgrade-authority key remains one sole Owner-held key. There is no upgrade-authority multisig and no agent co-signer. The prior audit recommendation for upgrade-authority multisig is declined and risk-accepted. This update reconciles the active readiness docs to the decision recorded in `ROADMAP.md` without changing `ROADMAP.md`.
+
 In scope:
 
 | Area | Current source | Mainnet decision status |
@@ -70,7 +72,7 @@ No V3 mainnet program ID is currently configured. Mainnet must remain disabled u
 
 | Mainnet authority class | Required public identifier | Required custody | Current status |
 | --- | --- | --- | --- |
-| Program upgrade authority | Owner-approved multisig/governance public key | Hardware-backed multisig or governance | Pending Owner approval. |
+| Program upgrade authority | Owner-approved public key | Sole Owner-held key; no multisig; no agent co-signer | Custody model decided by Owner; public key still pending before any mainnet action. |
 | Fee payer | Limited-balance operational public key | Separate fee-payer key with replenishment limits | Pending Owner approval. |
 | Issuer registry root | Public issuer-admin authority | Multisig/governance with issuer admission policy | Pending Owner approval. |
 | Trust-class administrator | Public trust-class authority | Governance or policy-bound administrator | Pending Owner approval. |
@@ -92,17 +94,18 @@ Read-only RPC: `https://api.mainnet-beta.solana.com`, `getAccountInfo`, `confirm
 | Attestations V2 | `ENvaD19QzwWWMJFu5r5xJ9SmHqWN6GvyzxACRejqbdug` | `3m2jKxUCo8XudjXYqKsWhNmh83S9vYphmU1zimLyYy1M` | `CSyppbZuGJ4syJcNgyFFhCc3qgbWNWJyL2Y195MNS6J7` | Upgradeable. |
 | Validation V2 | `9p795d2j3eGqzborG2AncucWBaU6PieKxmhKVroV3LNh` | `5rPvh32ypHcYfRH2jb7ofvp7Yr4KpyMbXbcWkZHS4Qjj` | `CSyppbZuGJ4syJcNgyFFhCc3qgbWNWJyL2Y195MNS6J7` | Upgradeable. |
 
-## Upgrade Custody Recommendation
+## Upgrade Custody Decision
 
-Do not use a local keypair, CI secret, server hot wallet, default Anchor wallet, or single human wallet as mainnet upgrade authority.
+Superseded recommendation: the earlier recommendation to choose a hardware-backed multisig or governance account for V3 mainnet upgrade authority is no longer active. The Owner declined that recommendation and accepted the single-key custody risk.
 
-Recommended Owner decision:
+Current Owner decision:
 
-1. Choose a hardware-backed multisig or governance account as V3 mainnet upgrade authority.
-2. Require public readback of quorum, signer role names, recovery path, and rotation process before deployment.
-3. Separate upgrade authority from fee payer, issuer registry root, trust-class administrator, funds authority, dispute authority, and emergency authority.
-4. If a temporary deployment authority is unavoidable, pre-approve its public key, expiry, transfer command plan, rollback criteria, and final post-transfer readback before any deploy occurs.
-5. Keep V3 mainnet IDs disabled until conformance tests and brainShield review pass.
+1. Keep the SATP upgrade-authority key as a sole Owner-held key.
+2. Do not add an upgrade-authority multisig.
+3. Do not add an agent co-signer or agent-controlled upgrade authority.
+4. Separate upgrade authority from fee payer, issuer registry root, trust-class administrator, funds authority, dispute authority, and emergency authority.
+5. Before any mainnet deploy or value-bearing action, require the Owner-approved public upgrade-authority address, command plan, rollback criteria, and final readback evidence.
+6. Keep V3 mainnet IDs disabled until conformance tests and brainShield review pass.
 
 ## Fee-Payer And Funding Runbook
 
@@ -124,7 +127,7 @@ Abort funding if the fee-payer address is also an authority, if replenishment li
 Abort before mainnet if any of the following is true:
 
 - V3 mainnet program IDs are not explicitly approved in a PR and HQ evidence.
-- Upgrade custody is a single key, hot wallet, CI secret, default Anchor wallet, or unknown authority.
+- Upgrade custody is not the Owner-approved sole Owner-held key, uses an agent co-signer, uses a CI secret, uses a default Anchor wallet, or is an unknown authority.
 - Any required public authority address is missing or cannot be read back.
 - Fee payer overlaps with upgrade, issuer, trust-class, funds, dispute, or emergency authority.
 - Conformance tests fail or do not cover third-party read-only verification.
@@ -141,7 +144,7 @@ Containment after an approved mainnet action must include public readback of pro
 | --- | --- | --- |
 | V3 mainnet IDs are unset | Mainnet SDK path correctly fails closed, but no mainnet deploy can proceed. | Owner must approve program IDs and authority addresses after brainShield review. |
 | V3 devnet ProgramData readback was incomplete for Reviews, Reputation, Attestations, Validation, and Escrow | Upgrade authority cannot be confirmed from this public RPC readback for those devnet programs. | Re-run with Solana CLI or an alternate public RPC before using these programs as promotion evidence. |
-| Identity V3 devnet upgrade authority is a single public key in readback | Mainnet must not inherit single-key authority. | Replace with multisig/governance custody for mainnet. |
+| Identity V3 devnet upgrade authority is a single public key in readback | Devnet readback does not prove the Owner-approved mainnet key. | Mainnet must use the Owner-approved sole Owner-held upgrade-authority public key with no multisig and no agent co-signer. |
 | Legacy V2 mainnet programs are upgradeable under one authority | Existing public constants carry authority concentration risk. | Treat as legacy/out-of-scope for V3 launch, or create a separate V2 retirement/ownership review. |
 | Escrow/funds custody model remains open | Value movement risk if launched without policy. | Decide program-controlled vault vs governance-controlled vault in a reviewed design. |
 | Dispute and emergency policies are not final | Incident response could become arbitrary or overpowered. | Approve public trigger, quorum, unfreeze, and post-incident evidence rules before launch. |
@@ -150,7 +153,7 @@ Containment after an approved mainnet action must include public readback of pro
 
 Request ID: `OWNER-MAINNET-AUTHORITY-6c8a5545`
 
-Requested Owner action, and no other action: approve the public mainnet authority plan for SATP V3 by naming the exact public keys or governance accounts for upgrade authority, fee payer, issuer registry root, trust-class administrator, escrow/funds authority, dispute authority, and pause/freeze authority if present.
+Requested Owner action, and no other action: approve the public mainnet authority plan for SATP V3 by naming the exact public key for the sole Owner-held upgrade authority, plus the exact public keys or governance accounts for fee payer, issuer registry root, trust-class administrator, escrow/funds authority, dispute authority, and pause/freeze authority if present.
 
 This approval must also state that:
 
