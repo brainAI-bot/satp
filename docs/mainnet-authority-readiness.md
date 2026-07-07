@@ -4,13 +4,15 @@ Status: readiness proposal only. This document does not approve, execute, or pre
 
 This model defines the authority boundaries and evidence gates that must be reviewed before brainShield security review and any brainKID or Hani mainnet decision can be considered ripe. It uses public-only placeholders until owners provide approved public addresses through HQ.
 
+Owner decision update, 2026-07-06: the SATP upgrade-authority key remains one sole Owner-held key. There is no upgrade-authority multisig and no agent co-signer. The prior audit recommendation for upgrade-authority multisig is declined and risk-accepted. This document keeps the remaining gates for mainnet deploy, value-bearing actions, keypair use, npm publish, production mutation, and non-upgrade authorities.
+
 ## Authority Inventory Placeholders
 
 Do not replace these placeholders with private key material, seed phrases, local keypair paths, secret-store paths, RPC tokens, or raw environment values. Final values must be public keys or public account addresses only.
 
 | Network | Program or module | Authority class | Public identifier | Custody option | Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| mainnet | SATP V3 program suite | Upgrade authority | `<mainnet-upgrade-authority-public-key>` | Multisig/governance with hardware-backed signers | Proposed | Owner-gated; no hot-key custody. |
+| mainnet | SATP V3 program suite | Upgrade authority | `<mainnet-upgrade-authority-public-key>` | Sole Owner-held key; no multisig; no agent co-signer | Owner-decided custody; public key pending | Owner-gated; no hot-key custody, CI secret, default Anchor wallet, or agent signer. |
 | mainnet | SATP fee payment | Fee payer | `<mainnet-fee-payer-public-key>` | Limited-balance operational key | Proposed | Must not also control upgrade, issuer root, escrow, funds, or dispute authority. |
 | mainnet | Issuer registry | Issuer registry root | `<issuer-registry-root-public-key>` | Multisig/governance with documented issuer admission policy | Proposed | Controls issuer-class administration only. |
 | mainnet | Trust classes | Trust-class administrator | `<trust-class-admin-public-key>` | Multisig/governance or policy-bound administrator | Proposed | May classify issuers; must not move escrow funds. |
@@ -20,11 +22,12 @@ Do not replace these placeholders with private key material, seed phrases, local
 
 ## Upgrade Custody Decision
 
-The proposed mainnet upgrade custody option is multisig/governance with hardware-backed human signers. A single local keypair, server hot wallet, CI secret, or default Anchor wallet is not acceptable for mainnet upgrade authority.
+The active mainnet upgrade custody decision is a sole Owner-held upgrade-authority key. The previous multisig/governance recommendation is superseded for the upgrade authority because the Owner declined it and accepted the single-key custody risk. A server hot wallet, CI secret, default Anchor wallet, local developer keypair, agent co-signer, or agent-controlled key remains unacceptable for mainnet upgrade authority.
 
 Before any owner approval:
 
-- The multisig or governance mechanism must be documented with public address, quorum, signer role names, recovery model, and rotation path.
+- The sole Owner-held upgrade-authority public key must be documented with public readback, custody confirmation, recovery model, and rotation path.
+- The upgrade authority must not include a multisig signer set, agent co-signer, agent-controlled key, CI secret, server hot wallet, default Anchor wallet, or implicit local signer.
 - The upgrade authority must be separated from fee payment, issuer administration, funds authority, dispute authority, and emergency authority.
 - Any temporary upgrade authority must have an expiry or transfer plan approved in HQ before deployment.
 - Verification must use public chain/account data only.
@@ -83,7 +86,7 @@ Required plan:
 The following evidence must be attached to the future review packet before brainShield is asked to approve mainnet readiness:
 
 - Public-only authority inventory for every mainnet authority class in this document.
-- Multisig/governance custody evidence for upgrade authority, including public address, quorum, signer roles, recovery, and rotation plan.
+- Owner-held custody evidence for the upgrade authority, including public address, no-multisig/no-agent-co-signer readback, recovery, and rotation plan.
 - Public proof that upgrade authority, fee payer, issuer registry root, trust-class administrator, funds authority, dispute authority, and emergency authority are separated.
 - Static diff evidence showing no runtime mainnet program IDs, deploy config, private key paths, secret env names, or signing defaults were introduced by the readiness PR.
 - Build proof from the repository's required CI command, or exact blocker if CI cannot run locally.
