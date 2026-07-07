@@ -22,6 +22,7 @@
     "check:exports": "node scripts/check-exports.js",
     "test:package-entrypoints": "node tests/package-entrypoints.test.js",
     "smoke:consumer-install": "node scripts/smoke-clean-consumer-install.js",
+    "smoke:satp-client-packed-consumer": "node scripts/smoke-satp-client-packed-consumer.js",
     "check:examples": "npm --prefix examples/mcp-x402-readonly run check && npm --prefix examples/agentfolio-consumer-readonly run check && npm --prefix examples/third-party-runtime-conformance run check",
     "test:attestation-request": "node packages/satp-client/test-attestation-request.js",
     "test:runtime-policy": "node --test packages/satp-client/test-runtime-policy-adapter.js",
@@ -32,7 +33,7 @@
     "test:borsh": "node packages/satp-client/test-borsh-reader.js",
     "test:examples": "npm --prefix examples/mcp-x402-readonly test && npm --prefix examples/agentfolio-consumer-readonly test && npm --prefix examples/third-party-runtime-conformance test",
     "ci:offline-with-examples": "npm run ci && npm run check:examples && npm run test:examples",
-    "ci": "npm run lint:roadmap && npm run validate:idls && npm run verify:v3-program-sources && npm run check:js && npm run check:exports && npm run check:release-metadata && npm run test:package-entrypoints && npm run smoke:consumer-install && npm run test:attestation-request && npm run test:runtime-policy && npm run test:wallet-control && npm run test:x402-discovery && npm run test:conformance:rc-s6 && npm run test:v3 && npm run test:borsh"
+    "ci": "npm run lint:roadmap && npm run validate:idls && npm run verify:v3-program-sources && npm run check:js && npm run check:exports && npm run check:release-metadata && npm run test:package-entrypoints && npm run smoke:consumer-install && npm run smoke:satp-client-packed-consumer && npm run test:attestation-request && npm run test:runtime-policy && npm run test:wallet-control && npm run test:x402-discovery && npm run test:conformance:rc-s6 && npm run test:v3 && npm run test:borsh"
   },
   "main": "packages/satp-client/src/index.js",
   "types": "packages/satp-client/src/index.d.ts",

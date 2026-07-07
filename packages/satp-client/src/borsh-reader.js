@@ -18,8 +18,7 @@
  */
 
 const { PublicKey } = require('@solana/web3.js');
-const { readFileSync } = require('fs');
-const { join } = require('path');
+const { V3_IDL_ACCOUNT_DISCRIMINATORS } = require('./v3-idl-discriminators');
 
 // ═══════════════════════════════════════════════════
 //  BorshReader — streaming Borsh deserializer
@@ -439,32 +438,14 @@ function accountDiscriminator(accountName) {
     .slice(0, 8);
 }
 
-const V3_IDL_FILES = [
-  'identity_v3.json',
-  'reviews_v3.json',
-  'attestations_v3.json',
-  'reputation_v3.json',
-  'validation_v3.json',
-  'escrow_v3.json',
-];
-
-function bareAccountName(name) {
-  return name.includes('::') ? name.split('::').pop() : name;
-}
-
 function loadGeneratedIdlDiscriminators() {
   const discriminators = {};
-  const idlDir = join(__dirname, '../../../idls/v3');
 
-  for (const file of V3_IDL_FILES) {
-    const idlPath = join(idlDir, file);
-    const idl = JSON.parse(readFileSync(idlPath, 'utf8'));
-    for (const account of idl.accounts || []) {
-      if (!Array.isArray(account.discriminator) || account.discriminator.length !== 8) {
-        throw new Error(`${file}: account ${account.name} is missing an 8-byte discriminator`);
-      }
-      discriminators[bareAccountName(account.name)] = Buffer.from(account.discriminator);
+  for (const [accountName, discriminator] of Object.entries(V3_IDL_ACCOUNT_DISCRIMINATORS)) {
+    if (!Array.isArray(discriminator) || discriminator.length !== 8) {
+      throw new Error(`${accountName} is missing an 8-byte V3 IDL discriminator`);
     }
+    discriminators[accountName] = Buffer.from(discriminator);
   }
 
   return Object.freeze(discriminators);
