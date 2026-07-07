@@ -62,7 +62,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - Program source for all 6 V3 Anchor programs extracted from clawd-brainchain
   into this repo under programs/ after a secret/agent-memory scrub and anchor
   verify src==deployed, so third parties can verify independently (open-core;
-  ARCHITECTURE section 5 mandate; approved 2026-07-06). [pending]
+  ARCHITECTURE section 5 mandate; approved 2026-07-06). [#3faa5445] [shipped]
 
 ## Phase 2 - SDK package and consumer boundary
 
