@@ -109,7 +109,7 @@ conformance, security, release, and mainnet authority gates remain open.
   emergency/freeze plan, and the conformance/build evidence. [#6c8a5545] [shipped]
 - Upgrade-custody DECISION (Owner, 2026-07-06): the single upgrade-authority key remains a SOLE Owner-held key
   — NO multisig and no agent co-signer (the audits' multisig reco is declined; risk-accepted). This resolves
-  the packet's upgrade-custody question. [pending] · owner-gated
+  the packet's upgrade-custody question. [#71a5c329] [shipped]
 - Mainnet authority, upgrade, fee-payer, escrow/funds authority, and issuer
   separation: Owner signature on the decision packet above is required before
   any mainnet deploy or value-bearing action. [#e0556f1f] [blocked] · owner-gated
