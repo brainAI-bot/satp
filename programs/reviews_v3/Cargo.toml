@@ -1,0 +1,21 @@
+[package]
+name = "reviews_v3"
+version = "0.1.0"
+description = "SATP Reviews V3 — agent_id-based reviews with attestation CPI"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "1.0.0"
+solana-hash = "4.2.0"
+solana-sha256-hasher = "3.1.0"

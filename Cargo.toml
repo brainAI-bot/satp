@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "programs/satp_escrow"
+    "programs/*"
 ]
 resolver = "2"
 

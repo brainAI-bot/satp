@@ -1,19 +1,42 @@
 [toolchain]
-anchor_version = "0.31.1"
+anchor_version = "1.0.0"
 
 [features]
-seeds = false
+resolution = true
 skip-lint = false
 
 [programs.devnet]
+attestations_v3 = "55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw"
+escrow_v3 = "B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg"
+identity_v3 = "7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ"
+reputation_v3 = "CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9"
+reviews_v3 = "3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk"
 satp_escrow = "UpJ7jmUzHkQ7EdBKiBv3zq8Dr1fVh6GVWKa7nYtwQ22"
+validation_v3 = "DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj"
 
-[registry]
-url = "https://api.apr.dev"
+[programs.localnet]
+attestations_v3 = "55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw"
+escrow_v3 = "B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg"
+identity_v3 = "7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ"
+reputation_v3 = "CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9"
+reviews_v3 = "3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk"
+satp_escrow = "UpJ7jmUzHkQ7EdBKiBv3zq8Dr1fVh6GVWKa7nYtwQ22"
+validation_v3 = "DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj"
+
+[programs.mainnet]
+attestations_v3 = "6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD"
+escrow_v3 = "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C"
+identity_v3 = "GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG"
+reputation_v3 = "2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ"
+reviews_v3 = "r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4"
+validation_v3 = "6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV"
 
 [provider]
 cluster = "devnet"
-wallet = "~/.config/solana/id.json"
+wallet = "./.anchor/readonly-build-wallet.json"
 
 [scripts]
-test = "node tests/escrow-source-idl.test.js"
+test = "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[hooks]
+post_build = "echo 'Build complete — run: npm run litesvm to verify'"
