@@ -1,0 +1,300 @@
+{
+  "address": "",
+  "metadata": {
+    "name": "reviews_v3",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "SATP Reviews V3 — agent_id-based reviews with attestation CPI"
+  },
+  "instructions": [
+    {
+      "name": "create_review",
+      "docs": [
+        "Create a review for an agent (identified by agent_id, not wallet).",
+        "PDA: `[b\"review_v3\", SHA256(agent_id), reviewer]`"
+      ],
+      "discriminator": [
+        69,
+        237,
+        87,
+        43,
+        238,
+        125,
+        40,
+        1
+      ],
+      "accounts": [
+        {
+          "name": "review",
+          "writable": true
+        },
+        {
+          "name": "review_counter",
+          "writable": true
+        },
+        {
+          "name": "reviewer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "identity_program",
+          "docs": [
+            "When provided (non-system_program), the instruction validates that the reviewer",
+            "is not the agent's authority via on-chain identity PDA deserialization."
+          ]
+        },
+        {
+          "name": "identity_account",
+          "docs": [
+            "Pass any account when identity_program == system_program (check skipped).",
+            "Validated in instruction body when identity_program is provided."
+          ]
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "rating",
+          "type": "u8"
+        },
+        {
+          "name": "review_text",
+          "type": "string"
+        },
+        {
+          "name": "metadata",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "update_review",
+      "docs": [
+        "Update an existing review (reviewer only)."
+      ],
+      "discriminator": [
+        254,
+        84,
+        60,
+        221,
+        68,
+        163,
+        94,
+        29
+      ],
+      "accounts": [
+        {
+          "name": "review",
+          "writable": true
+        },
+        {
+          "name": "reviewer",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "rating",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "review_text",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "option": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "delete_review",
+      "docs": [
+        "Soft-delete a review (reviewer only)."
+      ],
+      "discriminator": [
+        217,
+        101,
+        10,
+        71,
+        231,
+        220,
+        241,
+        202
+      ],
+      "accounts": [
+        {
+          "name": "review",
+          "writable": true
+        },
+        {
+          "name": "reviewer",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "init_review_counter",
+      "docs": [
+        "Initialize a review counter for an agent (by agent_id).",
+        "PDA: `[b\"review_counter_v3\", SHA256(agent_id)]`"
+      ],
+      "discriminator": [
+        22,
+        101,
+        236,
+        30,
+        237,
+        207,
+        181,
+        36
+      ],
+      "accounts": [
+        {
+          "name": "review_counter",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "agent_id",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "reviews_v3::Review",
+      "discriminator": [
+        124,
+        63,
+        203,
+        215,
+        226,
+        30,
+        222,
+        15
+      ]
+    },
+    {
+      "name": "reviews_v3::ReviewCounter",
+      "discriminator": [
+        89,
+        31,
+        82,
+        96,
+        68,
+        42,
+        80,
+        60
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "reviews_v3::Review",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent_id",
+            "type": "string"
+          },
+          {
+            "name": "agent_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "reviewer",
+            "type": "pubkey"
+          },
+          {
+            "name": "rating",
+            "type": "u8"
+          },
+          {
+            "name": "review_text",
+            "type": "string"
+          },
+          {
+            "name": "metadata",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "reviews_v3::ReviewCounter",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent_id",
+            "type": "string"
+          },
+          {
+            "name": "agent_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "count",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}

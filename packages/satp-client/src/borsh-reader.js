@@ -18,6 +18,7 @@
  */
 
 const { PublicKey } = require('@solana/web3.js');
+const { V3_IDL_ACCOUNT_DISCRIMINATORS } = require('./v3-idl-discriminators');
 
 // ═══════════════════════════════════════════════════
 //  BorshReader — streaming Borsh deserializer
@@ -437,17 +438,20 @@ function accountDiscriminator(accountName) {
     .slice(0, 8);
 }
 
-// Pre-compute discriminators for all V3 account types
-const DISCRIMINATORS = {
-  GenesisRecord: accountDiscriminator('GenesisRecord'),
-  LinkedWallet: accountDiscriminator('LinkedWallet'),
-  MintTracker: accountDiscriminator('MintTracker'),
-  NameRegistry: accountDiscriminator('NameRegistry'),
-  Review: accountDiscriminator('Review'),
-  ReviewCounter: accountDiscriminator('ReviewCounter'),
-  Attestation: accountDiscriminator('Attestation'),
-  EscrowV3: accountDiscriminator('EscrowV3'),
-};
+function loadGeneratedIdlDiscriminators() {
+  const discriminators = {};
+
+  for (const [accountName, discriminator] of Object.entries(V3_IDL_ACCOUNT_DISCRIMINATORS)) {
+    if (!Array.isArray(discriminator) || discriminator.length !== 8) {
+      throw new Error(`${accountName} is missing an 8-byte V3 IDL discriminator`);
+    }
+    discriminators[accountName] = Buffer.from(discriminator);
+  }
+
+  return Object.freeze(discriminators);
+}
+
+const DISCRIMINATORS = loadGeneratedIdlDiscriminators();
 
 const DESERIALIZERS = {
   GenesisRecord: deserializeGenesisRecord,
