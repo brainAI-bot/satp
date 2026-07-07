@@ -124,6 +124,102 @@
       ]
     },
     {
+      "name": "create_usdc_escrow",
+      "docs": [
+        "Create an escrow funded with USDC/SPL tokens.",
+        "",
+        "The vault must be the associated token account for the escrow PDA and",
+        "USDC mint. Clients are expected to include an idempotent ATA creation",
+        "instruction before this instruction when the vault may not exist."
+      ],
+      "discriminator": [
+        90,
+        241,
+        187,
+        228,
+        185,
+        194,
+        187,
+        152
+      ],
+      "accounts": [
+        {
+          "name": "client",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "agent_wallet"
+        },
+        {
+          "name": "agent_identity"
+        },
+        {
+          "name": "arbiter"
+        },
+        {
+          "name": "escrow",
+          "writable": true
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "client_usdc_account",
+          "writable": true
+        },
+        {
+          "name": "vault_usdc_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "description_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "deadline",
+          "type": "i64"
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "min_verification_level",
+          "type": "u8"
+        },
+        {
+          "name": "require_born",
+          "type": "bool"
+        },
+        {
+          "name": "token_decimals",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "submit_work",
       "docs": [
         "Agent submits work proof. Only callable before deadline."
@@ -193,6 +289,50 @@
       "args": []
     },
     {
+      "name": "release_usdc",
+      "docs": [
+        "Client releases full remaining USDC/SPL funds to agent."
+      ],
+      "discriminator": [
+        18,
+        122,
+        66,
+        80,
+        106,
+        106,
+        191,
+        167
+      ],
+      "accounts": [
+        {
+          "name": "escrow",
+          "writable": true
+        },
+        {
+          "name": "client",
+          "signer": true
+        },
+        {
+          "name": "agent"
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "vault_usdc_account",
+          "writable": true
+        },
+        {
+          "name": "agent_usdc_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "partial_release",
       "docs": [
         "Client releases a partial amount (milestone payment).",
@@ -230,6 +370,55 @@
       ]
     },
     {
+      "name": "partial_release_usdc",
+      "docs": [
+        "Client releases a partial USDC/SPL amount."
+      ],
+      "discriminator": [
+        96,
+        50,
+        106,
+        239,
+        190,
+        153,
+        153,
+        106
+      ],
+      "accounts": [
+        {
+          "name": "escrow",
+          "writable": true
+        },
+        {
+          "name": "client",
+          "signer": true
+        },
+        {
+          "name": "agent"
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "vault_usdc_account",
+          "writable": true
+        },
+        {
+          "name": "agent_usdc_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "cancel",
       "docs": [
         "Client cancels escrow and gets refund of unreleased funds.",
@@ -254,6 +443,48 @@
           "name": "client",
           "writable": true,
           "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel_usdc",
+      "docs": [
+        "Client cancels USDC/SPL escrow and gets refund of unreleased funds."
+      ],
+      "discriminator": [
+        25,
+        132,
+        227,
+        232,
+        60,
+        46,
+        9,
+        217
+      ],
+      "accounts": [
+        {
+          "name": "escrow",
+          "writable": true
+        },
+        {
+          "name": "client",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "vault_usdc_account",
+          "writable": true
+        },
+        {
+          "name": "client_usdc_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
         }
       ],
       "args": []
@@ -346,6 +577,66 @@
       ]
     },
     {
+      "name": "resolve_dispute_usdc",
+      "docs": [
+        "Arbiter resolves USDC/SPL dispute. Split must equal remaining vault funds."
+      ],
+      "discriminator": [
+        103,
+        249,
+        11,
+        83,
+        254,
+        225,
+        114,
+        0
+      ],
+      "accounts": [
+        {
+          "name": "escrow",
+          "writable": true
+        },
+        {
+          "name": "arbiter",
+          "signer": true
+        },
+        {
+          "name": "agent"
+        },
+        {
+          "name": "client_wallet"
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "vault_usdc_account",
+          "writable": true
+        },
+        {
+          "name": "agent_usdc_account",
+          "writable": true
+        },
+        {
+          "name": "client_usdc_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "agent_amount",
+          "type": "u64"
+        },
+        {
+          "name": "client_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "extend_deadline",
       "docs": [
         "Client extends the escrow deadline. Only when Active.",
@@ -424,6 +715,20 @@
     }
   ],
   "types": [
+    {
+      "name": "escrow_v3::EscrowCurrency",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Sol"
+          },
+          {
+            "name": "Usdc"
+          }
+        ]
+      }
+    },
     {
       "name": "escrow_v3::EscrowStatus",
       "type": {
@@ -520,6 +825,44 @@
               "Nonce for uniqueness (same client+agent can have multiple escrows)"
             ],
             "type": "u64"
+          },
+          {
+            "name": "currency",
+            "docs": [
+              "Escrow funding currency."
+            ],
+            "type": {
+              "defined": {
+                "name": "escrow_v3::EscrowCurrency"
+              }
+            }
+          },
+          {
+            "name": "token_mint",
+            "docs": [
+              "SPL mint used for token-funded escrow; None for SOL."
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "token_vault",
+            "docs": [
+              "SPL vault ATA controlled by the escrow PDA; None for SOL."
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "token_decimals",
+            "docs": [
+              "SPL mint decimals used by transfer_checked; None for SOL."
+            ],
+            "type": {
+              "option": "u8"
+            }
           },
           {
             "name": "status",

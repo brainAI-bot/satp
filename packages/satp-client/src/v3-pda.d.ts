@@ -11,6 +11,12 @@ export interface V3ProgramIds {
   ESCROW: PublicKey;
 }
 
+export const SPL_TOKEN_PROGRAM_ID: PublicKey;
+export const ASSOCIATED_TOKEN_PROGRAM_ID: PublicKey;
+export const V3_DEVNET_TOKEN_MINTS: {
+  USDC: PublicKey;
+};
+
 /** Get all V3 program IDs for a network. */
 export function getV3ProgramIds(network?: Network): V3ProgramIds;
 
@@ -70,3 +76,23 @@ export function getV3EscrowPDA(
   nonce: number | bigint,
   network?: Network
 ): [PublicKey, number];
+
+/** Derive canonical Associated Token Account address. */
+export function getAssociatedTokenAddress(
+  owner: PublicKey | string,
+  mint: PublicKey | string
+): [PublicKey, number];
+
+/** Derive Escrow V3 PDA plus its SPL vault ATA for a mint. */
+export function getV3EscrowVaultATA(
+  client: PublicKey | string,
+  descriptionHash: Buffer,
+  nonce: number | bigint,
+  mint: PublicKey | string,
+  network?: Network
+): {
+  escrowPDA: PublicKey;
+  escrowBump: number;
+  vaultATA: PublicKey;
+  vaultBump: number;
+};

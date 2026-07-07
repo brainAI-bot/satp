@@ -906,6 +906,9 @@ module.exports = {
   // V3 PDA derivation (local extracted scaffold)
   PROGRAM_IDS: v3pda.getV3ProgramIds('devnet'),
   getV3ProgramIds: v3pda.getV3ProgramIds,
+  V3_DEVNET_TOKEN_MINTS: v3pda.V3_DEVNET_TOKEN_MINTS,
+  SPL_TOKEN_PROGRAM_ID: v3pda.SPL_TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID: v3pda.ASSOCIATED_TOKEN_PROGRAM_ID,
   hashAgentId: v3pda.hashAgentId,
   agentIdHash: v3pda.hashAgentId,
   hashName: v3pda.hashName,
@@ -929,6 +932,8 @@ module.exports = {
   deriveAttestationPda: v3pda.getV3AttestationPDA,
   getV3EscrowPDA: v3pda.getV3EscrowPDA,
   deriveEscrowPda: v3pda.getV3EscrowPDA,
+  getAssociatedTokenAddress: v3pda.getAssociatedTokenAddress,
+  getV3EscrowVaultATA: v3pda.getV3EscrowVaultATA,
   deriveReviewAttestationPda: getReviewAttestationPDA,
   prepareIdentityAttestationRequest,
   TRUST_PACKET_SCHEMA_VERSION,

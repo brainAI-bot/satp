@@ -124,16 +124,41 @@ export interface UpdateReviewFields {
 }
 
 export type EscrowStatus = 'Active' | 'WorkSubmitted' | 'Released' | 'Cancelled' | 'Disputed' | 'Resolved';
+export type EscrowCurrency = 'SOL' | 'USDC';
 
 export interface CreateEscrowOpts {
+  currency?: EscrowCurrency;
   minVerificationLevel?: number;
   requireBorn?: boolean;
   arbiter?: PublicKey | string;
+  mint?: PublicKey | string;
+  tokenDecimals?: number;
+  createVaultAta?: boolean;
 }
 
 export interface CreateEscrowResult extends TransactionResult {
   escrowPDA: PublicKey;
   descriptionHash: Buffer;
+  currency?: EscrowCurrency;
+  mint?: PublicKey;
+  clientTokenAccount?: PublicKey;
+  vaultTokenAccount?: PublicKey;
+}
+
+export interface UsdcEscrowAccountOpts {
+  currency?: 'USDC';
+  mint?: PublicKey | string;
+  tokenDecimals?: number;
+  createVaultAta?: boolean;
+  createAgentAta?: boolean;
+  createClientAta?: boolean;
+}
+
+export interface UsdcEscrowResult extends TransactionResult {
+  mint: PublicKey;
+  vaultTokenAccount: PublicKey;
+  agentTokenAccount?: PublicKey;
+  clientTokenAccount?: PublicKey;
 }
 
 export interface SubmitWorkResult extends TransactionResult {
@@ -161,6 +186,11 @@ export interface V3Escrow {
   descriptionHash: string;
   deadline: number;
   nonce: number;
+  currency: EscrowCurrency | string;
+  currencyCode: number;
+  tokenMint: string | null;
+  tokenVault: string | null;
+  tokenDecimals: number | null;
   status: EscrowStatus;
   statusCode: number;
   minVerificationLevel: number;
@@ -413,6 +443,18 @@ export class SATPV3SDK {
     opts?: CreateEscrowOpts
   ): Promise<CreateEscrowResult>;
 
+  /** Build createEscrow transaction for USDC/SPL token escrow. */
+  buildCreateUsdcEscrow(
+    client: PublicKey | string,
+    agentWallet: PublicKey | string,
+    agentId: string,
+    amount: number,
+    descriptionOrHash: string | Buffer,
+    deadline: number,
+    nonce?: number,
+    opts?: UsdcEscrowAccountOpts & Pick<CreateEscrowOpts, 'minVerificationLevel' | 'requireBorn' | 'arbiter'>
+  ): Promise<CreateEscrowResult>;
+
   /** Build submitWork transaction (agent submits work proof). */
   buildSubmitWork(
     agent: PublicKey | string,
@@ -424,22 +466,49 @@ export class SATPV3SDK {
   buildEscrowRelease(
     client: PublicKey | string,
     agent: PublicKey | string,
-    escrowPDA: PublicKey | string
+    escrowPDA: PublicKey | string,
+    opts?: UsdcEscrowAccountOpts
   ): Promise<TransactionResult>;
+
+  /** Build release transaction for USDC/SPL escrow funds. */
+  buildUsdcEscrowRelease(
+    client: PublicKey | string,
+    agent: PublicKey | string,
+    escrowPDA: PublicKey | string,
+    opts?: UsdcEscrowAccountOpts
+  ): Promise<UsdcEscrowResult>;
 
   /** Build partialRelease transaction (milestone payment). */
   buildPartialRelease(
     client: PublicKey | string,
     agent: PublicKey | string,
     escrowPDA: PublicKey | string,
-    amount: number
+    amount: number,
+    opts?: UsdcEscrowAccountOpts
   ): Promise<TransactionResult>;
+
+  /** Build partial release transaction for USDC/SPL escrow funds. */
+  buildPartialUsdcEscrowRelease(
+    client: PublicKey | string,
+    agent: PublicKey | string,
+    escrowPDA: PublicKey | string,
+    amount: number,
+    opts?: UsdcEscrowAccountOpts
+  ): Promise<UsdcEscrowResult>;
 
   /** Build cancel transaction (client cancels after deadline). */
   buildCancelEscrow(
     client: PublicKey | string,
-    escrowPDA: PublicKey | string
+    escrowPDA: PublicKey | string,
+    opts?: UsdcEscrowAccountOpts
   ): Promise<TransactionResult>;
+
+  /** Build cancel transaction for USDC/SPL escrow refund. */
+  buildUsdcCancelEscrow(
+    client: PublicKey | string,
+    escrowPDA: PublicKey | string,
+    opts?: UsdcEscrowAccountOpts
+  ): Promise<UsdcEscrowResult>;
 
   /** Build raiseDispute transaction (either client or agent). */
   buildRaiseDispute(
@@ -455,8 +524,20 @@ export class SATPV3SDK {
     clientWallet: PublicKey | string,
     escrowPDA: PublicKey | string,
     agentAmount: number,
-    clientAmount: number
+    clientAmount: number,
+    opts?: UsdcEscrowAccountOpts
   ): Promise<TransactionResult>;
+
+  /** Build resolveDispute transaction for USDC/SPL escrow funds. */
+  buildUsdcResolveDispute(
+    arbiter: PublicKey | string,
+    agent: PublicKey | string,
+    clientWallet: PublicKey | string,
+    escrowPDA: PublicKey | string,
+    agentAmount: number,
+    clientAmount: number,
+    opts?: UsdcEscrowAccountOpts
+  ): Promise<UsdcEscrowResult>;
 
   /** Build extendDeadline transaction (client extends escrow deadline). */
   buildExtendDeadline(

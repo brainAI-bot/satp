@@ -20,6 +20,11 @@ const {
   getV3ReviewCounterPDA,
   getV3AttestationPDA,
   getV3EscrowPDA,
+  getAssociatedTokenAddress,
+  getV3EscrowVaultATA,
+  V3_DEVNET_TOKEN_MINTS,
+  SPL_TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
 } = require('./v3-pda');
 
 const DEVNET_RPC = 'https://api.devnet.solana.com';
@@ -77,6 +82,93 @@ function serializeVecString(arr) {
   count.writeUInt32LE(arr.length);
   const parts = arr.map(s => serializeString(s));
   return Buffer.concat([count, ...parts]);
+}
+
+function hashDescription(descriptionOrHash) {
+  return Buffer.isBuffer(descriptionOrHash) && descriptionOrHash.length === 32
+    ? descriptionOrHash
+    : crypto.createHash('sha256')
+      .update(typeof descriptionOrHash === 'string' ? descriptionOrHash : Buffer.from(descriptionOrHash))
+      .digest();
+}
+
+function normalizeCurrency(currency) {
+  const value = String(currency || 'SOL').toUpperCase();
+  if (value !== 'SOL' && value !== 'USDC') {
+    throw new Error('Unsupported escrow currency: expected SOL or USDC');
+  }
+  return value;
+}
+
+function resolveTokenMint(currency, mint) {
+  if (mint) return new PublicKey(mint);
+  if (currency === 'USDC') return V3_DEVNET_TOKEN_MINTS.USDC;
+  return null;
+}
+
+function createAssociatedTokenAccountIdempotentInstruction(payer, owner, mint) {
+  const payerKey = new PublicKey(payer);
+  const ownerKey = new PublicKey(owner);
+  const mintKey = new PublicKey(mint);
+  const [ata] = getAssociatedTokenAddress(ownerKey, mintKey);
+
+  return new TransactionInstruction({
+    programId: ASSOCIATED_TOKEN_PROGRAM_ID,
+    keys: [
+      { pubkey: payerKey, isSigner: true, isWritable: true },
+      { pubkey: ata, isSigner: false, isWritable: true },
+      { pubkey: ownerKey, isSigner: false, isWritable: false },
+      { pubkey: mintKey, isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: SPL_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+    ],
+    data: Buffer.from([1]), // SPL Associated Token Account: CreateIdempotent
+  });
+}
+
+function normalizeTokenOpts(opts = {}) {
+  const currency = normalizeCurrency(opts.currency);
+  const mint = resolveTokenMint(currency, opts.mint);
+  return {
+    currency,
+    mint,
+    tokenDecimals: opts.tokenDecimals == null ? 6 : opts.tokenDecimals,
+  };
+}
+
+function maybeAddAtaInstruction(tx, enabled, payer, owner, mint) {
+  if (enabled) {
+    tx.add(createAssociatedTokenAccountIdempotentInstruction(payer, owner, mint));
+  }
+}
+
+function readOptionPubkey(data, offset) {
+  const hasValue = data[offset] === 1;
+  offset += 1;
+  if (!hasValue) return { value: null, offset };
+  const value = new PublicKey(data.slice(offset, offset + 32)).toBase58();
+  return { value, offset: offset + 32 };
+}
+
+function readOptionU8(data, offset) {
+  const hasValue = data[offset] === 1;
+  offset += 1;
+  if (!hasValue) return { value: null, offset };
+  return { value: data[offset], offset: offset + 1 };
+}
+
+function readOptionBytes32(data, offset) {
+  const hasValue = data[offset] === 1;
+  offset += 1;
+  if (!hasValue) return { value: null, offset };
+  return { value: Buffer.from(data.slice(offset, offset + 32)).toString('hex'), offset: offset + 32 };
+}
+
+function readOptionI64(data, offset) {
+  const hasValue = data[offset] === 1;
+  offset += 1;
+  if (!hasValue) return { value: null, offset };
+  return { value: Number(data.readBigInt64LE(offset)), offset: offset + 8 };
 }
 
 class SATPV3SDK {
@@ -1084,11 +1176,12 @@ class SATPV3SDK {
    * @param {PublicKey|string} client - Client wallet (signer + payer)
    * @param {PublicKey|string} agentWallet - Agent's wallet to receive funds
    * @param {string} agentId - Agent identifier (for Genesis Record lookup)
-   * @param {number} amount - Lamports to escrow
+   * @param {number} amount - Lamports or token base units to escrow
    * @param {string|Buffer} descriptionOrHash - Job description string (will be SHA-256 hashed) or 32-byte hash buffer
    * @param {number} deadline - Unix timestamp deadline
    * @param {number} [nonce=0] - Nonce for uniqueness (multiple escrows between same parties)
-   * @param {object} [opts={}] - Optional trust requirements
+   * @param {object} [opts={}] - Optional trust requirements and currency selection
+   * @param {'SOL'|'USDC'} [opts.currency='SOL'] - Escrow funding currency
    * @param {number} [opts.minVerificationLevel=0] - Minimum verification level (0-5)
    * @param {boolean} [opts.requireBorn=false] - Require agent to have completed burn-to-become
    * @param {PublicKey|string} [opts.arbiter] - Arbiter for dispute resolution (defaults to client)
@@ -1097,9 +1190,20 @@ class SATPV3SDK {
   async buildCreateEscrow(client, agentWallet, agentId, amount, descriptionOrHash, deadline, nonce = 0, opts = {}) {
     const clientKey = new PublicKey(client);
     const agentWalletKey = new PublicKey(agentWallet);
-    const descriptionHash = Buffer.isBuffer(descriptionOrHash) && descriptionOrHash.length === 32
-      ? descriptionOrHash
-      : crypto.createHash('sha256').update(typeof descriptionOrHash === 'string' ? descriptionOrHash : Buffer.from(descriptionOrHash)).digest();
+    const descriptionHash = hashDescription(descriptionOrHash);
+    const currency = normalizeCurrency(opts.currency);
+    if (currency === 'USDC') {
+      return this.buildCreateUsdcEscrow(
+        clientKey,
+        agentWalletKey,
+        agentId,
+        amount,
+        descriptionHash,
+        deadline,
+        nonce,
+        opts
+      );
+    }
 
     const [escrowPDA] = getV3EscrowPDA(clientKey, descriptionHash, nonce, this.network);
     const [agentIdentityPDA] = getGenesisPDA(agentId, this.network);
@@ -1151,6 +1255,135 @@ class SATPV3SDK {
   }
 
   /**
+   * Build createEscrow transaction for USDC/SPL token escrow.
+   * Includes idempotent vault ATA creation by default; client source ATA must
+   * exist and hold enough token base units for transfer_checked to succeed.
+   * @param {PublicKey|string} client - Client wallet (signer + payer)
+   * @param {PublicKey|string} agentWallet - Agent's wallet to receive funds
+   * @param {string} agentId - Agent identifier (for Genesis Record lookup)
+   * @param {number} amount - Token base units to escrow
+   * @param {string|Buffer} descriptionOrHash - Job description or 32-byte hash
+   * @param {number} deadline - Unix timestamp deadline
+   * @param {number} [nonce=0] - Nonce for uniqueness
+   * @param {object} [opts={}]
+   * @param {PublicKey|string} [opts.mint] - SPL mint; defaults to devnet USDC
+   * @param {number} [opts.tokenDecimals=6] - Mint decimals used by transfer_checked
+   * @param {boolean} [opts.createVaultAta=true] - Add idempotent vault ATA creation
+   * @returns {{ transaction: Transaction, escrowPDA: PublicKey, descriptionHash: Buffer, currency: 'USDC', mint: PublicKey, clientTokenAccount: PublicKey, vaultTokenAccount: PublicKey }}
+   */
+  async buildCreateUsdcEscrow(client, agentWallet, agentId, amount, descriptionOrHash, deadline, nonce = 0, opts = {}) {
+    const clientKey = new PublicKey(client);
+    const agentWalletKey = new PublicKey(agentWallet);
+    const descriptionHash = hashDescription(descriptionOrHash);
+    const mintKey = resolveTokenMint('USDC', opts.mint);
+    const tokenDecimals = opts.tokenDecimals == null ? 6 : opts.tokenDecimals;
+    const { escrowPDA, vaultATA } = getV3EscrowVaultATA(clientKey, descriptionHash, nonce, mintKey, this.network);
+    const [agentIdentityPDA] = getGenesisPDA(agentId, this.network);
+    const [clientTokenAccount] = getAssociatedTokenAddress(clientKey, mintKey);
+
+    const arbiterKey = opts.arbiter ? new PublicKey(opts.arbiter) : clientKey;
+    const minVerificationLevel = opts.minVerificationLevel || 0;
+    const requireBorn = opts.requireBorn || false;
+
+    const amountBuf = Buffer.alloc(8);
+    amountBuf.writeBigUInt64LE(BigInt(amount));
+    const deadlineBuf = Buffer.alloc(8);
+    deadlineBuf.writeBigInt64LE(BigInt(deadline));
+    const nonceBuf = Buffer.alloc(8);
+    nonceBuf.writeBigUInt64LE(BigInt(nonce));
+
+    const data = Buffer.concat([
+      anchorDiscriminator('create_usdc_escrow'),
+      serializeString(agentId),
+      amountBuf,
+      descriptionHash,
+      deadlineBuf,
+      nonceBuf,
+      Buffer.from([minVerificationLevel]),
+      Buffer.from([requireBorn ? 1 : 0]),
+      Buffer.from([tokenDecimals]),
+    ]);
+
+    const tx = new Transaction();
+    if (opts.createVaultAta !== false) {
+      tx.add(createAssociatedTokenAccountIdempotentInstruction(clientKey, escrowPDA, mintKey));
+    }
+
+    tx.add(new TransactionInstruction({
+      programId: this.programIds.ESCROW,
+      keys: [
+        { pubkey: clientKey, isSigner: true, isWritable: true },
+        { pubkey: agentWalletKey, isSigner: false, isWritable: false },
+        { pubkey: agentIdentityPDA, isSigner: false, isWritable: false },
+        { pubkey: arbiterKey, isSigner: false, isWritable: false },
+        { pubkey: escrowPDA, isSigner: false, isWritable: true },
+        { pubkey: mintKey, isSigner: false, isWritable: false },
+        { pubkey: clientTokenAccount, isSigner: false, isWritable: true },
+        { pubkey: vaultATA, isSigner: false, isWritable: true },
+        { pubkey: SPL_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      ],
+      data,
+    }));
+
+    tx.feePayer = clientKey;
+    tx.recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+
+    return {
+      transaction: tx,
+      escrowPDA,
+      descriptionHash,
+      currency: 'USDC',
+      mint: mintKey,
+      clientTokenAccount,
+      vaultTokenAccount: vaultATA,
+    };
+  }
+
+  /**
+   * Build release transaction for USDC/SPL escrow funds.
+   * Adds idempotent agent ATA creation by default so the destination account
+   * exists before the escrow program performs transfer_checked.
+   * @param {PublicKey|string} client
+   * @param {PublicKey|string} agent
+   * @param {PublicKey|string} escrowPDA
+   * @param {object} [opts={}]
+   * @param {PublicKey|string} [opts.mint]
+   * @param {boolean} [opts.createAgentAta=true]
+   * @returns {{ transaction: Transaction, mint: PublicKey, vaultTokenAccount: PublicKey, agentTokenAccount: PublicKey }}
+   */
+  async buildUsdcEscrowRelease(client, agent, escrowPDA, opts = {}) {
+    const clientKey = new PublicKey(client);
+    const agentKey = new PublicKey(agent);
+    const escrowKey = new PublicKey(escrowPDA);
+    const { mint } = normalizeTokenOpts({ ...opts, currency: 'USDC' });
+    const [vaultTokenAccount] = getAssociatedTokenAddress(escrowKey, mint);
+    const [agentTokenAccount] = getAssociatedTokenAddress(agentKey, mint);
+
+    const tx = new Transaction();
+    maybeAddAtaInstruction(tx, opts.createAgentAta !== false, clientKey, agentKey, mint);
+
+    tx.add(new TransactionInstruction({
+      programId: this.programIds.ESCROW,
+      keys: [
+        { pubkey: escrowKey, isSigner: false, isWritable: true },
+        { pubkey: clientKey, isSigner: true, isWritable: false },
+        { pubkey: agentKey, isSigner: false, isWritable: false },
+        { pubkey: mint, isSigner: false, isWritable: false },
+        { pubkey: vaultTokenAccount, isSigner: false, isWritable: true },
+        { pubkey: agentTokenAccount, isSigner: false, isWritable: true },
+        { pubkey: SPL_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      ],
+      data: anchorDiscriminator('release_usdc'),
+    }));
+
+    tx.feePayer = clientKey;
+    tx.recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+
+    return { transaction: tx, mint, vaultTokenAccount, agentTokenAccount };
+  }
+
+  /**
    * Build submitWork transaction (agent submits work proof).
    * @param {PublicKey|string} agent - Agent wallet (signer)
    * @param {PublicKey|string} escrowPDA - Escrow account address
@@ -1190,7 +1423,11 @@ class SATPV3SDK {
    * @param {PublicKey|string} escrowPDA - Escrow account address
    * @returns {{ transaction: Transaction }}
    */
-  async buildEscrowRelease(client, agent, escrowPDA) {
+  async buildEscrowRelease(client, agent, escrowPDA, opts = {}) {
+    if (normalizeCurrency(opts.currency) === 'USDC') {
+      return this.buildUsdcEscrowRelease(client, agent, escrowPDA, opts);
+    }
+
     const clientKey = new PublicKey(client);
     const agentKey = new PublicKey(agent);
     const escrowKey = new PublicKey(escrowPDA);
@@ -1223,6 +1460,11 @@ class SATPV3SDK {
    * @returns {{ transaction: Transaction }}
    */
   async buildPartialRelease(client, agent, escrowPDA, amount) {
+    const opts = arguments.length >= 5 ? arguments[4] || {} : {};
+    if (normalizeCurrency(opts.currency) === 'USDC') {
+      return this.buildPartialUsdcEscrowRelease(client, agent, escrowPDA, amount, opts);
+    }
+
     const clientKey = new PublicKey(client);
     const agentKey = new PublicKey(agent);
     const escrowKey = new PublicKey(escrowPDA);
@@ -1251,12 +1493,37 @@ class SATPV3SDK {
   }
 
   /**
+   * Build partial release transaction for USDC/SPL escrow funds.
+   * @param {PublicKey|string} client
+   * @param {PublicKey|string} agent
+   * @param {PublicKey|string} escrowPDA
+   * @param {number} amount
+   * @param {object} [opts={}]
+   * @returns {{ transaction: Transaction, mint: PublicKey, vaultTokenAccount: PublicKey, agentTokenAccount: PublicKey }}
+   */
+  async buildPartialUsdcEscrowRelease(client, agent, escrowPDA, amount, opts = {}) {
+    const result = await this.buildUsdcEscrowRelease(client, agent, escrowPDA, {
+      ...opts,
+      createAgentAta: opts.createAgentAta,
+    });
+    const amountBuf = Buffer.alloc(8);
+    amountBuf.writeBigUInt64LE(BigInt(amount));
+    const ix = result.transaction.instructions[result.transaction.instructions.length - 1];
+    ix.data = Buffer.concat([anchorDiscriminator('partial_release_usdc'), amountBuf]);
+    return result;
+  }
+
+  /**
    * Build cancel transaction (client cancels after deadline, gets refund).
    * @param {PublicKey|string} client - Client wallet (signer)
    * @param {PublicKey|string} escrowPDA - Escrow account address
    * @returns {{ transaction: Transaction }}
    */
-  async buildCancelEscrow(client, escrowPDA) {
+  async buildCancelEscrow(client, escrowPDA, opts = {}) {
+    if (normalizeCurrency(opts.currency) === 'USDC') {
+      return this.buildUsdcCancelEscrow(client, escrowPDA, opts);
+    }
+
     const clientKey = new PublicKey(client);
     const escrowKey = new PublicKey(escrowPDA);
 
@@ -1276,6 +1543,41 @@ class SATPV3SDK {
     tx.recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
 
     return { transaction: tx };
+  }
+
+  /**
+   * Build cancel transaction for USDC/SPL escrow refund.
+   * @param {PublicKey|string} client
+   * @param {PublicKey|string} escrowPDA
+   * @param {object} [opts={}]
+   * @returns {{ transaction: Transaction, mint: PublicKey, vaultTokenAccount: PublicKey, clientTokenAccount: PublicKey }}
+   */
+  async buildUsdcCancelEscrow(client, escrowPDA, opts = {}) {
+    const clientKey = new PublicKey(client);
+    const escrowKey = new PublicKey(escrowPDA);
+    const { mint } = normalizeTokenOpts({ ...opts, currency: 'USDC' });
+    const [vaultTokenAccount] = getAssociatedTokenAddress(escrowKey, mint);
+    const [clientTokenAccount] = getAssociatedTokenAddress(clientKey, mint);
+
+    const tx = new Transaction();
+    maybeAddAtaInstruction(tx, opts.createClientAta === true, clientKey, clientKey, mint);
+    tx.add(new TransactionInstruction({
+      programId: this.programIds.ESCROW,
+      keys: [
+        { pubkey: escrowKey, isSigner: false, isWritable: true },
+        { pubkey: clientKey, isSigner: true, isWritable: true },
+        { pubkey: mint, isSigner: false, isWritable: false },
+        { pubkey: vaultTokenAccount, isSigner: false, isWritable: true },
+        { pubkey: clientTokenAccount, isSigner: false, isWritable: true },
+        { pubkey: SPL_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      ],
+      data: anchorDiscriminator('cancel_usdc'),
+    }));
+
+    tx.feePayer = clientKey;
+    tx.recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+
+    return { transaction: tx, mint, vaultTokenAccount, clientTokenAccount };
   }
 
   /**
@@ -1321,7 +1623,11 @@ class SATPV3SDK {
    * @param {number} clientAmount - Lamports to refund to client
    * @returns {{ transaction: Transaction }}
    */
-  async buildResolveDispute(arbiter, agent, clientWallet, escrowPDA, agentAmount, clientAmount) {
+  async buildResolveDispute(arbiter, agent, clientWallet, escrowPDA, agentAmount, clientAmount, opts = {}) {
+    if (normalizeCurrency(opts.currency) === 'USDC') {
+      return this.buildUsdcResolveDispute(arbiter, agent, clientWallet, escrowPDA, agentAmount, clientAmount, opts);
+    }
+
     const arbiterKey = new PublicKey(arbiter);
     const agentKey = new PublicKey(agent);
     const clientKey = new PublicKey(clientWallet);
@@ -1351,6 +1657,58 @@ class SATPV3SDK {
     tx.recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
 
     return { transaction: tx };
+  }
+
+  /**
+   * Build resolveDispute transaction for USDC/SPL escrow funds.
+   * Adds idempotent recipient ATA creation by default.
+   * @param {PublicKey|string} arbiter
+   * @param {PublicKey|string} agent
+   * @param {PublicKey|string} clientWallet
+   * @param {PublicKey|string} escrowPDA
+   * @param {number} agentAmount
+   * @param {number} clientAmount
+   * @param {object} [opts={}]
+   * @returns {{ transaction: Transaction, mint: PublicKey, vaultTokenAccount: PublicKey, agentTokenAccount: PublicKey, clientTokenAccount: PublicKey }}
+   */
+  async buildUsdcResolveDispute(arbiter, agent, clientWallet, escrowPDA, agentAmount, clientAmount, opts = {}) {
+    const arbiterKey = new PublicKey(arbiter);
+    const agentKey = new PublicKey(agent);
+    const clientKey = new PublicKey(clientWallet);
+    const escrowKey = new PublicKey(escrowPDA);
+    const { mint } = normalizeTokenOpts({ ...opts, currency: 'USDC' });
+    const [vaultTokenAccount] = getAssociatedTokenAddress(escrowKey, mint);
+    const [agentTokenAccount] = getAssociatedTokenAddress(agentKey, mint);
+    const [clientTokenAccount] = getAssociatedTokenAddress(clientKey, mint);
+
+    const agentAmtBuf = Buffer.alloc(8);
+    agentAmtBuf.writeBigUInt64LE(BigInt(agentAmount));
+    const clientAmtBuf = Buffer.alloc(8);
+    clientAmtBuf.writeBigUInt64LE(BigInt(clientAmount));
+
+    const tx = new Transaction();
+    maybeAddAtaInstruction(tx, opts.createAgentAta !== false, arbiterKey, agentKey, mint);
+    maybeAddAtaInstruction(tx, opts.createClientAta !== false, arbiterKey, clientKey, mint);
+    tx.add(new TransactionInstruction({
+      programId: this.programIds.ESCROW,
+      keys: [
+        { pubkey: escrowKey, isSigner: false, isWritable: true },
+        { pubkey: arbiterKey, isSigner: true, isWritable: false },
+        { pubkey: agentKey, isSigner: false, isWritable: false },
+        { pubkey: clientKey, isSigner: false, isWritable: false },
+        { pubkey: mint, isSigner: false, isWritable: false },
+        { pubkey: vaultTokenAccount, isSigner: false, isWritable: true },
+        { pubkey: agentTokenAccount, isSigner: false, isWritable: true },
+        { pubkey: clientTokenAccount, isSigner: false, isWritable: true },
+        { pubkey: SPL_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      ],
+      data: Buffer.concat([anchorDiscriminator('resolve_dispute_usdc'), agentAmtBuf, clientAmtBuf]),
+    }));
+
+    tx.feePayer = arbiterKey;
+    tx.recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
+
+    return { transaction: tx, mint, vaultTokenAccount, agentTokenAccount, clientTokenAccount };
   }
 
   /**
@@ -1438,6 +1796,10 @@ class SATPV3SDK {
       const descriptionHash = data.slice(offset, offset + 32); offset += 32;
       const deadline = Number(data.readBigInt64LE(offset)); offset += 8;
       const nonce = Number(data.readBigUInt64LE(offset)); offset += 8;
+      const currencyByte = data[offset]; offset += 1;
+      const tokenMintResult = readOptionPubkey(data, offset); offset = tokenMintResult.offset;
+      const tokenVaultResult = readOptionPubkey(data, offset); offset = tokenVaultResult.offset;
+      const tokenDecimalsResult = readOptionU8(data, offset); offset = tokenDecimalsResult.offset;
       const statusByte = data[offset]; offset += 1;
       const minVerificationLevel = data[offset]; offset += 1;
       const requireBorn = data[offset] === 1; offset += 1;
@@ -1487,6 +1849,7 @@ class SATPV3SDK {
       const bump = data[offset]; offset += 1;
 
       const STATUS_MAP = ['Active', 'WorkSubmitted', 'Released', 'Cancelled', 'Disputed', 'Resolved'];
+      const CURRENCY_MAP = ['SOL', 'USDC'];
 
       return {
         pda: escrowKey.toBase58(),
@@ -1499,6 +1862,11 @@ class SATPV3SDK {
         descriptionHash: Buffer.from(descriptionHash).toString('hex'),
         deadline,
         nonce,
+        currency: CURRENCY_MAP[currencyByte] || `Unknown(${currencyByte})`,
+        currencyCode: currencyByte,
+        tokenMint: tokenMintResult.value,
+        tokenVault: tokenVaultResult.value,
+        tokenDecimals: tokenDecimalsResult.value,
         status: STATUS_MAP[statusByte] || `Unknown(${statusByte})`,
         statusCode: statusByte,
         minVerificationLevel,

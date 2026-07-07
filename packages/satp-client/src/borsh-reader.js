@@ -378,6 +378,7 @@ function deserializeEscrowV3(data) {
     'Active', 'WorkSubmitted', 'Released',
     'Cancelled', 'Disputed', 'Resolved',
   ];
+  const ESCROW_CURRENCY_MAP = ['SOL', 'USDC'];
 
   const client = r.readPubkeyBase58();
   const agent = r.readPubkeyBase58();
@@ -387,6 +388,10 @@ function deserializeEscrowV3(data) {
   const descriptionHash = r.readFixedBytes32().toString('hex');
   const deadline = r.readI64();
   const nonce = r.readU64Num();
+  const currencyByte = r.readU8();
+  const tokenMint = r.readOptionPubkey();
+  const tokenVault = r.readOptionPubkey();
+  const tokenDecimals = r.readOption(() => r.readU8());
   const statusByte = r.readU8();
   const minVerificationLevel = r.readU8();
   const requireBorn = r.readBool();
@@ -409,6 +414,11 @@ function deserializeEscrowV3(data) {
     descriptionHash,
     deadline,
     nonce,
+    currency: ESCROW_CURRENCY_MAP[currencyByte] || `Unknown(${currencyByte})`,
+    currencyCode: currencyByte,
+    tokenMint,
+    tokenVault,
+    tokenDecimals,
     status: ESCROW_STATUS_MAP[statusByte] || `Unknown(${statusByte})`,
     statusCode: statusByte,
     minVerificationLevel,
