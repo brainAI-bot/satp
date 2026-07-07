@@ -107,9 +107,6 @@ conformance, security, release, and mainnet authority gates remain open.
   inventory, upgrade-custody choice, fee-payer separation, issuer registry and
   trust-class boundary, escrow/funds authority and dispute model,
   emergency/freeze plan, and the conformance/build evidence. [#6c8a5545] [shipped]
-- Upgrade-custody DECISION (Owner, 2026-07-06): the single upgrade-authority key remains a SOLE Owner-held key
-  — NO multisig and no agent co-signer (the audits' multisig reco is declined; risk-accepted). This resolves
-  the packet's upgrade-custody question. [pending] · owner-gated
 - Mainnet authority, upgrade, fee-payer, escrow/funds authority, and issuer
   separation: Owner signature on the decision packet above is required before
   any mainnet deploy or value-bearing action. [#e0556f1f] [blocked] · owner-gated
@@ -162,11 +159,6 @@ conformance, security, release, and mainnet authority gates remain open.
 - Burn-to-Become verified end-to-end on devnet against the deployed identity
   program: free mint, the 3-per-identity cap enforced on-chain, wallet rotation
   carrying the cap, and a soulbound transfer that fails. [pending]
-
-- FINAL hardening (Owner-approved 2026-07-06, sequenced LAST — do only after all core work): separate the
-  low-privilege OPERATIONAL signer (fee-payer / test / attestation, agent-holdable, cannot upgrade programs)
-  from the sole Owner-held upgrade-authority key, so routine traffic never touches the key that can rewrite
-  program logic. No authority transfer, no multisig; the Owner provisions one new low-priv key. [pending]
 
 ## Expansion · non-core
 
