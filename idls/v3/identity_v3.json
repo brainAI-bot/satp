@@ -1,0 +1,1344 @@
+{
+  "address": "",
+  "metadata": {
+    "name": "identity_v3",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "SATP Identity Registry V3 — agent_id-seeded, wallet-independent identity"
+  },
+  "instructions": [
+    {
+      "name": "create_identity",
+      "docs": [
+        "Create a Genesis Record for an agent.",
+        "PDA seed: `[b\"genesis\", agent_id_hash]`",
+        "Called at registration — face fields start empty (agent is \"unborn\")."
+      ],
+      "discriminator": [
+        12,
+        253,
+        209,
+        41,
+        176,
+        51,
+        195,
+        179
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "agent_id_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "category",
+          "type": "string"
+        },
+        {
+          "name": "capabilities",
+          "type": {
+            "vec": "string"
+          }
+        },
+        {
+          "name": "metadata_uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "burn_to_become",
+      "docs": [
+        "Burn-to-become: set the agent's permanent face.",
+        "This is the agent's \"birth event\" — irreversible.",
+        "After this, face_image and face_mint are immutable."
+      ],
+      "discriminator": [
+        76,
+        240,
+        170,
+        88,
+        79,
+        189,
+        192,
+        10
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "face_image",
+          "type": "string"
+        },
+        {
+          "name": "face_mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "face_burn_tx",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "update_identity",
+      "docs": [
+        "Update identity metadata (authority only).",
+        "Face fields are immutable after burn-to-become."
+      ],
+      "discriminator": [
+        130,
+        54,
+        88,
+        104,
+        222,
+        124,
+        238,
+        252
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "description",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "category",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "capabilities",
+          "type": {
+            "option": {
+              "vec": "string"
+            }
+          }
+        },
+        {
+          "name": "metadata_uri",
+          "type": {
+            "option": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "propose_authority",
+      "discriminator": [
+        20,
+        148,
+        236,
+        198,
+        76,
+        119,
+        99,
+        142
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_authority",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "accept_authority",
+      "discriminator": [
+        107,
+        86,
+        198,
+        91,
+        33,
+        12,
+        107,
+        160
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "new_authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel_authority_transfer",
+      "discriminator": [
+        94,
+        131,
+        125,
+        184,
+        183,
+        24,
+        125,
+        229
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "link_wallet",
+      "discriminator": [
+        86,
+        92,
+        31,
+        146,
+        228,
+        51,
+        209,
+        230
+      ],
+      "accounts": [
+        {
+          "name": "genesis"
+        },
+        {
+          "name": "linked_wallet",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "chain",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "unlink_wallet",
+      "discriminator": [
+        220,
+        121,
+        97,
+        13,
+        193,
+        137,
+        209,
+        159
+      ],
+      "accounts": [
+        {
+          "name": "genesis"
+        },
+        {
+          "name": "linked_wallet",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_reputation",
+      "docs": [
+        "Update reputation score — CPI-only via authorized program PDA.",
+        "The caller_authority must be a PDA derived from an authorized program.",
+        "Direct wallet calls are rejected by verifying the caller is a PDA",
+        "(not on the ed25519 curve)."
+      ],
+      "discriminator": [
+        194,
+        220,
+        43,
+        201,
+        54,
+        209,
+        49,
+        178
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "caller_authority",
+          "docs": [
+            "Caller must be a PDA signer — enforces CPI-only access.",
+            "The reputation program signs with its PDA [b\"reputation_v3_authority\"].",
+            "Direct wallet calls will fail because wallets can't sign as a PDA."
+          ],
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "score",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "update_verification",
+      "docs": [
+        "Update verification level — CPI-only via authorized program PDA."
+      ],
+      "discriminator": [
+        81,
+        184,
+        217,
+        235,
+        163,
+        170,
+        228,
+        38
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "caller_authority",
+          "docs": [
+            "Caller must be a PDA signer — enforces CPI-only access.",
+            "The validation program signs with its PDA [b\"validation_v3_authority\"]."
+          ],
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "level",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "update_score_and_level",
+      "docs": [
+        "Update both score and level — CPI-only via attestations program PDA.",
+        "Called by attestations_v3::recompute_score after attestation changes.",
+        "Attestation-weighted score (0..1_000_000) and threshold-based level (0..5)."
+      ],
+      "discriminator": [
+        208,
+        80,
+        207,
+        58,
+        167,
+        27,
+        205,
+        107
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "caller_authority",
+          "docs": [
+            "Caller must be the attestations program's PDA [b\"attestations_v3_authority\"]."
+          ],
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "score",
+          "type": "u64"
+        },
+        {
+          "name": "level",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "init_mint_tracker",
+      "discriminator": [
+        176,
+        203,
+        116,
+        40,
+        206,
+        205,
+        156,
+        145
+      ],
+      "accounts": [
+        {
+          "name": "genesis"
+        },
+        {
+          "name": "mint_tracker",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "record_mint",
+      "discriminator": [
+        162,
+        92,
+        105,
+        126,
+        18,
+        1,
+        158,
+        242
+      ],
+      "accounts": [
+        {
+          "name": "genesis"
+        },
+        {
+          "name": "mint_tracker",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "deactivate_identity",
+      "docs": [
+        "Deactivate an identity. Authority only.",
+        "Deactivated identities cannot perform actions",
+        "but remain on-chain for historical reference."
+      ],
+      "discriminator": [
+        58,
+        175,
+        10,
+        246,
+        145,
+        179,
+        1,
+        179
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "reactivate_identity",
+      "docs": [
+        "Reactivate a previously deactivated identity."
+      ],
+      "discriminator": [
+        200,
+        24,
+        123,
+        17,
+        93,
+        88,
+        85,
+        23
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "register_name",
+      "docs": [
+        "Register a unique name for an agent identity.",
+        "PDA seed: `[b\"name_registry\", name_hash]` where name_hash = SHA-256(lowercase(name))",
+        "Once claimed, no other identity can use the same name (case-insensitive)."
+      ],
+      "discriminator": [
+        101,
+        120,
+        221,
+        151,
+        68,
+        123,
+        191,
+        103
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "name_registry",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "name_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "release_name",
+      "docs": [
+        "Release a registered name. Authority only.",
+        "Frees the name for others to claim."
+      ],
+      "discriminator": [
+        3,
+        68,
+        17,
+        217,
+        57,
+        53,
+        123,
+        164
+      ],
+      "accounts": [
+        {
+          "name": "genesis"
+        },
+        {
+          "name": "name_registry",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "migrate_v2_to_v3",
+      "docs": [
+        "Migrate a V2 identity to a V3 Genesis Record.",
+        "The V2 authority must sign to prove ownership.",
+        "Creates a new V3 PDA seeded by agent_id_hash.",
+        "V2 account is NOT closed (stays as historical reference).",
+        "",
+        "Caller must provide metadata fields since V2 → V3 field mapping",
+        "requires agent_id (which V2 doesn't store as a string)."
+      ],
+      "discriminator": [
+        25,
+        157,
+        17,
+        205,
+        179,
+        34,
+        196,
+        207
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "v2_authority",
+          "docs": [
+            "V2 authority wallet — must sign to prove V2 identity ownership.",
+            "V2 identity account can be passed as remaining_accounts[0] for verification."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "agent_id_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "category",
+          "type": "string"
+        },
+        {
+          "name": "capabilities",
+          "type": {
+            "vec": "string"
+          }
+        },
+        {
+          "name": "metadata_uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "admin_set_born",
+      "docs": [
+        "Admin-only: set genesis_record (birth timestamp) for an agent.",
+        "Can only be called by the program's upgrade authority.",
+        "Used for agents who already have face data but genesis_record == 0.",
+        "Does NOT overwrite face fields — only sets genesis_record if currently 0."
+      ],
+      "discriminator": [
+        150,
+        145,
+        121,
+        204,
+        30,
+        129,
+        182,
+        99
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "upgrade_authority",
+          "docs": [
+            "The upgrade authority of this program — must be signer"
+          ],
+          "signer": true
+        },
+        {
+          "name": "program",
+          "docs": [
+            "The executable identity_v3 program account."
+          ]
+        },
+        {
+          "name": "program_data",
+          "docs": [
+            "The program's programdata account — used to verify upgrade authority"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "admin_set_face",
+      "docs": [
+        "Admin-only: set face data on a born agent whose face fields are empty.",
+        "This fixes the V2→V3 migration gap where agents were born via admin_set_born",
+        "without carrying over face data from V2 records.",
+        "Guards:",
+        "- face_image must be currently empty (cannot overwrite existing face data)",
+        "- genesis_record must be > 0 (agent must be born)",
+        "- Only upgrade authority can call",
+        "Does NOT modify: authority, scores, genesis_record, is_active."
+      ],
+      "discriminator": [
+        159,
+        60,
+        220,
+        130,
+        122,
+        7,
+        199,
+        226
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "upgrade_authority",
+          "docs": [
+            "The upgrade authority of this program — must be signer"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program",
+          "docs": [
+            "The executable identity_v3 program account."
+          ]
+        },
+        {
+          "name": "program_data",
+          "docs": [
+            "The program's programdata account — used to verify upgrade authority"
+          ]
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "face_image",
+          "type": "string"
+        },
+        {
+          "name": "face_mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "face_burn_tx",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "admin_unbirth",
+      "docs": [
+        "Admin-only: reset an agent's birth status to unborn.",
+        "Sets genesis_record = 0 and clears face fields.",
+        "Used for agents who were incorrectly marked as born without going",
+        "through burn-to-become (e.g., admin_set_born used prematurely).",
+        "Guards:",
+        "- Only upgrade authority can call",
+        "- Face fields must be empty (no real burn-to-become happened)",
+        "- If face data exists, use a different fix — this prevents",
+        "accidentally unbirting agents who have real soulbound NFTs"
+      ],
+      "discriminator": [
+        184,
+        19,
+        82,
+        66,
+        150,
+        88,
+        1,
+        97
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "upgrade_authority",
+          "signer": true
+        },
+        {
+          "name": "program",
+          "docs": [
+            "The executable identity_v3 program account."
+          ]
+        },
+        {
+          "name": "program_data"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "admin_close_stale",
+      "docs": [
+        "Admin-only: close a stale/deactivated genesis account and reclaim rent.",
+        "Guards:",
+        "- Only upgrade authority can call",
+        "- Account must be owned by this program",
+        "- Account must NOT be the canonical active V3 record (size != 1384 OR is_active == false)",
+        "- For V3 accounts (1384 bytes): must have is_active == false",
+        "- For V2 accounts (1383 bytes or other): can be closed unconditionally (legacy)",
+        "Lamports are sent to the rent_recipient."
+      ],
+      "discriminator": [
+        24,
+        85,
+        249,
+        213,
+        62,
+        192,
+        22,
+        231
+      ],
+      "accounts": [
+        {
+          "name": "stale_account",
+          "docs": [
+            "The stale account to close. Must be owned by this program."
+          ],
+          "writable": true
+        },
+        {
+          "name": "rent_recipient",
+          "docs": [
+            "Receives the reclaimed lamports (typically the upgrade authority)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "upgrade_authority",
+          "docs": [
+            "The upgrade authority of this program — must be signer"
+          ],
+          "signer": true
+        },
+        {
+          "name": "program",
+          "docs": [
+            "The executable identity_v3 program account."
+          ]
+        },
+        {
+          "name": "program_data",
+          "docs": [
+            "The program's programdata account — used to verify upgrade authority"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "admin_delete_identity",
+      "docs": [
+        "Admin-only: delete (close) any genesis record regardless of active status.",
+        "Use case: cleaning up test/spam registrations on-chain.",
+        "Unlike admin_close_stale, this does NOT require the account to be deactivated.",
+        "Guards:",
+        "- Only upgrade authority can call (verified via programdata)",
+        "- Account must be owned by this program",
+        "Emits: IdentityDeleted event"
+      ],
+      "discriminator": [
+        212,
+        226,
+        85,
+        160,
+        183,
+        57,
+        116,
+        145
+      ],
+      "accounts": [
+        {
+          "name": "target_account",
+          "docs": [
+            "The account to delete. Must be owned by this program."
+          ],
+          "writable": true
+        },
+        {
+          "name": "rent_recipient",
+          "docs": [
+            "Receives the reclaimed lamports"
+          ],
+          "writable": true
+        },
+        {
+          "name": "upgrade_authority",
+          "docs": [
+            "The upgrade authority of this program — must be signer"
+          ],
+          "signer": true
+        },
+        {
+          "name": "program",
+          "docs": [
+            "The executable identity_v3 program account."
+          ]
+        },
+        {
+          "name": "program_data",
+          "docs": [
+            "The program's programdata account — used to verify upgrade authority"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "admin_set_authority",
+      "docs": [
+        "Admin-only: force-set authority on a genesis record.",
+        "Use case: agent keypair is lost/inaccessible, cannot complete propose/accept flow.",
+        "Guards:",
+        "- Only upgrade authority can call",
+        "- Agent must be active",
+        "- Clears any pending_authority"
+      ],
+      "discriminator": [
+        7,
+        72,
+        233,
+        189,
+        124,
+        10,
+        225,
+        76
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "upgrade_authority",
+          "docs": [
+            "The upgrade authority of this program — must be signer"
+          ],
+          "signer": true
+        },
+        {
+          "name": "program",
+          "docs": [
+            "The executable identity_v3 program account."
+          ]
+        },
+        {
+          "name": "program_data"
+        }
+      ],
+      "args": [
+        {
+          "name": "new_authority",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "admin_set_score",
+      "docs": [
+        "Admin-only: directly set reputation score and verification level.",
+        "Use case: correcting scores after recompute CPI set wrong values,",
+        "or syncing on-chain state with authoritative DB values.",
+        "Guards:",
+        "- Only upgrade authority can call (verified via programdata)",
+        "- Score must be 0..=1_000_000",
+        "- Level must be 0..=5",
+        "- Agent must be active",
+        "Emits: ScoreSet event"
+      ],
+      "discriminator": [
+        9,
+        246,
+        158,
+        3,
+        55,
+        42,
+        5,
+        172
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "upgrade_authority",
+          "docs": [
+            "The upgrade authority of this program — must be signer"
+          ],
+          "signer": true
+        },
+        {
+          "name": "program",
+          "docs": [
+            "The executable identity_v3 program account."
+          ]
+        },
+        {
+          "name": "program_data"
+        }
+      ],
+      "args": [
+        {
+          "name": "score",
+          "type": "u64"
+        },
+        {
+          "name": "level",
+          "type": "u8"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "identity_v3::GenesisRecord",
+      "discriminator": [
+        22,
+        160,
+        245,
+        112,
+        178,
+        126,
+        177,
+        106
+      ]
+    },
+    {
+      "name": "identity_v3::LinkedWallet",
+      "discriminator": [
+        43,
+        44,
+        217,
+        238,
+        93,
+        127,
+        166,
+        59
+      ]
+    },
+    {
+      "name": "identity_v3::MintTracker",
+      "discriminator": [
+        217,
+        230,
+        22,
+        187,
+        250,
+        88,
+        11,
+        174
+      ]
+    },
+    {
+      "name": "identity_v3::NameRegistry",
+      "discriminator": [
+        169,
+        63,
+        83,
+        240,
+        198,
+        158,
+        53,
+        11
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "identity_v3::GenesisRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "agent_name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "name": "capabilities",
+            "type": {
+              "vec": "string"
+            }
+          },
+          {
+            "name": "metadata_uri",
+            "type": "string"
+          },
+          {
+            "name": "face_image",
+            "type": "string"
+          },
+          {
+            "name": "face_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "face_burn_tx",
+            "type": "string"
+          },
+          {
+            "name": "genesis_record",
+            "type": "i64"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_authority",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "reputation_score",
+            "type": "u64"
+          },
+          {
+            "name": "verification_level",
+            "type": "u8"
+          },
+          {
+            "name": "reputation_updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "verification_updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "identity_v3::LinkedWallet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "identity",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "chain",
+            "type": "string"
+          },
+          {
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "name": "verified_at",
+            "type": "i64"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "identity_v3::MintTracker",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "identity",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_count",
+            "type": "u8"
+          },
+          {
+            "name": "last_mint_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "identity_v3::NameRegistry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "name_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "identity",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "registered_at",
+            "type": "i64"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,5 +17,11 @@ for path in idl_files:
         raise SystemExit(f"{path}: expected JSON object")
     if "name" not in data and "metadata" not in data:
         raise SystemExit(f"{path}: missing IDL name/metadata")
-    print(f"ok {path.relative_to(ROOT)}")
-print(f"validated {len(idl_files)} IDL JSON files")
+    print(f"ok {path.relative_to(ROOT)}", flush=True)
+print(f"validated {len(idl_files)} IDL JSON files", flush=True)
+
+subprocess.run(
+    ["node", "scripts/generate-v3-idls.mjs", "--check"],
+    cwd=ROOT,
+    check=True,
+)

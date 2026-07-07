@@ -1,0 +1,146 @@
+{
+  "address": "",
+  "metadata": {
+    "name": "validation_v3",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "SATP Validation V3 — verification level computation via CPI to Identity V3"
+  },
+  "instructions": [
+    {
+      "name": "recompute_level",
+      "docs": [
+        "Verification levels (0-5):",
+        "0 = Unverified, 1 = Basic (1+), 2 = Standard (3+),",
+        "3 = Enhanced (5+, 2+ types), 4 = Premium (10+, 3+ types),",
+        "5 = Maximum (20+, 5+ types)"
+      ],
+      "discriminator": [
+        188,
+        71,
+        22,
+        212,
+        156,
+        164,
+        238,
+        88
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "writable": true
+        },
+        {
+          "name": "validation_authority"
+        },
+        {
+          "name": "identity_program"
+        },
+        {
+          "name": "caller",
+          "signer": true
+        }
+      ],
+      "args": []
+    }
+  ],
+  "types": [
+    {
+      "name": "validation_v3::identity_v3::accounts::GenesisRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "agent_name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "name": "capabilities",
+            "type": {
+              "vec": "string"
+            }
+          },
+          {
+            "name": "metadata_uri",
+            "type": "string"
+          },
+          {
+            "name": "face_image",
+            "type": "string"
+          },
+          {
+            "name": "face_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "face_burn_tx",
+            "type": "string"
+          },
+          {
+            "name": "genesis_record",
+            "type": "i64"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_authority",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "reputation_score",
+            "type": "u64"
+          },
+          {
+            "name": "verification_level",
+            "type": "u8"
+          },
+          {
+            "name": "reputation_updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "verification_updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}

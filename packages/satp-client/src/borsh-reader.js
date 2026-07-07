@@ -18,6 +18,8 @@
  */
 
 const { PublicKey } = require('@solana/web3.js');
+const { readFileSync } = require('fs');
+const { join } = require('path');
 
 // ═══════════════════════════════════════════════════
 //  BorshReader — streaming Borsh deserializer
@@ -437,17 +439,38 @@ function accountDiscriminator(accountName) {
     .slice(0, 8);
 }
 
-// Pre-compute discriminators for all V3 account types
-const DISCRIMINATORS = {
-  GenesisRecord: accountDiscriminator('GenesisRecord'),
-  LinkedWallet: accountDiscriminator('LinkedWallet'),
-  MintTracker: accountDiscriminator('MintTracker'),
-  NameRegistry: accountDiscriminator('NameRegistry'),
-  Review: accountDiscriminator('Review'),
-  ReviewCounter: accountDiscriminator('ReviewCounter'),
-  Attestation: accountDiscriminator('Attestation'),
-  EscrowV3: accountDiscriminator('EscrowV3'),
-};
+const V3_IDL_FILES = [
+  'identity_v3.json',
+  'reviews_v3.json',
+  'attestations_v3.json',
+  'reputation_v3.json',
+  'validation_v3.json',
+  'escrow_v3.json',
+];
+
+function bareAccountName(name) {
+  return name.includes('::') ? name.split('::').pop() : name;
+}
+
+function loadGeneratedIdlDiscriminators() {
+  const discriminators = {};
+  const idlDir = join(__dirname, '../../../idls/v3');
+
+  for (const file of V3_IDL_FILES) {
+    const idlPath = join(idlDir, file);
+    const idl = JSON.parse(readFileSync(idlPath, 'utf8'));
+    for (const account of idl.accounts || []) {
+      if (!Array.isArray(account.discriminator) || account.discriminator.length !== 8) {
+        throw new Error(`${file}: account ${account.name} is missing an 8-byte discriminator`);
+      }
+      discriminators[bareAccountName(account.name)] = Buffer.from(account.discriminator);
+    }
+  }
+
+  return Object.freeze(discriminators);
+}
+
+const DISCRIMINATORS = loadGeneratedIdlDiscriminators();
 
 const DESERIALIZERS = {
   GenesisRecord: deserializeGenesisRecord,
