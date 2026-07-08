@@ -10,11 +10,16 @@ Toolchain lock notes:
 
 - Anchor CLI/version target: `0.31.1` as recorded in `Anchor.toml`.
 - Rust channel target: `1.86.0` as recorded in `rust-toolchain.toml`.
+- Solana/SBF toolchain target: Solana CLI `2.1.21`; the SBF platform
+  tools currently invoke Rust/Cargo `1.79.0-dev` for the BPF build.
 - Rust edition: `2021` as recorded in `programs/satp_escrow/Cargo.toml`.
 - Program ID: `UpJ7jmUzHkQ7EdBKiBv3zq8Dr1fVh6GVWKa7nYtwQ22`, matching the
   committed IDL address.
 - Verification is source-only and offline by default:
   `node scripts/verify-escrow-source-idl.mjs`.
+- `Cargo.lock` is committed for the escrow workspace so SBF builds do not float
+  to crates whose manifests require edition 2024 or Rust newer than Solana
+  platform-tools can parse.
 
 This source slice does not deploy, write to devnet/mainnet, create or move
 keypairs, publish npm packages, restart production, perform admin actions, spend
@@ -34,7 +39,17 @@ It can also fetch the deployed IDL, sort it with the same stable JSON routine
 used by `scripts/verify-escrow-source-idl.mjs`, and compare that sha256 against
 the committed `idls/satp_escrow.json` sha256 from this PR.
 
-No `Cargo.lock` is committed by this source slice because the local execution
-host used for the PR does not have `cargo` or `anchor` installed. The PR pins the
-intended Rust and Anchor versions so the reviewer/build host can generate the
-lockfile and `.so` artifact in the approved build environment.
+The current local build proof was produced without deploying:
+
+```sh
+cargo build-sbf --manifest-path programs/satp_escrow/Cargo.toml
+shasum -a 256 target/deploy/satp_escrow.so
+```
+
+Resulting local artifact:
+
+```text
+target/deploy/satp_escrow.so
+size: 234608 bytes
+sha256: d8069cd186d58bd80b90de2de23731f4693180539c2877b62d98454aa187965b
+```
