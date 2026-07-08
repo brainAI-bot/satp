@@ -93,13 +93,16 @@ SATP code may:
 - run read-only verification without private keys.
 
 Low-privilege operational signer config must use the public-only signer
-separation shape in `docs/operational-signer-separation.md` and the exported
-`buildSignerSeparationConfig()` helper. The operational signer may be scoped to
-devnet fee payment, devnet transaction submission after separate approval,
-offline transaction preparation, and read-only RPC only. It must not be reused
-as the Owner-held upgrade authority or configured with keypair paths, private
-keys, seed phrases, authority-transfer actions, deploy actions, npm publish, or
-funds custody.
+separation shape in `docs/operational-signer-separation.md`, the checked-in
+public config at `config/satp-operational-signer.public.json`, and the exported
+`buildSignerSeparationConfig()` helper. The current Owner-provisioned
+operational signer public key is
+`8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g`. It may be scoped only to
+fee-payer, test, and attestation signing flows that are separately approved
+through HQ. It must not be reused as the Owner-held upgrade authority, must not
+be authorized to rewrite programs, and must not be configured with keypair
+paths, private keys, seed phrases, authority-transfer actions, deploy actions,
+npm publish, funds custody, or funds transfer.
 
 ---
 

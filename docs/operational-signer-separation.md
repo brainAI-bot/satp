@@ -20,11 +20,13 @@ the Owner upgrade authority.
 ## Public Config Shape
 
 Use public-key-only configuration names. These names are safe to document, but
-their values must still be public keys only:
+their values must still be public keys only. The checked-in public config for
+the current Owner-provisioned operational signer is
+`config/satp-operational-signer.public.json`.
 
 ```text
-SATP_OPERATIONAL_SIGNER_PUBLIC_KEY=<public key only>
-SATP_OWNER_UPGRADE_AUTHORITY_PUBLIC_KEY=<public key only>
+SATP_OPERATIONAL_SIGNER_PUBLIC_KEY=8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g
+SATP_OWNER_UPGRADE_AUTHORITY_PUBLIC_KEY=Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc
 ```
 
 Do not introduce config fields for keypair paths, seed phrases, private keys,
@@ -41,9 +43,10 @@ const {
 
 const config = buildSignerSeparationConfig({
   network: 'devnet',
-  operationalSignerPublicKey: process.env.SATP_OPERATIONAL_SIGNER_PUBLIC_KEY,
-  ownerUpgradeAuthorityPublicKey: process.env.SATP_OWNER_UPGRADE_AUTHORITY_PUBLIC_KEY,
+  operationalSignerPublicKey: '8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g',
+  ownerUpgradeAuthorityPublicKey: 'Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc',
   operationalAllowedActions: [
+    'devnet_transaction_submission',
     'read_only_rpc',
     'offline_transaction_preparation',
     'devnet_fee_payment',
@@ -61,7 +64,10 @@ privilege allowlist.
 
 ## Operational Allowlist
 
-The operational signer may be configured only for:
+The operational signer
+`8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g` may be configured only for
+low-privilege fee-payer, test, and attestation-signing workflows that are
+separately approved through HQ. Its policy allowlist is:
 
 ```text
 read_only_rpc
@@ -73,23 +79,29 @@ devnet_transaction_submission
 Any live write or transaction submission still requires a separate HQ assignment
 and must follow the active deploy/key-management gate.
 
-## Pending Owner Inputs
+## Owner-Provisioned Public Key
 
-The engineering boundary is ready for review, but live signer provisioning remains
-Owner-gated. Pending Owner input list:
+Owner has provisioned this public key for the low-privilege operational signer:
 
 ```text
-1. Owner-provisioned low-privilege operational signer public key.
-2. Owner-approved account scope for that public key, limited to devnet fee payment,
-   separately approved devnet transaction submission, offline transaction
-   preparation, and read-only RPC.
-3. Owner confirmation that the operational signer public key is distinct from the
-   Owner-held upgrade-authority public key.
+8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g
 ```
+
+This public key is limited to fee-payer, test, and attestation signing scope
+only. It is not upgrade authority, is not authorized to rewrite programs, and
+must not be used for authority transfer, key generation or rotation, deploys,
+npm publishing, funds custody, funds transfer, or any mainnet action.
+
+Read-only mainnet account lookup on 2026-07-08 showed both
+`8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g` and
+`Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc` as non-executable
+system-owned public accounts. The configured operational signer public key is
+distinct from the cited hot upgrade key
+`Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc`.
 
 Do not add keypair files, private keys, seed phrases, secret-store references,
 authority-transfer instructions, deploy commands, npm tokens, or funding
-instructions to satisfy these inputs.
+instructions for this signer.
 
 ## Owner-Gated Actions
 
