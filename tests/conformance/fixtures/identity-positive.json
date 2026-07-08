@@ -26,7 +26,7 @@
     "schemaVersion": "satp.identity.v1",
     "recordType": "identity",
     "network": "devnet",
-    "identityId": "3L1hQV51pJGbhv6ie1aYVZ8T719PUtNGxRMxUJLkc5cY",
+    "identityId": "8pCsrc91rvEpee2KqDJNmcAZH6jw8jvasuvQWThKLtXw",
     "agentId": "rc-s6-fixture-agent",
     "agentIdHash": "6dc0a0a47a40224b9dee426b29cf4b7842a907b005a1f23ecaf35e381e80294f",
     "authority": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG",
@@ -44,11 +44,11 @@
       "minReaderVersion": "rc-s6"
     },
     "pda": {
-      "genesis": "3L1hQV51pJGbhv6ie1aYVZ8T719PUtNGxRMxUJLkc5cY",
+      "genesis": "8pCsrc91rvEpee2KqDJNmcAZH6jw8jvasuvQWThKLtXw",
       "genesisBump": 255
     },
     "programs": {
-      "identity": "GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG"
+      "identity": "7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ"
     }
   }
 }
