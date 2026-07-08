@@ -26,6 +26,7 @@ Run:
 ```sh
 npm run verify:v3-program-sources
 cargo +1.89.0 check --workspace
+cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml
 ```
 
 `npm run verify:v3-program-sources` performs offline readback of all six program
@@ -35,6 +36,10 @@ nested IDL JSON files, and rejects committed `.env`, memory, target,
 `.program-state`, keypair, secret, or env-style secret material in the V3
 program tree. The Rust workspace check requires Rust 1.89.0 or newer because
 the resolved Solana crate set rejects older compilers.
+
+The `escrow_v3` SBF proof requires platform-tools `v1.52`; the Solana CLI
+2.1.21 default platform-tools are too old for the Solana 3.x dependency graph
+and fail before compilation on edition-2024 transitive crates.
 
 ## Anchor Verify
 
