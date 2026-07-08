@@ -14,9 +14,10 @@ const V3_DEVNET_PROGRAM_IDS = {
   ESCROW: new PublicKey('B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg'),
 };
 
-// Approved D1 SDK wiring source:
-// docs/mainnet-authority-decision-packet-6c8a5545.md, D1 SDK wiring update
-// for HQ task TASK-30ec9d53 / [#bd298672]. Keep V3 separate from legacy V2
+// Mainnet registry source: Anchor.toml [programs.mainnet], checked by
+// scripts/verify-v3-program-sources.mjs and docs/v3-program-source-verification.md.
+// docs/mainnet-authority-decision-packet-6c8a5545.md remains the owner-gating
+// packet for deploy/key/publish actions. Keep V3 separate from legacy V2
 // MAINNET_PROGRAM_IDS in constants.js; do not fall back to V2 program IDs.
 const V3_MAINNET_PROGRAM_IDS = {
   IDENTITY: new PublicKey('GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG'),
