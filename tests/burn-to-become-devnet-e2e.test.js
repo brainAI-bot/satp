@@ -29,4 +29,3 @@ assert.equal(plan.approvalPacket.guardrails.includes('no mainnet write'), true);
 assert.match(plan.approvalPacket.command, /SATP_DEVNET_E2E_APPROVED=1/);
 
 console.log('burn-to-become devnet e2e plan test passed');
-

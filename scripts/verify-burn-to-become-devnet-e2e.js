@@ -492,4 +492,3 @@ main().catch(err => {
   output(result);
   process.exit(1);
 });
-
