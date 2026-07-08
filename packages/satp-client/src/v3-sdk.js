@@ -42,13 +42,10 @@ function normalizeSDKOptions(opts = {}) {
       : { rpcUrl: opts };
   }
   const rpcUrl = normalized.rpcUrl || normalized.url || normalized.endpoint;
-  if (!normalized.network && isMainnetRpc(rpcUrl)) {
-    throw new Error('Mainnet RPC requires network=mainnet, but SATP V3 mainnet program IDs are not configured');
-  }
   return {
     ...normalized,
     rpcUrl,
-    network: normalized.network || 'devnet',
+    network: normalized.network || (isMainnetRpc(rpcUrl) ? 'mainnet' : 'devnet'),
   };
 }
 

@@ -7,7 +7,7 @@ Date: 2026-07-05
 
 ## Scope
 
-This packet covers the SATP V3 program suite and authority model needed before any Owner mainnet decision. The current live deploy truth is manual Anchor deployment, devnet today, with no push-to-ship pipeline and no V3 mainnet program IDs enabled.
+This packet covers the SATP V3 program suite and authority model needed before any Owner mainnet decision. The current live deploy truth is manual Anchor deployment, devnet today, with no push-to-ship pipeline and no mainnet deploy enabled.
 
 Owner decision update, 2026-07-06: the SATP upgrade-authority key remains one sole Owner-held key. There is no upgrade-authority multisig and no agent co-signer. The prior audit recommendation for upgrade-authority multisig is declined and risk-accepted. This update reconciles the active readiness docs to the decision recorded in `ROADMAP.md` without changing `ROADMAP.md`.
 
@@ -16,11 +16,26 @@ In scope:
 | Area | Current source | Mainnet decision status |
 | --- | --- | --- |
 | V3 devnet program IDs | `packages/satp-client/src/v3-pda.js` | Existing devnet readback only; not a mainnet approval. |
-| V3 mainnet program IDs | `packages/satp-client/src/v3-pda.js` | Fail-closed. `V3_MAINNET_PROGRAM_IDS = null`; `getV3ProgramIds('mainnet')` throws. |
+| V3 mainnet SDK program IDs | `packages/satp-client/src/v3-pda.js` | D1 SDK wiring approved by HQ task `TASK-30ec9d53` / `[#bd298672]` for the six identifiers listed in the D1 SDK wiring update below; not a deploy approval. |
 | Mainnet authority classes | `docs/mainnet-authority-readiness.md`, `docs/key-management.md` | Owner-gated; public authority addresses still pending. |
 | Legacy V2 mainnet constants | `packages/satp-client/src/constants.js` | Read back for risk awareness only; not treated as the V3 mainnet target. |
 
 Out of scope: deploy execution, keypair creation or movement, authority rotation, npm publish, AgentFolio product work, paid spend, and any ROADMAP status flip.
+
+## D1 SDK Wiring Update
+
+HQ task `TASK-30ec9d53` / `[#bd298672]` authorizes the SDK-only D1 wiring milestone for `packages/satp-client/src/v3-pda.js`. The SDK may expose exactly these six V3 program IDs from `getV3ProgramIds('mainnet')`:
+
+| Program | V3 mainnet SDK program ID |
+| --- | --- |
+| Identity V3 | `GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG` |
+| Reviews V3 | `r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4` |
+| Reputation V3 | `2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ` |
+| Attestations V3 | `6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD` |
+| Validation V3 | `6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV` |
+| Escrow V3 | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` |
+
+This SDK wiring does not approve or perform a Solana write, devnet deploy, mainnet deploy, keypair action, signer import/export, authority rotation, npm publish, production mutation, paid spend, or public launch. Legacy V2 `MAINNET_PROGRAM_IDS` in `packages/satp-client/src/constants.js` remain separate and are not a fallback source for V3.
 
 ## Public Authority Inventory
 
@@ -68,7 +83,7 @@ Additional devnet account readback at slot `474238008`, block height `462079664`
 
 ### V3 Mainnet Authority Inventory
 
-No V3 mainnet program ID is currently configured. Mainnet must remain disabled until the Owner approves public authority addresses and custody.
+V3 mainnet SDK program IDs are configured only for D1 client identifier wiring. Mainnet deploy, authority movement, funding, and production use remain disabled until the Owner approves public authority addresses and custody.
 
 | Mainnet authority class | Required public identifier | Required custody | Current status |
 | --- | --- | --- | --- |
@@ -105,7 +120,7 @@ Current Owner decision:
 3. Do not add an agent co-signer or agent-controlled upgrade authority.
 4. Separate upgrade authority from fee payer, issuer registry root, trust-class administrator, funds authority, dispute authority, and emergency authority.
 5. Before any mainnet deploy or value-bearing action, require the Owner-approved public upgrade-authority address, command plan, rollback criteria, and final readback evidence.
-6. Keep V3 mainnet IDs disabled until conformance tests and brainShield review pass.
+6. Keep V3 mainnet deploy, production use, and authority actions disabled until conformance tests and brainShield review pass.
 
 ## Fee-Payer And Funding Runbook
 
@@ -142,7 +157,7 @@ Containment after an approved mainnet action must include public readback of pro
 
 | Risk or unknown | Impact | Required resolution |
 | --- | --- | --- |
-| V3 mainnet IDs are unset | Mainnet SDK path correctly fails closed, but no mainnet deploy can proceed. | Owner must approve program IDs and authority addresses after brainShield review. |
+| V3 mainnet SDK IDs are wired before deployment approval | Clients can resolve configured identifiers, but no mainnet deploy or production use can proceed. | Keep deploy, authority, funding, and production actions Owner-gated after brainShield review. |
 | V3 devnet ProgramData readback was incomplete for Reviews, Reputation, Attestations, Validation, and Escrow | Upgrade authority cannot be confirmed from this public RPC readback for those devnet programs. | Re-run with Solana CLI or an alternate public RPC before using these programs as promotion evidence. |
 | Identity V3 devnet upgrade authority is a single public key in readback | Devnet readback does not prove the Owner-approved mainnet key. | Mainnet must use the Owner-approved sole Owner-held upgrade-authority public key with no multisig and no agent co-signer. |
 | Legacy V2 mainnet programs are upgradeable under one authority | Existing public constants carry authority concentration risk. | Treat as legacy/out-of-scope for V3 launch, or create a separate V2 retirement/ownership review. |
