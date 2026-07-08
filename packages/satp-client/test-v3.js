@@ -18,6 +18,11 @@ const {
   getV3ReviewPDA,
   getV3AttestationPDA,
   getV3ProgramIds,
+  V3_DEVNET_TOKEN_MINTS,
+  SPL_TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  getV3EscrowVaultATA,
 } = require('./src/index');
 
 let passed = 0;
@@ -251,9 +256,70 @@ assert(escrowResult.escrowPDA === escrowPDA1.toBase58(), 'getEscrowPDA(string) m
 const escrowResult2 = sdk.getEscrowPDA(fakeClient, 'Build me an AI agent', 1);
 assert(escrowResult.escrowPDA !== escrowResult2.escrowPDA, 'Different nonce produces different escrowPDA via helper');
 
-// ─── Summary ─────────────────────────────────────────
-console.log(`\n${'='.repeat(40)}`);
-console.log(`Results: ${passed} passed, ${failed} failed, ${passed + failed} total`);
-console.log(`${'='.repeat(40)}\n`);
+// ─── Escrow V3 USDC PDA + SDK Builders ──────────────
+(async () => {
+  console.log('\n=== Escrow V3 USDC PDA + SDK Builders ===');
 
-process.exit(failed > 0 ? 1 : 0);
+  assert(V3_DEVNET_TOKEN_MINTS.USDC instanceof PublicKey, 'USDC devnet mint is exported as PublicKey');
+  assert(SPL_TOKEN_PROGRAM_ID.toBase58() === 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA', 'SPL Token program ID exported');
+  assert(ASSOCIATED_TOKEN_PROGRAM_ID.toBase58() === 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL', 'Associated Token program ID exported');
+
+  const [clientUsdcAta1, clientUsdcBump1] = getAssociatedTokenAddress(fakeClient, V3_DEVNET_TOKEN_MINTS.USDC);
+  const [clientUsdcAta2, clientUsdcBump2] = getAssociatedTokenAddress(fakeClient, V3_DEVNET_TOKEN_MINTS.USDC);
+  assert(clientUsdcAta1.equals(clientUsdcAta2), 'USDC client ATA derivation is deterministic');
+  assert(clientUsdcBump1 === clientUsdcBump2, 'USDC client ATA bump is deterministic');
+
+  const vault = getV3EscrowVaultATA(fakeClient, descHash, 0, V3_DEVNET_TOKEN_MINTS.USDC, 'devnet');
+  assert(vault.escrowPDA.equals(escrowPDA1), 'USDC vault helper reuses escrow PDA seeds');
+  assert(vault.vaultATA.equals(getAssociatedTokenAddress(escrowPDA1, V3_DEVNET_TOKEN_MINTS.USDC)[0]), 'USDC vault ATA derives from escrow PDA owner');
+
+  sdk.connection = {
+    getLatestBlockhash: async () => ({ blockhash: '11111111111111111111111111111111' }),
+  };
+
+  const solCreate = await sdk.buildCreateEscrow(
+    fakeClient,
+    testWallet,
+    'brainChain',
+    1000,
+    descHash,
+    Math.floor(Date.now() / 1000) + 3600,
+    0,
+    { arbiter: fakeClient2 }
+  );
+  assert(solCreate.transaction.instructions.length === 1, 'SOL create builder keeps single escrow instruction');
+  assert(solCreate.escrowPDA.equals(escrowPDA1), 'SOL create builder uses deterministic escrow PDA');
+
+  const usdcCreate = await sdk.buildCreateEscrow(
+    fakeClient,
+    testWallet,
+    'brainChain',
+    1_000_000,
+    descHash,
+    Math.floor(Date.now() / 1000) + 3600,
+    0,
+    { currency: 'USDC', arbiter: fakeClient2 }
+  );
+  assert(usdcCreate.currency === 'USDC', 'Generic create builder selects USDC path');
+  assert(usdcCreate.transaction.instructions.length === 2, 'USDC create builder prepends vault ATA creation');
+  assert(usdcCreate.clientTokenAccount.equals(clientUsdcAta1), 'USDC create builder returns deterministic client ATA');
+  assert(usdcCreate.vaultTokenAccount.equals(vault.vaultATA), 'USDC create builder returns deterministic vault ATA');
+
+  const usdcRelease = await sdk.buildEscrowRelease(fakeClient, testWallet, escrowPDA1, { currency: 'USDC' });
+  assert(usdcRelease.transaction.instructions.length === 2, 'USDC release builder prepends agent ATA creation');
+  assert(usdcRelease.vaultTokenAccount.equals(vault.vaultATA), 'USDC release builder derives vault ATA from escrow PDA');
+
+  // ─── Summary ─────────────────────────────────────────
+  console.log(`\n${'='.repeat(40)}`);
+  console.log(`Results: ${passed} passed, ${failed} failed, ${passed + failed} total`);
+  console.log(`${'='.repeat(40)}\n`);
+
+  process.exit(failed > 0 ? 1 : 0);
+})().catch((err) => {
+  failed++;
+  console.error(err);
+  console.log(`\n${'='.repeat(40)}`);
+  console.log(`Results: ${passed} passed, ${failed} failed, ${passed + failed} total`);
+  console.log(`${'='.repeat(40)}\n`);
+  process.exit(1);
+});

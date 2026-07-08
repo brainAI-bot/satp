@@ -15,6 +15,12 @@ const V3_DEVNET_PROGRAM_IDS = {
 };
 
 const V3_MAINNET_PROGRAM_IDS = null;
+const SPL_TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+
+const V3_DEVNET_TOKEN_MINTS = {
+  USDC: new PublicKey('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU'),
+};
 
 // ═══════════════════════════════════════════════════
 //  V3 PDA Seeds — must match on-chain programs
@@ -256,10 +262,44 @@ function getV3EscrowPDA(client, descriptionHash, nonce, network = 'devnet') {
   );
 }
 
+/**
+ * Derive the canonical associated token account address.
+ * Seeds: [owner, SPL Token program, mint]
+ * @param {PublicKey|string} owner
+ * @param {PublicKey|string} mint
+ * @returns {[PublicKey, number]}
+ */
+function getAssociatedTokenAddress(owner, mint) {
+  const ownerKey = new PublicKey(owner);
+  const mintKey = new PublicKey(mint);
+  return PublicKey.findProgramAddressSync(
+    [ownerKey.toBuffer(), SPL_TOKEN_PROGRAM_ID.toBuffer(), mintKey.toBuffer()],
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  );
+}
+
+/**
+ * Derive the escrow PDA and its SPL vault ATA for a mint.
+ * @param {PublicKey|string} client
+ * @param {Buffer} descriptionHash
+ * @param {number|bigint} nonce
+ * @param {PublicKey|string} mint
+ * @param {'mainnet'|'devnet'} network
+ * @returns {{ escrowPDA: PublicKey, escrowBump: number, vaultATA: PublicKey, vaultBump: number }}
+ */
+function getV3EscrowVaultATA(client, descriptionHash, nonce, mint, network = 'devnet') {
+  const [escrowPDA, escrowBump] = getV3EscrowPDA(client, descriptionHash, nonce, network);
+  const [vaultATA, vaultBump] = getAssociatedTokenAddress(escrowPDA, mint);
+  return { escrowPDA, escrowBump, vaultATA, vaultBump };
+}
+
 module.exports = {
   // Program IDs
   V3_DEVNET_PROGRAM_IDS,
   V3_MAINNET_PROGRAM_IDS,
+  V3_DEVNET_TOKEN_MINTS,
+  SPL_TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
   getV3ProgramIds,
   V3_SEEDS,
 
@@ -278,4 +318,6 @@ module.exports = {
   getV3ReviewCounterPDA,
   getV3AttestationPDA,
   getV3EscrowPDA,
+  getAssociatedTokenAddress,
+  getV3EscrowVaultATA,
 };

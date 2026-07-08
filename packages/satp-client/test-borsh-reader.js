@@ -115,6 +115,11 @@ function writeOptionI64(val) {
   return Buffer.concat([Buffer.from([1]), writeI64(val)]);
 }
 
+function writeOptionU8(val) {
+  if (val === null) return Buffer.from([0]);
+  return Buffer.from([1, val]);
+}
+
 function writeOptionBytes32(hex) {
   if (hex === null) return Buffer.from([0]);
   return Buffer.concat([Buffer.from([1]), Buffer.from(hex, 'hex')]);
@@ -578,6 +583,10 @@ console.log('\n=== EscrowV3 ===');
     writeBytes32(descHash),            // description_hash
     writeI64(NOW + 86400),             // deadline
     writeU64(0),                       // nonce
+    writeU8(0),                        // currency = SOL
+    writeOptionPubkey(null),           // token_mint = None
+    writeOptionPubkey(null),           // token_vault = None
+    writeOptionU8(null),               // token_decimals = None
     writeU8(1),                        // status = WorkSubmitted
     writeU8(2),                        // min_verification_level
     writeBool(true),                   // require_born
@@ -599,6 +608,11 @@ console.log('\n=== EscrowV3 ===');
   assertEqual(parsed.releasedAmount, 1000000000, 'escrow: releasedAmount');
   assertEqual(parsed.remaining, 4000000000, 'escrow: remaining');
   assertEqual(parsed.descriptionHash, descHash, 'escrow: descriptionHash');
+  assertEqual(parsed.currency, 'SOL', 'escrow: currency');
+  assertEqual(parsed.currencyCode, 0, 'escrow: currencyCode');
+  assertEqual(parsed.tokenMint, null, 'escrow: tokenMint none');
+  assertEqual(parsed.tokenVault, null, 'escrow: tokenVault none');
+  assertEqual(parsed.tokenDecimals, null, 'escrow: tokenDecimals none');
   assertEqual(parsed.status, 'WorkSubmitted', 'escrow: status');
   assertEqual(parsed.statusCode, 1, 'escrow: statusCode');
   assertEqual(parsed.minVerificationLevel, 2, 'escrow: minVerificationLevel');
@@ -626,6 +640,10 @@ console.log('\n=== EscrowV3 ===');
     writeBytes32(TEST_HASH),
     writeI64(NOW - 86400),            // deadline passed
     writeU64(1),                      // nonce=1
+    writeU8(1),                       // currency = USDC
+    writeOptionPubkey(TEST_PUBKEY_2), // token_mint = Some
+    writeOptionPubkey(TEST_PUBKEY_3), // token_vault = Some
+    writeOptionU8(6),                 // token_decimals = Some(6)
     writeU8(4),                       // status = Disputed
     writeU8(0),
     writeBool(false),
@@ -640,6 +658,10 @@ console.log('\n=== EscrowV3 ===');
   ]);
 
   const parsed = deserializeEscrowV3(data);
+  assertEqual(parsed.currency, 'USDC', 'escrow disputed: currency');
+  assertEqual(parsed.tokenMint, TEST_PUBKEY_2, 'escrow disputed: tokenMint');
+  assertEqual(parsed.tokenVault, TEST_PUBKEY_3, 'escrow disputed: tokenVault');
+  assertEqual(parsed.tokenDecimals, 6, 'escrow disputed: tokenDecimals');
   assertEqual(parsed.status, 'Disputed', 'escrow disputed: status');
   assertEqual(parsed.nonce, 1, 'escrow disputed: nonce');
   assertEqual(parsed.disputeReasonHash, disputeHash, 'escrow disputed: reason hash');
@@ -859,6 +881,10 @@ console.log('\n=== Edge Cases ===');
       writeBytes32(TEST_HASH),
       writeI64(NOW),
       writeU64(0),
+      writeU8(0),                    // currency = SOL
+      writeOptionPubkey(null),        // token_mint = None
+      writeOptionPubkey(null),        // token_vault = None
+      writeOptionU8(null),            // token_decimals = None
       writeU8(i),                    // status code
       writeU8(0),
       writeBool(false),

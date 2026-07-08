@@ -137,6 +137,11 @@ export interface ParsedEscrowV3 {
   descriptionHash: string;
   deadline: number;
   nonce: number;
+  currency: 'SOL' | 'USDC' | string;
+  currencyCode: number;
+  tokenMint: string | null;
+  tokenVault: string | null;
+  tokenDecimals: number | null;
   status: EscrowStatusV3 | string;
   statusCode: number;
   minVerificationLevel: number;
