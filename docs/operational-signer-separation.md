@@ -73,6 +73,24 @@ devnet_transaction_submission
 Any live write or transaction submission still requires a separate HQ assignment
 and must follow the active deploy/key-management gate.
 
+## Pending Owner Inputs
+
+The engineering boundary is ready for review, but live signer provisioning remains
+Owner-gated. Pending Owner input list:
+
+```text
+1. Owner-provisioned low-privilege operational signer public key.
+2. Owner-approved account scope for that public key, limited to devnet fee payment,
+   separately approved devnet transaction submission, offline transaction
+   preparation, and read-only RPC.
+3. Owner confirmation that the operational signer public key is distinct from the
+   Owner-held upgrade-authority public key.
+```
+
+Do not add keypair files, private keys, seed phrases, secret-store references,
+authority-transfer instructions, deploy commands, npm tokens, or funding
+instructions to satisfy these inputs.
+
 ## Owner-Gated Actions
 
 The operational signer must not be used for:

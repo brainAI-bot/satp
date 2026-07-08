@@ -75,6 +75,20 @@ const invalid = validateSignerSeparationConfig({
 assert.equal(invalid.ok, false);
 assert(invalid.errors.includes('ownerUpgradeAuthority.operationalSignerMayUse must be false'));
 
+const authorityFlagConfig = validateSignerSeparationConfig({
+  ...config,
+  flags: {
+    ...config.flags,
+    transfersAuthority: true,
+    deploysPrograms: true,
+    writesSolanaState: true,
+  },
+});
+assert.equal(authorityFlagConfig.ok, false);
+assert(authorityFlagConfig.errors.includes('flags.transfersAuthority must be false'));
+assert(authorityFlagConfig.errors.includes('flags.deploysPrograms must be false'));
+assert(authorityFlagConfig.errors.includes('flags.writesSolanaState must be false'));
+
 const secretBearingConfig = validateSignerSeparationConfig({
   ...config,
   operationalSigner: {

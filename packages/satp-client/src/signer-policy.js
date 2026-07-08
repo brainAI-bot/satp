@@ -149,6 +149,18 @@ function validateSignerSeparationConfig(config) {
     if (config && config.ownerUpgradeAuthority && config.ownerUpgradeAuthority.operationalSignerMayUse !== false) {
       errors.push('ownerUpgradeAuthority.operationalSignerMayUse must be false');
     }
+    for (const flagName of [
+      'readsKeypairs',
+      'generatesKeypairs',
+      'transfersAuthority',
+      'deploysPrograms',
+      'publishesPackages',
+      'writesSolanaState',
+    ]) {
+      if (!config || !config.flags || config.flags[flagName] !== false) {
+        errors.push(`flags.${flagName} must be false`);
+      }
+    }
     return { ok: errors.length === 0, errors, normalized };
   } catch (e) {
     return { ok: false, errors: [e.message], normalized: null };
