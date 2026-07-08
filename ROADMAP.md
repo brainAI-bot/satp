@@ -164,7 +164,7 @@ conformance, security, release, and mainnet authority gates remain open.
   client resolves mainnet rather than a hand-patch. [#bd298672] [shipped]
 - Burn-to-Become verified end-to-end on devnet against the deployed identity
   program: free mint, the 3-per-identity cap enforced on-chain, wallet rotation
-  carrying the cap, and a soulbound transfer that fails. [pending]
+  carrying the cap, and a soulbound transfer that fails. [#fbc35f6e] [shipped]
 
 - FINAL hardening (Owner-approved 2026-07-06, sequenced LAST — do only after all core work): separate the
   low-privilege OPERATIONAL signer (fee-payer / test / attestation, agent-holdable, cannot upgrade programs)
