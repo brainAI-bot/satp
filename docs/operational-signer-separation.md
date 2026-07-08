@@ -92,12 +92,15 @@ only. It is not upgrade authority, is not authorized to rewrite programs, and
 must not be used for authority transfer, key generation or rotation, deploys,
 npm publishing, funds custody, funds transfer, or any mainnet action.
 
-Read-only mainnet account lookup on 2026-07-08 showed both
-`8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g` and
-`Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc` as non-executable
-system-owned public accounts. The configured operational signer public key is
-distinct from the cited hot upgrade key
-`Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc`.
+Read-only mainnet account lookup on 2026-07-08 showed
+`8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g` as a non-executable
+system-owned public account. Read-only ProgramData lookup for the configured
+six V3 mainnet program IDs showed
+`Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc` as the current public upgrade
+authority. That readback proves only the public authority value currently
+stored in ProgramData; it does not prove private-key custody, storage class,
+or approval to use the key. The configured operational signer public key is
+distinct from that chain-observed upgrade authority.
 
 Do not add keypair files, private keys, seed phrases, secret-store references,
 authority-transfer instructions, deploy commands, npm tokens, or funding

@@ -104,6 +104,15 @@ be authorized to rewrite programs, and must not be configured with keypair
 paths, private keys, seed phrases, authority-transfer actions, deploy actions,
 npm publish, funds custody, or funds transfer.
 
+Read-only mainnet ProgramData evidence may identify a current public upgrade
+authority address, but it does not prove private-key custody, storage class, or
+approval to use that key. PR #94 evidence read back
+`Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc` as the public ProgramData
+authority for the configured six V3 mainnet program IDs. Treat that as a
+chain-observed public authority value only; any Owner-held custody assertion,
+authority transfer, deploy, or mainnet use still requires separate HQ approval
+and the pre-mainnet key gate.
+
 ---
 
 ## 6. Rotation runbook
