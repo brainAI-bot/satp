@@ -905,6 +905,8 @@ module.exports = {
 
   // V3 PDA derivation (local extracted scaffold)
   PROGRAM_IDS: v3pda.getV3ProgramIds('devnet'),
+  V3_DEVNET_PROGRAM_IDS: v3pda.V3_DEVNET_PROGRAM_IDS,
+  V3_MAINNET_PROGRAM_IDS: v3pda.V3_MAINNET_PROGRAM_IDS,
   getV3ProgramIds: v3pda.getV3ProgramIds,
   V3_DEVNET_TOKEN_MINTS: v3pda.V3_DEVNET_TOKEN_MINTS,
   SPL_TOKEN_PROGRAM_ID: v3pda.SPL_TOKEN_PROGRAM_ID,

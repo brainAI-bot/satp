@@ -41,31 +41,29 @@ const directDevnetString = createSATPClient('devnet');
 assert.equal(directDevnetString.network, 'devnet');
 assert.equal(directDevnetString.rpcUrl, DEVNET_RPC);
 
-assert.throws(
-  () => createSATPClient(MAINNET_RPC),
-  /Mainnet RPC requires network=mainnet/
-);
+const inferredMainnet = createSATPClient(MAINNET_RPC);
+assert.equal(inferredMainnet.network, 'mainnet');
+assert.equal(inferredMainnet.rpcUrl, MAINNET_RPC);
 
-assert.throws(
-  () => createSATPClient({ network: 'mainnet', rpcUrl: MAINNET_RPC }),
-  /SATP V3 mainnet program IDs are not configured/
-);
-assert.throws(
-  () => new SATPV3SDK({ rpcUrl: MAINNET_RPC }),
-  /Mainnet RPC requires network=mainnet/
-);
-assert.throws(
-  () => new SATPV3SDK({ network: 'mainnet' }),
-  /SATP V3 mainnet program IDs are not configured/
-);
-assert.throws(
-  () => new SATPV3SDK('mainnet'),
-  /SATP V3 mainnet program IDs are not configured/
-);
-assert.throws(
-  () => getV3ProgramIds('mainnet'),
-  /SATP V3 mainnet program IDs are not configured/
-);
+const explicitMainnet = createSATPClient({ network: 'mainnet', rpcUrl: MAINNET_RPC });
+assert.equal(explicitMainnet.network, 'mainnet');
+assert.equal(explicitMainnet.rpcUrl, MAINNET_RPC);
+
+const sdkMainnetRpc = new SATPV3SDK({ rpcUrl: MAINNET_RPC });
+assert.equal(sdkMainnetRpc.network, 'mainnet');
+assert.equal(sdkMainnetRpc.rpcUrl, MAINNET_RPC);
+
+const sdkMainnetOptions = new SATPV3SDK({ network: 'mainnet' });
+assert.equal(sdkMainnetOptions.network, 'mainnet');
+assert.equal(sdkMainnetOptions.rpcUrl, MAINNET_RPC);
+
+const sdkMainnetString = new SATPV3SDK('mainnet');
+assert.equal(sdkMainnetString.network, 'mainnet');
+assert.equal(sdkMainnetString.rpcUrl, MAINNET_RPC);
+
+const v3MainnetIds = getV3ProgramIds('mainnet');
+assert.equal(v3MainnetIds.IDENTITY.toBase58(), 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG');
+assert.equal(v3MainnetIds.ESCROW.toBase58(), 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C');
 
 const v2Default = new SATPSDK();
 assert.equal(v2Default.network, 'devnet');

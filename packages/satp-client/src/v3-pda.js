@@ -14,7 +14,19 @@ const V3_DEVNET_PROGRAM_IDS = {
   ESCROW: new PublicKey('HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C'),
 };
 
-const V3_MAINNET_PROGRAM_IDS = null;
+// Mainnet registry source: Anchor.toml [programs.mainnet], checked by
+// scripts/verify-v3-program-sources.mjs and docs/v3-program-source-verification.md.
+// docs/mainnet-authority-decision-packet-6c8a5545.md remains the owner-gating
+// packet for deploy/key/publish actions; these SDK constants do not authorize
+// any Solana write or reuse any legacy V2 MAINNET_PROGRAM_IDS fallback.
+const V3_MAINNET_PROGRAM_IDS = {
+  IDENTITY: new PublicKey('GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG'),
+  REVIEWS: new PublicKey('r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4'),
+  REPUTATION: new PublicKey('2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ'),
+  ATTESTATIONS: new PublicKey('6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD'),
+  VALIDATION: new PublicKey('6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV'),
+  ESCROW: new PublicKey('HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C'),
+};
 const SPL_TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
 const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
 
@@ -48,7 +60,7 @@ function getV3ProgramIds(network = 'devnet') {
     throw new Error('Invalid network: expected devnet or mainnet');
   }
   if (network === 'mainnet') {
-    throw new Error('SATP V3 mainnet program IDs are not configured; use devnet or provide an approved mainnet decision packet before enabling mainnet');
+    return V3_MAINNET_PROGRAM_IDS;
   }
   return V3_DEVNET_PROGRAM_IDS;
 }
