@@ -161,7 +161,7 @@ conformance, security, release, and mainnet authority gates remain open.
   [#14fa5837] [shipped]
 - D1 SDK wiring: V3_MAINNET_PROGRAM_IDS populated behind the approved
   mainnet-authority decision packet and the V2 path fenced, so the published
-  client resolves mainnet rather than a hand-patch. [pending]
+  client resolves mainnet rather than a hand-patch. [#bd298672] [shipped]
 - Burn-to-Become verified end-to-end on devnet against the deployed identity
   program: free mint, the 3-per-identity cap enforced on-chain, wallet rotation
   carrying the cap, and a soulbound transfer that fails. [pending]
