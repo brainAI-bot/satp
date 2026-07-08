@@ -41,12 +41,12 @@ function assert(condition, msg) {
 // ─── Program IDs ───────────────────────────────────────
 console.log('\n=== V3 Program IDs ===');
 const ids = getV3ProgramIds('devnet');
-assert(ids.IDENTITY.toBase58() === 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG', 'Identity V3 program ID');
-assert(ids.REVIEWS.toBase58() === 'r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4', 'Reviews V3 program ID');
-assert(ids.REPUTATION.toBase58() === '2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ', 'Reputation V3 program ID');
-assert(ids.ATTESTATIONS.toBase58() === '6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD', 'Attestations V3 program ID');
-assert(ids.VALIDATION.toBase58() === '6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV', 'Validation V3 program ID');
-assert(ids.ESCROW.toBase58() === 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C', 'Escrow V3 program ID');
+assert(ids.IDENTITY.toBase58() === '7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ', 'Identity V3 program ID');
+assert(ids.REVIEWS.toBase58() === '3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk', 'Reviews V3 program ID');
+assert(ids.REPUTATION.toBase58() === 'CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9', 'Reputation V3 program ID');
+assert(ids.ATTESTATIONS.toBase58() === '55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw', 'Attestations V3 program ID');
+assert(ids.VALIDATION.toBase58() === 'DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj', 'Validation V3 program ID');
+assert(ids.ESCROW.toBase58() === 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg', 'Escrow V3 program ID');
 
 const mainnetIds = getV3ProgramIds('mainnet');
 assert(mainnetIds.IDENTITY.toBase58() === 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG', 'Identity V3 mainnet program ID');
@@ -239,7 +239,7 @@ assert(!escrowPDA1.equals(escrowPDA4), 'Different description produces different
 console.log('\n=== Escrow V3 SDK Methods ===');
 
 // Program ID check
-assert(sdk.programIds.ESCROW.toBase58() === 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C', 'Escrow V3 program ID correct');
+assert(sdk.programIds.ESCROW.toBase58() === 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg', 'Escrow V3 program ID correct');
 
 // Method existence
 assert(typeof sdk.buildCreateEscrow === 'function', 'SDK has buildCreateEscrow');

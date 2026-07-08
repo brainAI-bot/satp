@@ -22,7 +22,7 @@
     "subjectIdentity": {
       "agentId": "rc-s6-fixture-agent",
       "agentIdHash": "6dc0a0a47a40224b9dee426b29cf4b7842a907b005a1f23ecaf35e381e80294f",
-      "genesisPda": "3L1hQV51pJGbhv6ie1aYVZ8T719PUtNGxRMxUJLkc5cY"
+      "genesisPda": "8pCsrc91rvEpee2KqDJNmcAZH6jw8jvasuvQWThKLtXw"
     },
     "score": 87,
     "scoreScale": "0-100-display-only",

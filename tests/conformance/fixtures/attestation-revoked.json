@@ -21,13 +21,13 @@
     "schemaVersion": "satp.attestation.v1",
     "recordType": "attestation",
     "network": "devnet",
-    "attestationId": "FgUPnA4cQ2aLvFe7FFDT1DU2WU6A1EwodTDYFFqepUf4",
+    "attestationId": "8z8Kd729S2kqtXGjLFczXVpGTyqy7rHpEKbWaHb5zZFv",
     "issuer": "9xQeWvG816bUx9EPf3q2w7Sc4pTCK2n12u3Zmd4Mx2f",
     "issuerTrustClass": "partner",
     "subjectIdentity": {
       "agentId": "rc-s6-fixture-agent",
       "agentIdHash": "6dc0a0a47a40224b9dee426b29cf4b7842a907b005a1f23ecaf35e381e80294f",
-      "genesisPda": "3L1hQV51pJGbhv6ie1aYVZ8T719PUtNGxRMxUJLkc5cY"
+      "genesisPda": "8pCsrc91rvEpee2KqDJNmcAZH6jw8jvasuvQWThKLtXw"
     },
     "subjectWallet": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG",
     "claimType": "github_verified",
@@ -50,11 +50,11 @@
       ]
     },
     "pda": {
-      "attestation": "FgUPnA4cQ2aLvFe7FFDT1DU2WU6A1EwodTDYFFqepUf4",
+      "attestation": "8z8Kd729S2kqtXGjLFczXVpGTyqy7rHpEKbWaHb5zZFv",
       "attestationBump": 255
     },
     "programs": {
-      "attestations": "6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD"
+      "attestations": "55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw"
     }
   }
 }

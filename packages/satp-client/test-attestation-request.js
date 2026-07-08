@@ -60,8 +60,8 @@ assert.equal(request.genesisBump, expectedGenesisBump);
 assert.equal(request.attestationPda, expectedAttestation.toBase58());
 assert.equal(request.attestationBump, expectedAttestationBump);
 assert.match(request.requestHash, /^[a-f0-9]{64}$/);
-assert.equal(request.programs.identity, 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG');
-assert.equal(request.programs.attestations, '6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD');
+assert.equal(request.programs.identity, '7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ');
+assert.equal(request.programs.attestations, '55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw');
 
 const deterministicA = prepareIdentityAttestationRequest({
   subjectWallet: SUBJECT_WALLET,
