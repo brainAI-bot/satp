@@ -68,10 +68,17 @@ treat a branch-only Git dependency as npm latest.
       prepareIdentityAttestationRequest,
       buildSatpTrustPacket,
       validateSatpTrustPacket,
+      buildSignerSeparationConfig,
+      validateSignerSeparationConfig,
     } = require('@brainai/satp-client');
 
 Subpath imports under @brainai/satp-client/src/* remain available for existing
 consumers during the review phase.
+
+`buildSignerSeparationConfig(opts)` prepares a public-key-only policy packet for
+separating a low-privilege operational signer from the Owner-held upgrade
+authority. It does not read keypairs, generate keys, transfer authority, deploy,
+publish, or write Solana state. See `docs/operational-signer-separation.md`.
 
 ## Read-only Trust Packets
 

@@ -92,6 +92,15 @@ SATP code may:
 - accept signer/wallet abstractions explicitly;
 - run read-only verification without private keys.
 
+Low-privilege operational signer config must use the public-only signer
+separation shape in `docs/operational-signer-separation.md` and the exported
+`buildSignerSeparationConfig()` helper. The operational signer may be scoped to
+devnet fee payment, devnet transaction submission after separate approval,
+offline transaction preparation, and read-only RPC only. It must not be reused
+as the Owner-held upgrade authority or configured with keypair paths, private
+keys, seed phrases, authority-transfer actions, deploy actions, npm publish, or
+funds custody.
+
 ---
 
 ## 6. Rotation runbook

@@ -191,6 +191,65 @@ export interface RuntimePolicyResult {
   checks: Record<string, unknown>;
 }
 
+export type SatpSignerRole = 'operational_signer' | 'owner_upgrade_authority';
+
+export type SatpOperationalSignerAction =
+  | 'devnet_fee_payment'
+  | 'devnet_transaction_submission'
+  | 'offline_transaction_preparation'
+  | 'read_only_rpc';
+
+export type SatpOwnerGatedAction =
+  | 'program_upgrade'
+  | 'authority_transfer'
+  | 'key_generation'
+  | 'key_rotation'
+  | 'mainnet_deploy'
+  | 'devnet_deploy'
+  | 'npm_publish'
+  | 'funds_custody'
+  | 'funds_transfer';
+
+export interface SignerSeparationOptions {
+  network?: Network;
+  operationalSignerPublicKey: PublicKey | string;
+  ownerUpgradeAuthorityPublicKey: PublicKey | string;
+  operationalAllowedActions?: SatpOperationalSignerAction[];
+}
+
+export interface SignerSeparationConfig {
+  schemaVersion: 'satp.signerSeparation.v1';
+  network: Network;
+  operationalSigner: {
+    role: 'operational_signer';
+    publicKey: string;
+    allowedActions: SatpOperationalSignerAction[];
+    blockedActions: SatpOwnerGatedAction[];
+    authorityBoundary: 'no_upgrade_authority_no_key_management_no_funds_custody';
+  };
+  ownerUpgradeAuthority: {
+    role: 'owner_upgrade_authority';
+    publicKey: string;
+    custody: 'owner_held';
+    operationalSignerMayUse: false;
+  };
+  flags: {
+    publicKeysOnly: true;
+    readsKeypairs: false;
+    generatesKeypairs: false;
+    transfersAuthority: false;
+    deploysPrograms: false;
+    publishesPackages: false;
+    writesSolanaState: false;
+  };
+}
+
+export interface SignerSeparationValidation {
+  ok: boolean;
+  errors: string[];
+  normalized: SignerSeparationConfig | null;
+}
+
 export const DECISIONS: Readonly<{
   ALLOW: 'allow';
   DENY: 'deny';
@@ -200,6 +259,22 @@ export const DECISIONS: Readonly<{
 
 export const REASON_CODES: Readonly<Record<string, string>>;
 export const DEFAULT_POLICY: Readonly<Required<RuntimePolicyConfig>>;
+
+export const SATP_SIGNER_ROLES: Readonly<{
+  OPERATIONAL_SIGNER: 'operational_signer';
+  OWNER_UPGRADE_AUTHORITY: 'owner_upgrade_authority';
+}>;
+
+export const OPERATIONAL_SIGNER_ALLOWED_ACTIONS: Readonly<SatpOperationalSignerAction[]>;
+export const OWNER_UPGRADE_AUTHORITY_BLOCKED_ACTIONS: Readonly<SatpOwnerGatedAction[]>;
+
+export function buildSignerSeparationConfig(
+  opts: SignerSeparationOptions
+): SignerSeparationConfig;
+
+export function validateSignerSeparationConfig(
+  config: SignerSeparationConfig | Record<string, unknown> | null | undefined
+): SignerSeparationValidation;
 
 export function evaluateRuntimePolicy(
   identityPayload: RuntimePolicyIdentityPayload,

@@ -31,6 +31,8 @@ const requiredExports = [
   'parseX402DiscoveryMetadata',
   'buildX402EvidenceLookup',
   'buildRuntimePolicyActionDescriptorFromX402Discovery',
+  'buildSignerSeparationConfig',
+  'validateSignerSeparationConfig',
 ];
 
 const missing = requiredExports.filter((key) => !(key in satp));
@@ -78,6 +80,14 @@ const policyDecision = satp.evaluateRuntimePolicy(
 );
 if (policyDecision.decision !== 'allow') {
   throw new Error('evaluateRuntimePolicy did not return allow for verified local policy input');
+}
+
+const signerConfig = satp.buildSignerSeparationConfig({
+  operationalSignerPublicKey: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG',
+  ownerUpgradeAuthorityPublicKey: 'EJtQh4Gyg88zXvSmFpxYkkeZsPwTsjfm4LvjmPQX1FD3',
+});
+if (!satp.validateSignerSeparationConfig(signerConfig).ok || signerConfig.flags.transfersAuthority !== false) {
+  throw new Error('signer separation config did not preserve public-only no-authority-transfer guardrails');
 }
 
 const declarations = fs.readFileSync(path.join(__dirname, '..', 'packages/satp-client/src/index.d.ts'), 'utf8');

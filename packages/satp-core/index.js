@@ -18,4 +18,9 @@ module.exports = {
   buildX402EvidenceLookup: client.buildX402EvidenceLookup,
   buildRuntimePolicyActionDescriptorFromX402Discovery: client.buildRuntimePolicyActionDescriptorFromX402Discovery,
   buildRuntimePolicyActionDescriptorFromX402: client.buildRuntimePolicyActionDescriptorFromX402,
+  SATP_SIGNER_ROLES: client.SATP_SIGNER_ROLES,
+  OPERATIONAL_SIGNER_ALLOWED_ACTIONS: client.OPERATIONAL_SIGNER_ALLOWED_ACTIONS,
+  OWNER_UPGRADE_AUTHORITY_BLOCKED_ACTIONS: client.OWNER_UPGRADE_AUTHORITY_BLOCKED_ACTIONS,
+  buildSignerSeparationConfig: client.buildSignerSeparationConfig,
+  validateSignerSeparationConfig: client.validateSignerSeparationConfig,
 };
