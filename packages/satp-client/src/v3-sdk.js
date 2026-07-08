@@ -1988,7 +1988,7 @@ class SATPV3SDK {
       const faceMint = new PublicKey(data.slice(offset, offset + 32)); offset += 32;
       const faceBurnTx = readString();
       const genesisRecord = Number(data.readBigInt64LE(offset)); offset += 8;
-      // No isActive on current deployed program GTppU4E44BqXTQg...
+      const isActive = data[offset] === 1; offset += 1;
       const authority = new PublicKey(data.slice(offset, offset + 32)); offset += 32;
 
       // Option<Pubkey> — Borsh: 0x00 = None (1 byte only), 0x01 + 32 bytes = Some
@@ -2022,6 +2022,7 @@ class SATPV3SDK {
         faceBurnTx: faceBurnTx || null,
         genesisRecord,
         isBorn,
+        isActive,
         authority: authority.toBase58(),
         pendingAuthority,
         reputationScore,
