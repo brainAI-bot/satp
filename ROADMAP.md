@@ -169,7 +169,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - FINAL hardening (Owner-approved 2026-07-06, sequenced LAST — do only after all core work): separate the
   low-privilege OPERATIONAL signer (fee-payer / test / attestation, agent-holdable, cannot upgrade programs)
   from the sole Owner-held upgrade-authority key, so routine traffic never touches the key that can rewrite
-  program logic. No authority transfer, no multisig; the Owner provisions one new low-priv key. [pending]
+  program logic. No authority transfer, no multisig; the Owner provisions one new low-priv key. [#c749448f] [shipped]
 
 ## Expansion · non-core
 
