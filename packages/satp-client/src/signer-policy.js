@@ -26,6 +26,11 @@ const OWNER_UPGRADE_AUTHORITY_BLOCKED_ACTIONS = Object.freeze([
   'funds_transfer',
 ]);
 
+const OPERATIONAL_SIGNER_AUTHORITY_BOUNDARY =
+  'no_upgrade_authority_no_key_management_no_funds_custody';
+
+const OWNER_UPGRADE_AUTHORITY_CUSTODY = 'owner_held';
+
 const SECRET_FIELD_NAMES = Object.freeze([
   'keypair',
   'keypairPath',
@@ -80,6 +85,16 @@ function normalizeOperationalActions(actions) {
   return Array.from(seen).sort();
 }
 
+function arraysMatchExactly(actual, expected) {
+  if (!Array.isArray(actual) || actual.length !== expected.length) {
+    return false;
+  }
+
+  const sortedActual = actual.slice().sort();
+  const sortedExpected = expected.slice().sort();
+  return sortedExpected.every((action, index) => sortedActual[index] === action);
+}
+
 function buildSignerSeparationConfig(opts = {}) {
   assertNoSecretFields(opts);
 
@@ -109,12 +124,12 @@ function buildSignerSeparationConfig(opts = {}) {
       publicKey: operationalSigner,
       allowedActions: normalizeOperationalActions(opts.operationalAllowedActions),
       blockedActions: OWNER_UPGRADE_AUTHORITY_BLOCKED_ACTIONS.slice().sort(),
-      authorityBoundary: 'no_upgrade_authority_no_key_management_no_funds_custody',
+      authorityBoundary: OPERATIONAL_SIGNER_AUTHORITY_BOUNDARY,
     },
     ownerUpgradeAuthority: {
       role: SATP_SIGNER_ROLES.OWNER_UPGRADE_AUTHORITY,
       publicKey: ownerUpgradeAuthority,
-      custody: 'owner_held',
+      custody: OWNER_UPGRADE_AUTHORITY_CUSTODY,
       operationalSignerMayUse: false,
     },
     flags: {
@@ -145,6 +160,25 @@ function validateSignerSeparationConfig(config) {
     }
     if (!config || !config.flags || config.flags.publicKeysOnly !== true) {
       errors.push('flags.publicKeysOnly must be true');
+    }
+    if (!config || !config.operationalSigner || config.operationalSigner.role !== SATP_SIGNER_ROLES.OPERATIONAL_SIGNER) {
+      errors.push('operationalSigner.role must be operational_signer');
+    }
+    if (!config || !config.ownerUpgradeAuthority || config.ownerUpgradeAuthority.role !== SATP_SIGNER_ROLES.OWNER_UPGRADE_AUTHORITY) {
+      errors.push('ownerUpgradeAuthority.role must be owner_upgrade_authority');
+    }
+    if (!config || !config.operationalSigner || config.operationalSigner.authorityBoundary !== OPERATIONAL_SIGNER_AUTHORITY_BOUNDARY) {
+      errors.push(`operationalSigner.authorityBoundary must be ${OPERATIONAL_SIGNER_AUTHORITY_BOUNDARY}`);
+    }
+    if (!config || !config.ownerUpgradeAuthority || config.ownerUpgradeAuthority.custody !== OWNER_UPGRADE_AUTHORITY_CUSTODY) {
+      errors.push(`ownerUpgradeAuthority.custody must be ${OWNER_UPGRADE_AUTHORITY_CUSTODY}`);
+    }
+    if (
+      !config
+      || !config.operationalSigner
+      || !arraysMatchExactly(config.operationalSigner.blockedActions, OWNER_UPGRADE_AUTHORITY_BLOCKED_ACTIONS)
+    ) {
+      errors.push('operationalSigner.blockedActions must list all owner-gated actions');
     }
     if (config && config.ownerUpgradeAuthority && config.ownerUpgradeAuthority.operationalSignerMayUse !== false) {
       errors.push('ownerUpgradeAuthority.operationalSignerMayUse must be false');

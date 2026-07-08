@@ -39,6 +39,78 @@ assert(OWNER_UPGRADE_AUTHORITY_BLOCKED_ACTIONS.includes('program_upgrade'));
 
 assert.equal(validateSignerSeparationConfig(config).ok, true);
 
+const tamperedMetadataCases = [
+  {
+    name: 'operational signer role',
+    patch: {
+      operationalSigner: {
+        ...config.operationalSigner,
+        role: SATP_SIGNER_ROLES.OWNER_UPGRADE_AUTHORITY,
+      },
+    },
+    error: 'operationalSigner.role must be operational_signer',
+  },
+  {
+    name: 'owner upgrade authority role',
+    patch: {
+      ownerUpgradeAuthority: {
+        ...config.ownerUpgradeAuthority,
+        role: SATP_SIGNER_ROLES.OPERATIONAL_SIGNER,
+      },
+    },
+    error: 'ownerUpgradeAuthority.role must be owner_upgrade_authority',
+  },
+  {
+    name: 'operational signer authority boundary',
+    patch: {
+      operationalSigner: {
+        ...config.operationalSigner,
+        authorityBoundary: 'can_upgrade_programs',
+      },
+    },
+    error: 'operationalSigner.authorityBoundary must be no_upgrade_authority_no_key_management_no_funds_custody',
+  },
+  {
+    name: 'owner upgrade authority custody',
+    patch: {
+      ownerUpgradeAuthority: {
+        ...config.ownerUpgradeAuthority,
+        custody: 'operational_signer_held',
+      },
+    },
+    error: 'ownerUpgradeAuthority.custody must be owner_held',
+  },
+  {
+    name: 'omitted owner-gated blocked actions',
+    patch: {
+      operationalSigner: {
+        ...config.operationalSigner,
+        blockedActions: config.operationalSigner.blockedActions.filter((action) => action !== 'program_upgrade'),
+      },
+    },
+    error: 'operationalSigner.blockedActions must list all owner-gated actions',
+  },
+  {
+    name: 'misrepresented owner-gated blocked actions',
+    patch: {
+      operationalSigner: {
+        ...config.operationalSigner,
+        blockedActions: [...config.operationalSigner.blockedActions, 'read_only_rpc'],
+      },
+    },
+    error: 'operationalSigner.blockedActions must list all owner-gated actions',
+  },
+];
+
+for (const testCase of tamperedMetadataCases) {
+  const result = validateSignerSeparationConfig({
+    ...config,
+    ...testCase.patch,
+  });
+  assert.equal(result.ok, false, `${testCase.name} tamper should fail validation`);
+  assert(result.errors.includes(testCase.error), `${testCase.name} tamper should report ${testCase.error}`);
+}
+
 assert.throws(
   () => buildSignerSeparationConfig({
     operationalSignerPublicKey: OPERATIONAL_PUBLIC_KEY,
