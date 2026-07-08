@@ -106,10 +106,15 @@ npm publish, funds custody, or funds transfer.
 
 Read-only mainnet ProgramData evidence may identify a current public upgrade
 authority address, but it does not prove private-key custody, storage class, or
-approval to use that key. PR #94 evidence read back
-`Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc` as the public ProgramData
-authority for the configured six V3 mainnet program IDs. Treat that as a
-chain-observed public authority value only; any Owner-held custody assertion,
+approval to use that key. TASK-bf93ea44 read-only evidence reports
+`CSyppbZuGJ4syJcNgyFFhCc3qgbWNWJyL2Y195MNS6J7` as the public ProgramData
+upgrade authority for the configured six V3 mainnet program IDs. The same
+read-only evidence reports
+`8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g` and
+`Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc` as system-owned non-executable
+accounts. PR #92 proves only the offline public-key-only repo policy; it does
+not prove live mainnet custody, Bq1ni upgrade control, or operational-signer
+separation from live upgrade authority. Any Owner-held custody assertion,
 authority transfer, deploy, or mainnet use still requires separate HQ approval
 and the pre-mainnet key gate.
 

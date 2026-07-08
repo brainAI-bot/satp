@@ -26,12 +26,17 @@ the current Owner-provisioned operational signer is
 
 ```text
 SATP_OPERATIONAL_SIGNER_PUBLIC_KEY=8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g
-SATP_OWNER_UPGRADE_AUTHORITY_PUBLIC_KEY=Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc
+SATP_OWNER_UPGRADE_AUTHORITY_PUBLIC_KEY=CSyppbZuGJ4syJcNgyFFhCc3qgbWNWJyL2Y195MNS6J7
 ```
 
 Do not introduce config fields for keypair paths, seed phrases, private keys,
 raw environment dumps, secret-store paths, deploy credentials, npm tokens, RPC
 tokens, or Owner signing instructions.
+
+The `ownerUpgradeAuthority.custody` field in this public-only packet is the
+schema's policy classification for Owner-gated authority separation. It is not
+live custody evidence and must not be cited as proof that any private key is
+held, stored, approved, or usable.
 
 SDK callers can normalize a public policy packet without touching secrets:
 
@@ -44,7 +49,7 @@ const {
 const config = buildSignerSeparationConfig({
   network: 'devnet',
   operationalSignerPublicKey: '8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g',
-  ownerUpgradeAuthorityPublicKey: 'Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc',
+  ownerUpgradeAuthorityPublicKey: 'CSyppbZuGJ4syJcNgyFFhCc3qgbWNWJyL2Y195MNS6J7',
   operationalAllowedActions: [
     'devnet_transaction_submission',
     'read_only_rpc',
@@ -92,15 +97,20 @@ only. It is not upgrade authority, is not authorized to rewrite programs, and
 must not be used for authority transfer, key generation or rotation, deploys,
 npm publishing, funds custody, funds transfer, or any mainnet action.
 
-Read-only mainnet account lookup on 2026-07-08 showed
+Read-only mainnet account lookup from TASK-bf93ea44 on 2026-07-08 showed
 `8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g` as a non-executable
-system-owned public account. Read-only ProgramData lookup for the configured
-six V3 mainnet program IDs showed
-`Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc` as the current public upgrade
-authority. That readback proves only the public authority value currently
-stored in ProgramData; it does not prove private-key custody, storage class,
-or approval to use the key. The configured operational signer public key is
-distinct from that chain-observed upgrade authority.
+system-owned public account. The same read-only account lookup showed
+`Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc` as a system-owned
+non-executable account, not as the live ProgramData upgrade authority.
+Read-only ProgramData lookup for the configured six V3 mainnet program IDs
+showed `CSyppbZuGJ4syJcNgyFFhCc3qgbWNWJyL2Y195MNS6J7` as the current public
+upgrade authority. That readback proves only the public authority value
+currently stored in ProgramData; it does not prove private-key custody,
+storage class, or approval to use the key. PR #92 proves only the offline
+public-key-only repo policy; it does not prove live mainnet custody, Bq1ni
+upgrade control, or operational-signer separation from live upgrade authority.
+The configured operational signer public key is distinct from the
+TASK-bf93ea44 chain-observed public upgrade authority.
 
 Do not add keypair files, private keys, seed phrases, secret-store references,
 authority-transfer instructions, deploy commands, npm tokens, or funding
