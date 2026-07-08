@@ -124,13 +124,17 @@ expectInvalid(/nonce has already been used/, {
   usedNonces: new Set(['wallet-control-nonce-001']),
 });
 
-assert.throws(() => buildWalletControlChallenge({
+const mainnetChallenge = buildWalletControlChallenge({
   agentId: 'brainChain',
   wallet: wallet.publicKey,
   network: 'mainnet',
-  nonce: 'mainnet-fails-closed',
+  nonce: 'mainnet-configured',
   issuedAt: 1893456000,
   expiresAt: 1893456300,
-}), /SATP V3 mainnet program IDs are not configured/);
+});
+
+assert.equal(mainnetChallenge.network, 'mainnet');
+assert.equal(typeof mainnetChallenge.genesisPda, 'string');
+assert.equal(typeof mainnetChallenge.linkedWalletPda, 'string');
 
 console.log('wallet-control challenge helper OK');

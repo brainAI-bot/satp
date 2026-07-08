@@ -98,13 +98,17 @@ assert.equal(aliasRequest.attester, ATTESTER);
 assert.equal(aliasRequest.network, 'devnet');
 assert.equal(aliasRequest.expiresAt, 1893456000);
 
-assertThrows(/SATP V3 mainnet program IDs are not configured/, () => prepareIdentityAttestationRequest({
+const mainnetRequest = prepareIdentityAttestationRequest({
   subjectWallet: SUBJECT_WALLET,
   attestationType: 'wallet_control_verified',
   metadataHash: METADATA_HASH.toLowerCase(),
   issuer: ATTESTER,
   network: 'mainnet',
-}));
+});
+
+assert.equal(mainnetRequest.network, 'mainnet');
+assert.equal(mainnetRequest.programs.identity, 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG');
+assert.equal(mainnetRequest.programs.attestations, '6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD');
 
 assertThrows(/Invalid subjectWallet/, () => prepareIdentityAttestationRequest({
   subjectWallet: 'not-a-wallet',

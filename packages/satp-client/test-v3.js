@@ -46,6 +46,22 @@ assert(ids.REVIEWS.toBase58() === 'r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4',
 assert(ids.REPUTATION.toBase58() === '2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ', 'Reputation V3 program ID');
 assert(ids.ATTESTATIONS.toBase58() === '6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD', 'Attestations V3 program ID');
 assert(ids.VALIDATION.toBase58() === '6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV', 'Validation V3 program ID');
+assert(ids.ESCROW.toBase58() === 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C', 'Escrow V3 program ID');
+
+const mainnetIds = getV3ProgramIds('mainnet');
+assert(mainnetIds.IDENTITY.toBase58() === 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG', 'Identity V3 mainnet program ID');
+assert(mainnetIds.REVIEWS.toBase58() === 'r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4', 'Reviews V3 mainnet program ID');
+assert(mainnetIds.REPUTATION.toBase58() === '2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ', 'Reputation V3 mainnet program ID');
+assert(mainnetIds.ATTESTATIONS.toBase58() === '6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD', 'Attestations V3 mainnet program ID');
+assert(mainnetIds.VALIDATION.toBase58() === '6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV', 'Validation V3 mainnet program ID');
+assert(mainnetIds.ESCROW.toBase58() === 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C', 'Escrow V3 mainnet program ID');
+
+try {
+  getV3ProgramIds('testnet');
+  assert(false, 'Invalid network is rejected');
+} catch (err) {
+  assert(/Invalid network/.test(err.message), 'Invalid network is rejected');
+}
 
 // ─── Hash Functions ───────────────────────────────────
 console.log('\n=== Hash Functions ===');
@@ -155,15 +171,10 @@ const sdkDevnetString = new SATPV3SDK('devnet');
 assert(sdkDevnetString.network === 'devnet', 'SDK string devnet maps to devnet network');
 assert(sdkDevnetString.rpcUrl === 'https://api.devnet.solana.com', 'SDK string devnet maps to default RPC URL');
 
-try {
-  new SATPV3SDK('mainnet');
-  assert(false, 'SDK string mainnet fails closed until V3 mainnet program IDs are approved');
-} catch (err) {
-  assert(
-    /SATP V3 mainnet program IDs are not configured/.test(err.message),
-    'SDK string mainnet fails closed until V3 mainnet program IDs are approved'
-  );
-}
+const sdkMainnetString = new SATPV3SDK('mainnet');
+assert(sdkMainnetString.network === 'mainnet', 'SDK string mainnet maps to mainnet network');
+assert(sdkMainnetString.rpcUrl === 'https://api.mainnet-beta.solana.com', 'SDK string mainnet maps to default RPC URL');
+assert(sdkMainnetString.programIds.IDENTITY.equals(mainnetIds.IDENTITY), 'SDK string mainnet uses configured V3 mainnet program IDs');
 
 const customRpcUrl = 'https://example-rpc.invalid';
 const sdkCustomRpc = new SATPV3SDK(customRpcUrl);

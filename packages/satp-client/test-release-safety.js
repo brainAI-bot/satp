@@ -41,30 +41,37 @@ const directDevnetString = createSATPClient('devnet');
 assert.equal(directDevnetString.network, 'devnet');
 assert.equal(directDevnetString.rpcUrl, DEVNET_RPC);
 
-assert.throws(
-  () => createSATPClient(MAINNET_RPC),
-  /Mainnet RPC requires network=mainnet/
-);
+const mainnetFromRpc = createSATPClient(MAINNET_RPC);
+assert.equal(mainnetFromRpc.network, 'mainnet');
+assert.equal(mainnetFromRpc.rpcUrl, MAINNET_RPC);
+
+const explicitMainnet = createSATPClient({ network: 'mainnet', rpcUrl: MAINNET_RPC });
+assert.equal(explicitMainnet.network, 'mainnet');
+assert.equal(explicitMainnet.rpcUrl, MAINNET_RPC);
+
+const directMainnetRpc = new SATPV3SDK({ rpcUrl: MAINNET_RPC });
+assert.equal(directMainnetRpc.network, 'mainnet');
+assert.equal(directMainnetRpc.rpcUrl, MAINNET_RPC);
+
+const directMainnetNetwork = new SATPV3SDK({ network: 'mainnet' });
+assert.equal(directMainnetNetwork.network, 'mainnet');
+assert.equal(directMainnetNetwork.rpcUrl, MAINNET_RPC);
+
+const exportedMainnetString = new SATPV3SDK('mainnet');
+assert.equal(exportedMainnetString.network, 'mainnet');
+assert.equal(exportedMainnetString.rpcUrl, MAINNET_RPC);
+
+const v3MainnetIds = getV3ProgramIds('mainnet');
+assert.equal(v3MainnetIds.IDENTITY.toBase58(), 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG');
+assert.equal(v3MainnetIds.REVIEWS.toBase58(), 'r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4');
+assert.equal(v3MainnetIds.REPUTATION.toBase58(), '2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ');
+assert.equal(v3MainnetIds.ATTESTATIONS.toBase58(), '6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD');
+assert.equal(v3MainnetIds.VALIDATION.toBase58(), '6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV');
+assert.equal(v3MainnetIds.ESCROW.toBase58(), 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C');
 
 assert.throws(
-  () => createSATPClient({ network: 'mainnet', rpcUrl: MAINNET_RPC }),
-  /SATP V3 mainnet program IDs are not configured/
-);
-assert.throws(
-  () => new SATPV3SDK({ rpcUrl: MAINNET_RPC }),
-  /Mainnet RPC requires network=mainnet/
-);
-assert.throws(
-  () => new SATPV3SDK({ network: 'mainnet' }),
-  /SATP V3 mainnet program IDs are not configured/
-);
-assert.throws(
-  () => new SATPV3SDK('mainnet'),
-  /SATP V3 mainnet program IDs are not configured/
-);
-assert.throws(
-  () => getV3ProgramIds('mainnet'),
-  /SATP V3 mainnet program IDs are not configured/
+  () => getV3ProgramIds('testnet'),
+  /Invalid network/
 );
 
 const v2Default = new SATPSDK();
