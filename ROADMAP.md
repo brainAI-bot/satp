@@ -157,7 +157,8 @@ conformance, security, release, and mainnet authority gates remain open.
   dead V2 escrow IDL and hand-rolled discriminators are retired, and CI runs
   validate:idls against them. [#c5634a2c] [shipped]
 - USDC escrow support in the escrow program and dual-currency SDK builders (SPL
-  vault PDA, ATAs, transfer_checked); SOL-first is fine to launch, USDC is v2. [pending]
+  vault PDA, ATAs, transfer_checked); SOL-first is fine to launch, USDC is v2.
+  [#14fa5837] [shipped]
 - D1 SDK wiring: V3_MAINNET_PROGRAM_IDS populated behind the approved
   mainnet-authority decision packet and the V2 path fenced, so the published
   client resolves mainnet rather than a hand-patch. [pending]
