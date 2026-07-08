@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "satp.signerSeparation.v1",
+  "network": "devnet",
+  "operationalSigner": {
+    "role": "operational_signer",
+    "publicKey": "8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g",
+    "allowedActions": [
+      "devnet_fee_payment",
+      "devnet_transaction_submission",
+      "offline_transaction_preparation",
+      "read_only_rpc"
+    ],
+    "blockedActions": [
+      "authority_transfer",
+      "devnet_deploy",
+      "funds_custody",
+      "funds_transfer",
+      "key_generation",
+      "key_rotation",
+      "mainnet_deploy",
+      "npm_publish",
+      "program_upgrade"
+    ],
+    "authorityBoundary": "no_upgrade_authority_no_key_management_no_funds_custody"
+  },
+  "ownerUpgradeAuthority": {
+    "role": "owner_upgrade_authority",
+    "publicKey": "Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc",
+    "custody": "owner_held",
+    "operationalSignerMayUse": false
+  },
+  "flags": {
+    "publicKeysOnly": true,
+    "readsKeypairs": false,
+    "generatesKeypairs": false,
+    "transfersAuthority": false,
+    "deploysPrograms": false,
+    "publishesPackages": false,
+    "writesSolanaState": false
+  },
+  "notes": [
+    "This file contains public keys only; it is not a keypair, wallet, deploy config, npm config, secret-store reference, or signing instruction.",
+    "Operational signer scope is limited to fee-payer, test, and attestation signing flows that are separately approved through HQ.",
+    "The operational signer is not the chain-observed ProgramData upgrade authority and is not authorized to rewrite programs.",
+    "Read-only mainnet ProgramData evidence identifies the public upgrade authority value only; it does not prove private-key custody, storage class, or approval to use that key."
+  ]
+}
