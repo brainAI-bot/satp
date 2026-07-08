@@ -28,7 +28,7 @@
     "subjectIdentity": {
       "agentId": "rc-s6-fixture-agent",
       "agentIdHash": "6dc0a0a47a40224b9dee426b29cf4b7842a907b005a1f23ecaf35e381e80294f",
-      "genesisPda": "3L1hQV51pJGbhv6ie1aYVZ8T719PUtNGxRMxUJLkc5cY"
+      "genesisPda": "8pCsrc91rvEpee2KqDJNmcAZH6jw8jvasuvQWThKLtXw"
     },
     "accountKind": "solana_wallet",
     "accountRef": "Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc",
@@ -38,11 +38,11 @@
     "expiresAt": 1893456000,
     "enabled": true,
     "pda": {
-      "linkedWallet": "8e5H8euuvzg9nd8TMJn2GxszH2Hvn76S64sY6Z5Pt7Ss",
-      "linkedWalletBump": 254
+      "linkedWallet": "6k55nhm7q9v1PQeQvR9DiFHveaC2iqzxYxYDTYSwT43K",
+      "linkedWalletBump": 255
     },
     "programs": {
-      "identity": "GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG"
+      "identity": "7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ"
     }
   }
 }

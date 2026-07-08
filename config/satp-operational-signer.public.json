@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "satp.signerSeparation.v1",
+  "network": "devnet",
+  "operationalSigner": {
+    "role": "operational_signer",
+    "publicKey": "8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g",
+    "allowedActions": [
+      "devnet_fee_payment",
+      "devnet_transaction_submission",
+      "offline_transaction_preparation",
+      "read_only_rpc"
+    ],
+    "blockedActions": [
+      "authority_transfer",
+      "devnet_deploy",
+      "funds_custody",
+      "funds_transfer",
+      "key_generation",
+      "key_rotation",
+      "mainnet_deploy",
+      "npm_publish",
+      "program_upgrade"
+    ],
+    "authorityBoundary": "no_upgrade_authority_no_key_management_no_funds_custody"
+  },
+  "ownerUpgradeAuthority": {
+    "role": "owner_upgrade_authority",
+    "publicKey": "CSyppbZuGJ4syJcNgyFFhCc3qgbWNWJyL2Y195MNS6J7",
+    "custody": "owner_held",
+    "operationalSignerMayUse": false
+  },
+  "flags": {
+    "publicKeysOnly": true,
+    "readsKeypairs": false,
+    "generatesKeypairs": false,
+    "transfersAuthority": false,
+    "deploysPrograms": false,
+    "publishesPackages": false,
+    "writesSolanaState": false
+  },
+  "notes": [
+    "This file contains public keys only; it is not a keypair, wallet, deploy config, npm config, secret-store reference, or signing instruction.",
+    "Operational signer scope is limited to fee-payer, test, and attestation signing flows that are separately approved through HQ.",
+    "The operational signer is not the chain-observed ProgramData upgrade authority and is not authorized to rewrite programs.",
+    "The ownerUpgradeAuthority custody field is the policy classification required by the public-only signer-separation schema; it is not live custody evidence.",
+    "TASK-bf93ea44 read-only mainnet evidence reports CSyppbZuGJ4syJcNgyFFhCc3qgbWNWJyL2Y195MNS6J7 as the public upgrade authority for the configured six V3 mainnet program IDs.",
+    "The same read-only evidence reports 8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g and Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc as system-owned non-executable accounts.",
+    "PR #92 and this public-only policy prove offline repo policy only; they do not prove live mainnet custody, Bq1ni upgrade control, operational-signer separation from live upgrade authority, private-key storage class, or approval to use any authority key."
+  ]
+}

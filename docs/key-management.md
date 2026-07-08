@@ -92,6 +92,32 @@ SATP code may:
 - accept signer/wallet abstractions explicitly;
 - run read-only verification without private keys.
 
+Low-privilege operational signer config must use the public-only signer
+separation shape in `docs/operational-signer-separation.md`, the checked-in
+public config at `config/satp-operational-signer.public.json`, and the exported
+`buildSignerSeparationConfig()` helper. The current Owner-provisioned
+operational signer public key is
+`8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g`. It may be scoped only to
+fee-payer, test, and attestation signing flows that are separately approved
+through HQ. It must not be reused as the Owner-held upgrade authority, must not
+be authorized to rewrite programs, and must not be configured with keypair
+paths, private keys, seed phrases, authority-transfer actions, deploy actions,
+npm publish, funds custody, or funds transfer.
+
+Read-only mainnet ProgramData evidence may identify a current public upgrade
+authority address, but it does not prove private-key custody, storage class, or
+approval to use that key. TASK-bf93ea44 read-only evidence reports
+`CSyppbZuGJ4syJcNgyFFhCc3qgbWNWJyL2Y195MNS6J7` as the public ProgramData
+upgrade authority for the configured six V3 mainnet program IDs. The same
+read-only evidence reports
+`8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g` and
+`Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc` as system-owned non-executable
+accounts. PR #92 proves only the offline public-key-only repo policy; it does
+not prove live mainnet custody, Bq1ni upgrade control, or operational-signer
+separation from live upgrade authority. Any Owner-held custody assertion,
+authority transfer, deploy, or mainnet use still requires separate HQ approval
+and the pre-mainnet key gate.
+
 ---
 
 ## 6. Rotation runbook

@@ -791,6 +791,7 @@ const {
 } = require('./runtime-policy-adapter');
 const walletControlChallenge = require('./wallet-control-challenge');
 const x402Discovery = require('./x402-discovery');
+const signerPolicy = require('./signer-policy');
 
 // Legacy V3 SDK wrapper — keeps string constructor compatibility while using
 // the local extracted SATPV3SDK implementation so offline tests and consumers
@@ -957,6 +958,11 @@ module.exports = {
   buildX402EvidenceLookup: x402Discovery.buildX402EvidenceLookup,
   buildRuntimePolicyActionDescriptorFromX402Discovery: x402Discovery.buildRuntimePolicyActionDescriptorFromX402Discovery,
   buildRuntimePolicyActionDescriptorFromX402: x402Discovery.buildRuntimePolicyActionDescriptorFromX402,
+  SATP_SIGNER_ROLES: signerPolicy.SATP_SIGNER_ROLES,
+  OPERATIONAL_SIGNER_ALLOWED_ACTIONS: signerPolicy.OPERATIONAL_SIGNER_ALLOWED_ACTIONS,
+  OWNER_UPGRADE_AUTHORITY_BLOCKED_ACTIONS: signerPolicy.OWNER_UPGRADE_AUTHORITY_BLOCKED_ACTIONS,
+  buildSignerSeparationConfig: signerPolicy.buildSignerSeparationConfig,
+  validateSignerSeparationConfig: signerPolicy.validateSignerSeparationConfig,
 
   // Runtime policy adapter (offline/local guardrail helper)
   DECISIONS,

@@ -14,4 +14,9 @@ export {
   buildX402EvidenceLookup,
   buildRuntimePolicyActionDescriptorFromX402Discovery,
   buildRuntimePolicyActionDescriptorFromX402,
+  SATP_SIGNER_ROLES,
+  OPERATIONAL_SIGNER_ALLOWED_ACTIONS,
+  OWNER_UPGRADE_AUTHORITY_BLOCKED_ACTIONS,
+  buildSignerSeparationConfig,
+  validateSignerSeparationConfig,
 } from '@brainai/satp-client';

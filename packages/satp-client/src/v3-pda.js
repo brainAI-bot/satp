@@ -6,19 +6,19 @@ const crypto = require('crypto');
 // ═══════════════════════════════════════════════════
 
 const V3_DEVNET_PROGRAM_IDS = {
-  IDENTITY: new PublicKey('GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG'),
-  REVIEWS: new PublicKey('r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4'),
-  REPUTATION: new PublicKey('2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ'),
-  ATTESTATIONS: new PublicKey('6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD'),
-  VALIDATION: new PublicKey('6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV'),
-  ESCROW: new PublicKey('HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C'),
+  IDENTITY: new PublicKey('7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ'),
+  REVIEWS: new PublicKey('3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk'),
+  REPUTATION: new PublicKey('CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9'),
+  ATTESTATIONS: new PublicKey('55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw'),
+  VALIDATION: new PublicKey('DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj'),
+  ESCROW: new PublicKey('B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg'),
 };
 
 // Mainnet registry source: Anchor.toml [programs.mainnet], checked by
 // scripts/verify-v3-program-sources.mjs and docs/v3-program-source-verification.md.
 // docs/mainnet-authority-decision-packet-6c8a5545.md remains the owner-gating
-// packet for deploy/key/publish actions; these SDK constants do not authorize
-// any Solana write or reuse any legacy V2 MAINNET_PROGRAM_IDS fallback.
+// packet for deploy/key/publish actions. Keep V3 separate from legacy V2
+// MAINNET_PROGRAM_IDS in constants.js; do not fall back to V2 program IDs.
 const V3_MAINNET_PROGRAM_IDS = {
   IDENTITY: new PublicKey('GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG'),
   REVIEWS: new PublicKey('r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4'),
@@ -59,10 +59,7 @@ function getV3ProgramIds(network = 'devnet') {
   if (network !== 'devnet' && network !== 'mainnet') {
     throw new Error('Invalid network: expected devnet or mainnet');
   }
-  if (network === 'mainnet') {
-    return V3_MAINNET_PROGRAM_IDS;
-  }
-  return V3_DEVNET_PROGRAM_IDS;
+  return network === 'mainnet' ? V3_MAINNET_PROGRAM_IDS : V3_DEVNET_PROGRAM_IDS;
 }
 
 // ═══════════════════════════════════════════════════
