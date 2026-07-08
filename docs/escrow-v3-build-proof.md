@@ -16,7 +16,7 @@ cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.t
 Artifact hash from the successful local build:
 
 ```text
-daf07a824ce5424e21e54bf8e38bd9ac248c2ed169bf78d9fd4fa468435f9ce0  target/deploy/escrow_v3.so
+fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31  target/deploy/escrow_v3.so
 ```
 
 Lockfile compatibility pins keep proc-macro TOML parser crates on
