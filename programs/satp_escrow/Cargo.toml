@@ -19,5 +19,5 @@ no-log-ix-name = []
 idl-build = ["anchor-lang/idl-build"]
 
 [dependencies]
-anchor-lang = "0.31.1"
+anchor-lang = "=0.31.1"
 solana-program = "=2.1.21"
