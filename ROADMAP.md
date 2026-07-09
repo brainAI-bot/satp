@@ -113,8 +113,9 @@ conformance, security, release, and mainnet authority gates remain open.
   — NO multisig and no agent co-signer (the audits' multisig reco is declined; risk-accepted). This resolves
   the packet's upgrade-custody question. [#71a5c329] [shipped]
 - Mainnet authority, upgrade, fee-payer, escrow/funds authority, and issuer
-  separation: Owner signature on the decision packet above is required before
-  any mainnet deploy or value-bearing action. [#e0556f1f] [blocked] · owner-gated
+  separation: Owner approved the decision-packet close via REQ-95b3cba7.
+  Mainnet deploys, value-bearing actions, keypair use, npm publish, and
+  production key actions still require separate explicit approval. [#e0556f1f] [shipped]
 - Verify npm publish readiness with evidence in the release packet: CI proof,
   package metadata, release notes, ownership, and dist-tag strategy. [#d7b0e5f9] [shipped]
 - Npm publish itself: waits on a separate Owner publish approval. [blocked] ·
