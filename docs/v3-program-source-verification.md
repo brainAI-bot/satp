@@ -37,6 +37,12 @@ nested IDL JSON files, and rejects committed `.env`, memory, target,
 program tree. The Rust workspace check requires Rust 1.89.0 or newer because
 the resolved Solana crate set rejects older compilers.
 
+Current post-merge source tree SHA-256:
+
+```text
+da3540f726a72228f5082c15807a6a3cbf8d0393cf7febddf4a8c5824af05037
+```
+
 The `escrow_v3` SBF proof requires platform-tools `v1.52`; the Solana CLI
 2.1.21 default platform-tools are too old for the Solana 3.x dependency graph
 and fail before compilation on edition-2024 transitive crates.
