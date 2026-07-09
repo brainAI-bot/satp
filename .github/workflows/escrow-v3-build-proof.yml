@@ -1,0 +1,77 @@
+name: Escrow V3 Build Proof
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/escrow-v3-build-proof.yml"
+      - "Anchor.toml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "programs/escrow_v3/**"
+      - "docs/escrow-v3-build-proof.md"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/escrow-v3-build-proof.yml"
+      - "Anchor.toml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "programs/escrow_v3/**"
+      - "docs/escrow-v3-build-proof.md"
+
+permissions:
+  contents: read
+
+env:
+  SOLANA_VERSION: "2.1.21"
+  SBF_TOOLS_VERSION: "v1.52"
+
+jobs:
+  escrow-v3-build-proof:
+    name: Escrow V3 build proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust 1.86.0
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: "1.86.0"
+          components: rustfmt, clippy
+
+      - name: Cache Cargo registry and git indexes
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-indexes-${{ runner.os }}-${{ hashFiles('**/Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml') }}
+
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v${SOLANA_VERSION}/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+
+      - name: Verify pinned build toolchain
+        run: |
+          rustc --version
+          cargo --version
+          solana --version
+          cargo build-sbf --version
+
+      - name: Prepare Solana platform-tools cache
+        run: mkdir -p "$HOME/.cache/solana"
+
+      - name: Build escrow_v3 program
+        run: cargo build-sbf --tools-version "${SBF_TOOLS_VERSION}" --manifest-path programs/escrow_v3/Cargo.toml
+
+      - name: Emit escrow_v3 artifact hash
+        run: |
+          test -f target/deploy/escrow_v3.so
+          shasum -a 256 target/deploy/escrow_v3.so
