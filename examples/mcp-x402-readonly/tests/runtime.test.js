@@ -16,6 +16,14 @@ const { createSatpMcpX402Server } = require('../src/server');
 
 const FIXTURE_WALLET = '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG';
 const FIXTURE_HASH = '4d9678a7869c25f26a2e38e43f70fc7d0c4142d20b1743a43e50cd8fd012f3d7';
+const DEVNET_PROGRAMS = {
+  identity: '7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ',
+  reviews: '3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk',
+  reputation: 'CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9',
+  attestations: '55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw',
+  validation: 'DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj',
+  escrow: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
+};
 const originalRpcEnv = process.env.SATP_EXAMPLE_ALLOW_RPC;
 
 let restrictedActionAttempted = false;
@@ -55,7 +63,7 @@ test('satp.getPrograms returns fixture-matched read-only program IDs', () => {
   const result = runtime.getPrograms({ network: 'devnet' });
   assert.equal(result.mode, 'readonly-fixture');
   assert.equal(result.fixtureMatchesSdk, true);
-  assert.equal(result.programs.identity, 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG');
+  assert.deepEqual(result.programs, DEVNET_PROGRAMS);
 });
 
 test('satp.resolveIdentity uses fixtures by default', async () => {
