@@ -1,6 +1,7 @@
 # SATP V3 SDK - `@brainai/satp-client`
 
-**Solana Agent Token Protocol** - JavaScript/TypeScript SDK for interacting with the SATP V3 devnet programs.
+**Solana Agent Trust Protocol** - JavaScript/TypeScript SDK for reading and
+building reviewed SATP V3 program interactions.
 
 Current stable npm package: **@brainai/satp-client@2.0.1** | reviewed rc artifact: **@brainai/satp-client@2.0.2-rc.0** | Programs: **6**
 
@@ -49,9 +50,12 @@ npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>
 The old `0.0.0-extraction` label was extraction-branch metadata and is not the
 current consumer package. Do not treat branch-only Git installs as npm latest.
 
-Mainnet program IDs are intentionally not enabled in this release candidate.
-Constructors and helpers fail closed for `network: 'mainnet'` until an approved
-mainnet decision packet provides production program IDs.
+Mainnet program IDs are present for the reviewed V3 registry, but availability
+is not action approval. Mainnet writes, deploys, keypair use, authority changes,
+value-bearing escrow actions, npm promotion, and production claims still require
+a separate HQ approval and the relevant owner-gated runbook. See
+`docs/mainnet-authority-decision-packet-6c8a5545.md` for the public authority
+decision packet.
 
 RC-S6 semantic uncertainty outcomes are covered by the offline conformance gate
 merged in `93db1b3` (PR #53, `[#43394290]`) and runnable with
@@ -65,6 +69,10 @@ escrow readiness, mainnet readiness, npm latest adoption, or product approval.
 **Runtime dependency:** `@solana/web3.js ^1.98.4`
 
 ## Quick Start
+
+For the root consumer quickstart covering stable npm, rc validation, Git-review
+pins, read-only trust packets, conformance checks, and network boundaries, see
+[`docs/quickstart.md`](../../docs/quickstart.md).
 
 ```javascript
 const { SATPV3SDK } = require('@brainai/satp-client');
@@ -455,7 +463,7 @@ node test-v3-devnet.js
 # CPI integration tests (35)
 cd .. && node tests/devnet-cpi-integration.js
 
-# Release-safety defaults and mainnet fail-closed checks
+# Release-safety defaults and network-boundary checks
 node test-release-safety.js
 ```
 

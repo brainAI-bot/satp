@@ -58,6 +58,7 @@
   },
   "files": [
     "README.md",
+    "docs/quickstart.md",
     "docs/agentfolio-consumption-readiness.md",
     "docs/package-boundary.md",
     "docs/runtime-policy-adapter-v0.md",

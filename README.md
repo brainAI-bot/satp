@@ -56,6 +56,39 @@ remains private: true, and exposes packages/satp-client/src/index.js plus
 packages/satp-client/src/index.d.ts through the package exports map. Do not
 treat a branch-only Git dependency as npm latest.
 
+## Quickstart
+
+Install the stable client package, then start with an offline read-only trust
+packet. This flow performs no RPC write, signing, live x402 payment, Solana
+deploy, keypair access, or npm publish.
+
+```bash
+npm install @brainai/satp-client@2.0.1
+```
+
+```js
+const {
+  buildSatpTrustPacket,
+  validateSatpTrustPacket,
+} = require('@brainai/satp-client');
+
+const packet = buildSatpTrustPacket({
+  subjectWallet: '11111111111111111111111111111111',
+  agentId: 'brainChain',
+  claimType: 'identity',
+  metadataHash: '93d122f8879fe87c186c10a00db8fbc80a73cecd2ede44b9ffa6410be3c2b805',
+  network: 'devnet',
+});
+
+const validation = validateSatpTrustPacket(packet);
+if (!validation.ok) throw new Error(validation.errors.join('; '));
+console.log(packet.mode);
+```
+
+For a longer consumer walkthrough covering stable npm, release candidates,
+Git-review pins, conformance checks, and network boundaries, see
+[`docs/quickstart.md`](./docs/quickstart.md).
+
 ## API Surface
 
     const {
