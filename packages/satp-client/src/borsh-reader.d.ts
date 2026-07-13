@@ -45,7 +45,7 @@ export interface ParsedGenesisRecord {
   faceBurnTx: string | null;
   genesisRecord: number;
   isBorn: boolean;
-  isActive: boolean;
+  isActive: boolean | null;
   authority: string;
   pendingAuthority: string | null;
   reputationScore: number;
@@ -55,6 +55,8 @@ export interface ParsedGenesisRecord {
   createdAt: number;
   updatedAt: number;
   bump: number;
+  layout: 'idl-with-is-active' | 'deployed-no-is-active';
+  hasIsActiveField: boolean;
 }
 
 export interface ParsedLinkedWallet {

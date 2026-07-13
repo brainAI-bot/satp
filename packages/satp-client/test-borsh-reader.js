@@ -174,6 +174,15 @@ console.log('\n=== BorshReader Primitives ===');
 }
 
 {
+  const buf = Buffer.alloc(9);
+  buf.writeBigUInt64LE(BigInt(42), 0);
+  buf.writeUInt8(7, 8);
+  const r = new BorshReader(buf);
+  assertEqual(r.readU64(), 42, 'readU64');
+  assertEqual(r.readU8(), 7, 'readU64 advances offset');
+}
+
+{
   const buf = Buffer.alloc(8);
   buf.writeBigInt64LE(BigInt(-123456));
   const r = new BorshReader(buf);
@@ -304,11 +313,48 @@ console.log('\n=== GenesisRecord ===');
   assertEqual(parsed.faceBurnTx, '5xBcD...sig', 'genesis: faceBurnTx');
   assertEqual(parsed.isBorn, true, 'genesis: isBorn');
   assertEqual(parsed.isActive, true, 'genesis: isActive');
+  assertEqual(parsed.layout, 'idl-with-is-active', 'genesis: IDL layout');
+  assertEqual(parsed.hasIsActiveField, true, 'genesis: has isActive field');
   assertEqual(parsed.authority, TEST_PUBKEY_2, 'genesis: authority');
   assertEqual(parsed.pendingAuthority, null, 'genesis: pendingAuthority null');
   assertEqual(parsed.reputationScore, 8500, 'genesis: reputationScore');
   assertEqual(parsed.verificationLevel, 3, 'genesis: verificationLevel');
   assertEqual(parsed.bump, 255, 'genesis: bump');
+}
+
+{
+  // GenesisRecord deployed-layout decoder path without the historical is_active byte.
+  const disc = anchorAccountDisc('GenesisRecord');
+  const data = Buffer.concat([
+    disc,
+    writeBytes32(TEST_HASH),
+    writeString('NoActiveByteAgent'),
+    writeString('deployed layout'),
+    writeString('utility'),
+    writeVecString(['decode']),
+    writeString(''),
+    writeString(''),
+    writePubkey(PublicKey.default.toBase58()),
+    writeString(''),
+    writeI64(NOW),
+    writePubkey(TEST_PUBKEY_2),
+    writeOptionPubkey(null),
+    writeU64(100),
+    writeU8(1),
+    writeI64(NOW - 10),
+    writeI64(NOW - 9),
+    writeI64(NOW - 100),
+    writeI64(NOW),
+    writeU8(201),
+  ]);
+
+  const parsed = deserializeGenesisRecord(data);
+  assertEqual(parsed.agentName, 'NoActiveByteAgent', 'genesis deployed: agentName');
+  assertEqual(parsed.layout, 'deployed-no-is-active', 'genesis deployed: layout');
+  assertEqual(parsed.hasIsActiveField, false, 'genesis deployed: no isActive field');
+  assertEqual(parsed.isActive, null, 'genesis deployed: isActive unknown');
+  assertEqual(parsed.authority, TEST_PUBKEY_2, 'genesis deployed: authority aligned');
+  assertEqual(parsed.reputationScore, 100, 'genesis deployed: reputation aligned');
 }
 
 {

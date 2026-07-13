@@ -78,15 +78,33 @@ const v2Default = new SATPSDK();
 assert.equal(v2Default.network, 'devnet');
 assert.equal(v2Default.rpcUrl, DEVNET_RPC);
 
+assert.throws(
+  () => new SATPSDK({ network: 'mainnet' }),
+  /Legacy SATPSDK V2 mainnet access is fenced/
+);
+
+const v2MainnetExplicit = new SATPSDK({ network: 'mainnet', allowLegacyV2Mainnet: true });
+assert.equal(v2MainnetExplicit.network, 'mainnet');
+assert.equal(v2MainnetExplicit.rpcUrl, MAINNET_RPC);
+
 const v2Custom = new SATPSDK({ rpcUrl: CUSTOM_RPC });
 assert.equal(v2Custom.network, 'devnet');
 assert.equal(v2Custom.rpcUrl, CUSTOM_RPC);
 
-const v2MainnetIds = getProgramIds('mainnet');
+assert.throws(
+  () => getProgramIds('mainnet'),
+  /Legacy SATP V2 mainnet program IDs are fenced/
+);
+assert.throws(
+  () => require('./src/constants').MAINNET_PROGRAM_IDS.IDENTITY,
+  /Legacy SATP V2 mainnet program IDs are fenced/
+);
+
+const v2MainnetIds = getProgramIds('mainnet', { allowLegacyV2Mainnet: true });
 assert.equal(v2MainnetIds.ESCROW, null);
 assert.throws(
   () => getEscrowPDA('11111111111111111111111111111112', Buffer.alloc(32), 'mainnet'),
-  /mainnet escrow program ID is not configured/
+  /Legacy SATP V2 mainnet program IDs are fenced/
 );
 
 for (const [name, value] of Object.entries({

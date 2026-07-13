@@ -467,6 +467,7 @@ export interface SATSDKOptions {
   network?: Network;
   rpcUrl?: string;
   commitment?: 'processed' | 'confirmed' | 'finalized';
+  allowLegacyV2Mainnet?: boolean;
 }
 
 export interface V2Identity {

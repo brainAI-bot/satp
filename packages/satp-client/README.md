@@ -56,6 +56,10 @@ a separate HQ approval and the relevant owner-gated runbook. See
 `docs/mainnet-authority-decision-packet-6c8a5545.md` for the public authority
 decision packet.
 
+Legacy `SATPSDK` is V2-only compatibility. It defaults to devnet and rejects
+`network: 'mainnet'` unless `allowLegacyV2Mainnet: true` is passed explicitly.
+New integrations should prefer `SATPV3SDK` or `createSATPClient`.
+
 RC-S6 semantic uncertainty outcomes are covered by the offline conformance gate
 merged in `93db1b3` (PR #53, `[#43394290]`) and runnable with
 `npm run test:conformance:rc-s6` from the repository root. Treat positive
@@ -549,6 +553,10 @@ const acct = await conn.getAccountInfo(new PublicKey('...'));
 const genesis = deserializeGenesisRecord(acct.data);
 console.log(genesis.agentName, genesis.reputationScore, genesis.isBorn);
 ```
+
+Genesis parsing is layout-aware for RC-S6 review. Parsed records include
+`layout` and `hasIsActiveField`; `isActive` is `null` when the account bytes do
+not carry the historical `is_active` field.
 
 ### Usage: Auto-detect Account Type
 

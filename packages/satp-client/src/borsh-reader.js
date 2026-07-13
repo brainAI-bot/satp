@@ -64,8 +64,9 @@ class BorshReader {
 
   /** Read u64 LE → number (safe for values < 2^53) */
   readU64() {
-    return Number(this.buf.readBigUInt64LE(this.offset));
-    // Note: offset advanced after return won't work — fix:
+    const val = Number(this.buf.readBigUInt64LE(this.offset));
+    this.offset += 8;
+    return val;
   }
 
   /** Read u64 LE → number, advances offset */
@@ -185,7 +186,7 @@ class BorshReader {
  * @param {Buffer} data - Raw account data (with 8-byte discriminator)
  * @returns {object} Parsed GenesisRecord
  */
-function deserializeGenesisRecord(data) {
+function parseGenesisRecordLayout(data, includeIsActive) {
   const r = new BorshReader(data).skipDiscriminator();
 
   const agentIdHash = r.readFixedBytes32();
@@ -198,7 +199,7 @@ function deserializeGenesisRecord(data) {
   const faceMint = r.readPubkey();
   const faceBurnTx = r.readString();
   const genesisRecord = r.readI64();
-  const isActive = r.readBool();
+  const isActive = includeIsActive ? r.readBool() : null;
   const authority = r.readPubkeyBase58();
   const pendingAuthority = r.readOptionPubkey();
   const reputationScore = r.readU64Num();
@@ -208,6 +209,10 @@ function deserializeGenesisRecord(data) {
   const createdAt = r.readI64();
   const updatedAt = r.readI64();
   const bump = r.readU8();
+
+  if (r.remaining() !== 0) {
+    throw new Error(`GenesisRecord layout left ${r.remaining()} unread bytes`);
+  }
 
   return {
     agentIdHash: agentIdHash.toString('hex'),
@@ -231,7 +236,21 @@ function deserializeGenesisRecord(data) {
     createdAt,
     updatedAt,
     bump,
+    layout: includeIsActive ? 'idl-with-is-active' : 'deployed-no-is-active',
+    hasIsActiveField: includeIsActive,
   };
+}
+
+function deserializeGenesisRecord(data) {
+  const errors = [];
+  for (const includeIsActive of [true, false]) {
+    try {
+      return parseGenesisRecordLayout(data, includeIsActive);
+    } catch (e) {
+      errors.push(e.message);
+    }
+  }
+  throw new Error(`Unable to deserialize GenesisRecord with known layouts: ${errors.join('; ')}`);
 }
 
 /**
