@@ -240,6 +240,38 @@ function checkNoMutationIndicators(value, errors, details, location = 'record') 
   }
 }
 
+function checkNoAuthorityGrantInvariant(value, errors, details, location = 'record') {
+  if (!value || typeof value !== 'object') return;
+  for (const [key, child] of Object.entries(value)) {
+    const normalizedKey = key.toLowerCase();
+    const childLocation = location + '.' + key;
+    if (normalizedKey === 'network' && child === 'mainnet') {
+      addError(errors, details, 'noAuthorityGrantInvariant', childLocation + ' must not be mainnet');
+    }
+    if (['maindeploy', 'mainnetdeploy', 'deploy', 'deployment', 'keypair', 'secretkey', 'packagepublish', 'npmpublish', 'publish'].includes(normalizedKey) && child) {
+      addError(errors, details, 'noAuthorityGrantInvariant', childLocation + ' must not be present/truthy');
+    }
+    if (['signingrequired', 'transactionrequired', 'writesrequired', 'livepaymentrequired', 'valuebearingready'].includes(normalizedKey) && child !== false) {
+      addError(errors, details, 'noAuthorityGrantInvariant', childLocation + ' must be false');
+    }
+    if ((normalizedKey === 'signers' || normalizedKey === 'instructions') && Array.isArray(child) && child.length > 0) {
+      addError(errors, details, 'noAuthorityGrantInvariant', childLocation + ' must be empty');
+    }
+    if (normalizedKey === 'transaction' && child !== null && child !== undefined) {
+      addError(errors, details, 'noAuthorityGrantInvariant', childLocation + ' must be null');
+    }
+    if (childLocation.toLowerCase().includes('escrow') && normalizedKey === 'state' && ['funded', 'released', 'activated'].includes(child)) {
+      addError(errors, details, 'noAuthorityGrantInvariant', childLocation + ' must remain reference-only');
+    }
+    if (['productionconsumerreplacement', 'prodconsumerreplacement', 'consumerreplacement', 'replaceproductionconsumer'].includes(normalizedKey) && child) {
+      addError(errors, details, 'noAuthorityGrantInvariant', childLocation + ' must not be present/truthy');
+    }
+    if (child && typeof child === 'object') {
+      checkNoAuthorityGrantInvariant(child, errors, details, childLocation);
+    }
+  }
+}
+
 function validateIdentity(record, errors, details) {
   checkSchema(record, 'satp.identity.v1', errors, details);
   checkNetwork(record, errors, details);
@@ -520,6 +552,11 @@ function validateFixture(fixture) {
     boundaryVerdict = validateAgentFolioCopyBoundary(record, errors, details);
   } else {
     addError(errors, details, 'recordType', 'unsupported recordType');
+  }
+
+  checkNoAuthorityGrantInvariant(fixture, errors, details, 'fixture');
+  if (!details.has('noAuthorityGrantInvariant') && !errors.some((error) => error.startsWith('noAuthorityGrantInvariant:'))) {
+    addDetail(details, 'noAuthorityGrantInvariant');
   }
 
   const verdict = errors.length > 0 ? 'fail' : boundaryVerdict || 'pass';
