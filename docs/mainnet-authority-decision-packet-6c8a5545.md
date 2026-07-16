@@ -35,7 +35,7 @@ The SDK exposes these six V3 program IDs from `getV3ProgramIds('mainnet')`. They
 | Reputation V3 | `2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ` | Ratify `Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc`. |
 | Attestations V3 | `6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD` | Ratify `Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc`. |
 | Validation V3 | `6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV` | Ratify `Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc`. |
-| Escrow V3 | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | Ratify `Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc`; escrow is live and must be ratified or migrated. |
+| Escrow V3 | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` | Ratify `Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc`; escrow is live and must be ratified or migrated. |
 
 The SDK also contains these five legacy V2 mainnet constants. They are not the V3 target surface, but they are live SATP mainnet programs and are included in the 11-program authority ratification.
 

@@ -20,6 +20,10 @@ const programs = [
   'escrow_v3',
 ];
 
+const programAddresses = {
+  escrow_v3: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
+};
+
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
 }
@@ -94,6 +98,9 @@ function generate(program) {
   const idl = extractIdl(output, program);
   if (idl.metadata?.name !== program) {
     throw new Error(`${program}: metadata.name mismatch: ${idl.metadata?.name}`);
+  }
+  if (programAddresses[program]) {
+    idl.address = programAddresses[program];
   }
   return idl;
 }
