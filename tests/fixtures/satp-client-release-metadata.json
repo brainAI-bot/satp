@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-06-27T13:52:20Z",
+  "checkedAt": "2026-07-16T09:49:01Z",
   "package": "@brainai/satp-client",
-  "stableLatest": "2.0.1",
+  "stableLatest": "2.0.3",
   "rcDistTag": "0.1.0-rc.0",
-  "nextReleaseCandidate": "2.0.2-rc.0"
+  "nextReleaseCandidate": null
 }

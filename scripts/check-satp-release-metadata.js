@@ -42,11 +42,12 @@ const local = parseVersion(pkg.version);
 const stable = parseVersion(fixture.stableLatest);
 
 assert.equal(pkg.name, fixture.package, 'release metadata package name mismatch');
-assert.equal(pkg.private, false, 'SATP client release candidate must be publishable');
-assert.equal(pkg.publishConfig && pkg.publishConfig.tag, 'rc', 'release candidate must publish with rc dist-tag only');
-assert.match(pkg.version, /-rc\.\d+$/, 'SATP client version must be an rc prerelease');
-assert.equal(pkg.version, fixture.nextReleaseCandidate, 'local SATP client version must match reconciled RC fixture');
-assert(compareCoreVersions(local, stable) > 0, `local RC ${pkg.version} must be newer than stable latest ${fixture.stableLatest}`);
+assert.equal(pkg.private, false, 'SATP client stable package must be publishable');
+assert.equal(pkg.publishConfig && pkg.publishConfig.access, 'public', 'stable package must keep public package access');
+assert.equal(pkg.publishConfig && pkg.publishConfig.tag, undefined, 'stable package must not force the rc dist-tag');
+assert.equal(local.prerelease, '', 'SATP client stable version must not be an rc prerelease');
+assert.equal(pkg.version, fixture.stableLatest, 'local SATP client version must match npm stable latest fixture');
+assert(compareCoreVersions(local, stable) === 0, `local stable ${pkg.version} must match stable latest ${fixture.stableLatest}`);
 
 for (const relativePath of dependentWorkspacePaths) {
   const workspacePackage = readJson(path.join(repoRoot, relativePath));
@@ -57,4 +58,4 @@ for (const relativePath of dependentWorkspacePaths) {
   );
 }
 
-console.log(`SATP release metadata OK: ${pkg.name}@${pkg.version} is newer than npm latest ${fixture.stableLatest}; publishConfig.tag=rc`);
+console.log(`SATP release metadata OK: ${pkg.name}@${pkg.version} matches npm latest ${fixture.stableLatest}; publishConfig.access=public`);

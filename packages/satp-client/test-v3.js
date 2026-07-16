@@ -58,7 +58,7 @@ assert(mainnetIds.REVIEWS.toBase58() === 'r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoS
 assert(mainnetIds.REPUTATION.toBase58() === '2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ', 'Reputation V3 mainnet program ID');
 assert(mainnetIds.ATTESTATIONS.toBase58() === '6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD', 'Attestations V3 mainnet program ID');
 assert(mainnetIds.VALIDATION.toBase58() === '6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV', 'Validation V3 mainnet program ID');
-assert(mainnetIds.ESCROW.toBase58() === 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C', 'Escrow V3 mainnet program ID');
+assert(mainnetIds.ESCROW.toBase58() === 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg', 'Escrow V3 mainnet program ID');
 
 try {
   getV3ProgramIds('testnet');
