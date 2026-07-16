@@ -67,7 +67,7 @@ assert.equal(v3MainnetIds.REVIEWS.toBase58(), 'r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckq
 assert.equal(v3MainnetIds.REPUTATION.toBase58(), '2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ');
 assert.equal(v3MainnetIds.ATTESTATIONS.toBase58(), '6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD');
 assert.equal(v3MainnetIds.VALIDATION.toBase58(), '6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV');
-assert.equal(v3MainnetIds.ESCROW.toBase58(), 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C');
+assert.equal(v3MainnetIds.ESCROW.toBase58(), 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg');
 
 assert.throws(
   () => getV3ProgramIds('testnet'),

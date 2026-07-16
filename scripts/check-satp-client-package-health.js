@@ -76,7 +76,8 @@ function readPackageMetadata() {
   assert(metadata.exports['./wallet-control-challenge'], 'wallet-control subpath export must be declared');
   assert(metadata.exports['./x402-discovery'], 'x402-discovery subpath export must be declared');
   assert(Array.isArray(metadata.files) && metadata.files.includes('src/'), 'files must include src/');
-  assert(metadata.publishConfig && metadata.publishConfig.tag === 'rc', 'publishConfig.tag must remain rc');
+  assert(metadata.publishConfig && metadata.publishConfig.access === 'public', 'publishConfig.access must remain public');
+  assert(!('tag' in metadata.publishConfig), 'stable package metadata must not force the rc dist-tag');
 }
 
 function auditProductionDependencies() {
