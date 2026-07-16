@@ -150,7 +150,7 @@ conformance, security, release, and mainnet authority gates remain open.
   [#3653fd5a] [shipped]
 - INVARIANT: RC-S6 core does not authorize mainnet deploys, signing flows,
   escrow activation, keypair movement, package publish, or production consumer
-  replacement. [#26179beb] [blocked] · owner-gated
+  replacement. [pending]
 
 ## Phase 7 - On-chain program completion (open-core)
 
