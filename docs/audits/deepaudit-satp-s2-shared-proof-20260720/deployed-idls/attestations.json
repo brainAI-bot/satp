@@ -1,0 +1,454 @@
+{
+  "accounts": [
+    {
+      "discriminator": [
+        152,
+        125,
+        183,
+        86,
+        36,
+        146,
+        121,
+        73
+      ],
+      "name": "Attestation"
+    }
+  ],
+  "address": "9xT3eNcndkmnqZtJqDQ1ggckHK7Dxo5EsAt5mHqsPBhP",
+  "errors": [
+    {
+      "code": 6000,
+      "msg": "Attestation type must be 64 characters or less",
+      "name": "TypeTooLong"
+    },
+    {
+      "code": 6001,
+      "msg": "Proof data must be 512 characters or less",
+      "name": "ProofDataTooLong"
+    },
+    {
+      "code": 6002,
+      "msg": "Expiry must be in the future",
+      "name": "ExpiryInPast"
+    },
+    {
+      "code": 6003,
+      "msg": "Attestation already revoked",
+      "name": "AlreadyRevoked"
+    }
+  ],
+  "events": [
+    {
+      "discriminator": [
+        217,
+        170,
+        19,
+        203,
+        128,
+        51,
+        29,
+        163
+      ],
+      "name": "AttestationCreated"
+    },
+    {
+      "discriminator": [
+        47,
+        106,
+        65,
+        238,
+        200,
+        127,
+        163,
+        50
+      ],
+      "name": "AttestationRevoked"
+    },
+    {
+      "discriminator": [
+        98,
+        148,
+        167,
+        161,
+        88,
+        59,
+        107,
+        231
+      ],
+      "name": "AttestationVerified"
+    }
+  ],
+  "instructions": [
+    {
+      "accounts": [
+        {
+          "name": "attestation",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "agent_id"
+              },
+              {
+                "kind": "account",
+                "path": "issuer"
+              },
+              {
+                "kind": "arg",
+                "path": "attestation_type"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "issuer",
+          "signer": true,
+          "writable": true
+        },
+        {
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "agent_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "attestation_type",
+          "type": "string"
+        },
+        {
+          "name": "proof_data",
+          "type": "string"
+        },
+        {
+          "name": "expires_at",
+          "type": {
+            "option": "i64"
+          }
+        }
+      ],
+      "discriminator": [
+        49,
+        24,
+        67,
+        80,
+        12,
+        249,
+        96,
+        239
+      ],
+      "docs": [
+        "Create an attestation for an agent (issuer pays)"
+      ],
+      "name": "create_attestation"
+    },
+    {
+      "accounts": [
+        {
+          "name": "attestation",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "agent_id"
+              },
+              {
+                "kind": "account",
+                "path": "reviews_authority"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  118,
+                  105,
+                  101,
+                  119
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "reviewer"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "docs": [
+            "The Reviews program's PDA authority — must sign via CPI"
+          ],
+          "name": "reviews_authority",
+          "signer": true
+        },
+        {
+          "docs": [
+            "Payer for the attestation account rent (the reviewer via CPI)"
+          ],
+          "name": "payer",
+          "signer": true,
+          "writable": true
+        },
+        {
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "agent_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "reviewer",
+          "type": "pubkey"
+        },
+        {
+          "name": "rating",
+          "type": "u8"
+        }
+      ],
+      "discriminator": [
+        10,
+        168,
+        98,
+        89,
+        138,
+        54,
+        148,
+        202
+      ],
+      "docs": [
+        "CPI-only: Called by the Reviews program to auto-create an attestation",
+        "when a review is submitted. The attestation is auto-verified since it's",
+        "programmatic (not human-issued).",
+        "",
+        "Authority must be the Reviews program's PDA signer (\"reviews_authority\")."
+      ],
+      "name": "create_review_attestation"
+    },
+    {
+      "accounts": [
+        {
+          "name": "attestation",
+          "writable": true
+        },
+        {
+          "name": "issuer",
+          "relations": [
+            "attestation"
+          ],
+          "signer": true
+        }
+      ],
+      "args": [],
+      "discriminator": [
+        12,
+        156,
+        103,
+        161,
+        194,
+        246,
+        211,
+        179
+      ],
+      "docs": [
+        "Revoke an attestation (issuer only)"
+      ],
+      "name": "revoke_attestation"
+    },
+    {
+      "accounts": [
+        {
+          "name": "attestation",
+          "writable": true
+        },
+        {
+          "name": "issuer",
+          "relations": [
+            "attestation"
+          ],
+          "signer": true
+        }
+      ],
+      "args": [],
+      "discriminator": [
+        144,
+        30,
+        116,
+        186,
+        33,
+        176,
+        35,
+        60
+      ],
+      "docs": [
+        "Verify an attestation (issuer only)"
+      ],
+      "name": "verify_attestation"
+    }
+  ],
+  "metadata": {
+    "description": "SATP Attestations — on-chain attestation proofs",
+    "name": "attestations",
+    "spec": "0.1.0",
+    "version": "0.1.0"
+  },
+  "types": [
+    {
+      "name": "Attestation",
+      "type": {
+        "fields": [
+          {
+            "name": "agent_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "attestation_type",
+            "type": "string"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "proof_data",
+            "type": "string"
+          },
+          {
+            "name": "verified",
+            "type": "bool"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "expires_at",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "is_revoked",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "AttestationCreated",
+      "type": {
+        "fields": [
+          {
+            "name": "agent_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "attestation_type",
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "AttestationRevoked",
+      "type": {
+        "fields": [
+          {
+            "name": "agent_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "attestation_type",
+            "type": "string"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "AttestationVerified",
+      "type": {
+        "fields": [
+          {
+            "name": "agent_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "attestation_type",
+            "type": "string"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ],
+        "kind": "struct"
+      }
+    }
+  ]
+}

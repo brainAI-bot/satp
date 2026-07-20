@@ -1,0 +1,150 @@
+{
+  "task": "REDO-DEEPAUDIT-SATP-S2-SHARED-PROOF-20260720-1237Z",
+  "source_task": "DEEPAUDIT-SATP-S2-DEPLOYED-IDL-REGEN-20260720-1158Z",
+  "generated_at_utc": "2026-07-20T13:38:53.604Z",
+  "solana_source": "Anchor IDL accounts fetched from devnet with anchor idl fetch; no transaction/signature/keypair used.",
+  "programs": [
+    {
+      "program": "attestations",
+      "program_id": "9xT3eNcndkmnqZtJqDQ1ggckHK7Dxo5EsAt5mHqsPBhP",
+      "source_idl_path": "idls/attestations.json",
+      "fetched_deployed_idl_path": "docs/audits/deepaudit-satp-s2-shared-proof-20260720/deployed-idls/attestations.json",
+      "source_sha256": "76bde8db8f698503ae1edfa2ec5373e5f3641c70d06fcd5522ae601a40e6e349",
+      "fetched_deployed_sha256": "83345acdba96101d49ff82af1bdd6ea266638ecd1ac8afb1e819183178178bf9",
+      "metadata_name_match": true,
+      "address_match": true,
+      "instruction_count": {
+        "source": 3,
+        "deployed": 4
+      },
+      "account_count": {
+        "source": 1,
+        "deployed": 1
+      },
+      "type_count": {
+        "source": 4,
+        "deployed": 4
+      },
+      "instructions_only_in_deployed": [
+        "create_review_attestation"
+      ],
+      "instructions_only_in_source": [],
+      "accounts_only_in_deployed": [],
+      "accounts_only_in_source": [],
+      "types_only_in_deployed": [],
+      "types_only_in_source": []
+    },
+    {
+      "program": "identity_registry",
+      "program_id": "EJtQh4Gyg88zXvSmFpxYkkeZsPwTsjfm4LvjmPQX1FD3",
+      "source_idl_path": "idls/identity_registry.json",
+      "fetched_deployed_idl_path": "docs/audits/deepaudit-satp-s2-shared-proof-20260720/deployed-idls/identity_registry.json",
+      "source_sha256": "ffc5ea3d6c20d5256073ea90c2af674b84b3823feba8478eabc2db1ffe4463b5",
+      "fetched_deployed_sha256": "d2ea719ab23ed63470c88fccda04570bb7f58013883c78b7c853b98f50277bae",
+      "metadata_name_match": true,
+      "address_match": true,
+      "instruction_count": {
+        "source": 6,
+        "deployed": 6
+      },
+      "account_count": {
+        "source": 2,
+        "deployed": 2
+      },
+      "type_count": {
+        "source": 7,
+        "deployed": 7
+      },
+      "instructions_only_in_deployed": [],
+      "instructions_only_in_source": [],
+      "accounts_only_in_deployed": [],
+      "accounts_only_in_source": [],
+      "types_only_in_deployed": [],
+      "types_only_in_source": []
+    },
+    {
+      "program": "reputation",
+      "program_id": "4y4W2Mdfpu91C4iVowiDyJTmdKSjo8bmSDQrX2c84WQF",
+      "source_idl_path": "idls/reputation.json",
+      "fetched_deployed_idl_path": "docs/audits/deepaudit-satp-s2-shared-proof-20260720/deployed-idls/reputation.json",
+      "source_sha256": "7e07201130fec0b8e0eb97299ea7abc61ec3f6d43170f7debcda86ef384d1d08",
+      "fetched_deployed_sha256": "c916dfb89540b40d6a3ef2dface01234741d1f442d5441512b7e012ccbe19fc5",
+      "metadata_name_match": true,
+      "address_match": true,
+      "instruction_count": {
+        "source": 1,
+        "deployed": 1
+      },
+      "account_count": {
+        "source": 1,
+        "deployed": 1
+      },
+      "type_count": {
+        "source": 2,
+        "deployed": 2
+      },
+      "instructions_only_in_deployed": [],
+      "instructions_only_in_source": [],
+      "accounts_only_in_deployed": [],
+      "accounts_only_in_source": [],
+      "types_only_in_deployed": [],
+      "types_only_in_source": []
+    },
+    {
+      "program": "reviews",
+      "program_id": "D8HsSpK3JtAN7tVcA1yfgxScju7KcG6skEfaShSKojki",
+      "source_idl_path": "idls/reviews.json",
+      "fetched_deployed_idl_path": "docs/audits/deepaudit-satp-s2-shared-proof-20260720/deployed-idls/reviews.json",
+      "source_sha256": "8211d4142ec7622101e29976a556ea55753c840f60e07d173076186b4cf22020",
+      "fetched_deployed_sha256": "39fd3d0df0a2ae14024eb205c8941c9a3c7cfd9675c7caa9c3466ed28b75a042",
+      "metadata_name_match": true,
+      "address_match": false,
+      "instruction_count": {
+        "source": 4,
+        "deployed": 4
+      },
+      "account_count": {
+        "source": 2,
+        "deployed": 2
+      },
+      "type_count": {
+        "source": 5,
+        "deployed": 5
+      },
+      "instructions_only_in_deployed": [],
+      "instructions_only_in_source": [],
+      "accounts_only_in_deployed": [],
+      "accounts_only_in_source": [],
+      "types_only_in_deployed": [],
+      "types_only_in_source": []
+    },
+    {
+      "program": "validation",
+      "program_id": "8jLaqodAzfM7oCxP7aedFeszeNjnJ5ik56dzhDU2HQgc",
+      "source_idl_path": "idls/validation.json",
+      "fetched_deployed_idl_path": "docs/audits/deepaudit-satp-s2-shared-proof-20260720/deployed-idls/validation.json",
+      "source_sha256": "223f76ce85b73682ba875a92ae8aee45a63e196fbb500cecbfe03c004e43b2e4",
+      "fetched_deployed_sha256": "9c43b65d33480cae29a512cdf7c129e53c90851f96632edd9b26fec2abfad5d3",
+      "metadata_name_match": true,
+      "address_match": true,
+      "instruction_count": {
+        "source": 1,
+        "deployed": 1
+      },
+      "account_count": {
+        "source": 1,
+        "deployed": 1
+      },
+      "type_count": {
+        "source": 2,
+        "deployed": 2
+      },
+      "instructions_only_in_deployed": [],
+      "instructions_only_in_source": [],
+      "accounts_only_in_deployed": [],
+      "accounts_only_in_source": [],
+      "types_only_in_deployed": [],
+      "types_only_in_source": []
+    }
+  ]
+}
