@@ -191,6 +191,48 @@ export interface RuntimePolicyResult {
   checks: Record<string, unknown>;
 }
 
+export interface RuntimePolicyAuditTrace {
+  schemaVersion: 'satp.runtimePolicyAuditTrace.v1';
+  mode: 'offline-local-runtime-policy-trace';
+  generatedAt: string;
+  decision: RuntimePolicyDecision;
+  reasonCodes: string[];
+  message: string;
+  subject: {
+    agentId: string | null;
+    active: boolean;
+    verified: boolean;
+    trustScoreBand: '90-100' | '80-89' | '70-79' | '50-69' | '25-49' | '0-24';
+    evidenceUpdatedAt: string | number | Date | null;
+    capabilityCount: number;
+  };
+  action: {
+    type: string;
+    operation: string | null;
+    resourceKind: string | null;
+    requiresCapability: string | null;
+    requiresFreshEvidence: boolean;
+    protectedTool: boolean;
+    operatorApprovalRequired: boolean;
+    costUsd: number | null;
+    evidenceLookup: {
+      type: string | null;
+      configured: true;
+      maxCostUsd: number | null;
+    } | null;
+  };
+  checks: Record<string, unknown>;
+  guardrails: {
+    localDecisionOnly: true;
+    writesSolanaState: false;
+    usesKeypairs: false;
+    deploysPrograms: false;
+    publishesPackages: false;
+    authorizesPayment: false;
+    authorizesAgentActionFromPayment: false;
+  };
+}
+
 export type SatpSignerRole = 'operational_signer' | 'owner_upgrade_authority';
 
 export type SatpOperationalSignerAction =
@@ -258,6 +300,7 @@ export const DECISIONS: Readonly<{
 }>;
 
 export const REASON_CODES: Readonly<Record<string, string>>;
+export const RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION: 'satp.runtimePolicyAuditTrace.v1';
 export const DEFAULT_POLICY: Readonly<Required<RuntimePolicyConfig>>;
 
 export const SATP_SIGNER_ROLES: Readonly<{
@@ -281,6 +324,12 @@ export function evaluateRuntimePolicy(
   actionDescriptor: RuntimePolicyActionDescriptor,
   options?: RuntimePolicyOptions
 ): RuntimePolicyResult;
+
+export function buildRuntimePolicyAuditTrace(
+  identityPayload: RuntimePolicyIdentityPayload,
+  actionDescriptor: RuntimePolicyActionDescriptor,
+  options?: RuntimePolicyOptions & { result?: RuntimePolicyResult }
+): RuntimePolicyAuditTrace;
 
 export interface WalletControlChallengeOptions {
   agentId: string;

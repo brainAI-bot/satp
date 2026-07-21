@@ -5,6 +5,8 @@ const test = require('node:test');
 const {
   DECISIONS,
   REASON_CODES,
+  RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION,
+  buildRuntimePolicyAuditTrace,
   evaluateRuntimePolicy,
 } = require('./src');
 
@@ -124,4 +126,80 @@ test('denies invalid action costUsd values instead of normalizing them to zero',
     assert.ok(result.reasonCodes.includes(REASON_CODES.INVALID_ACTION_COST_USD));
     assert.ok(!result.reasonCodes.includes(REASON_CODES.LOCAL_POLICY_ALLOW));
   }
+});
+
+test('builds a redacted runtime policy audit trace for host logs', () => {
+  const identity = {
+    ...baseIdentity,
+    secretToken: 'super-secret-token',
+    capabilities: ['mcp:read', 'agentfolio:trust-read', 'satp:private-write'],
+  };
+  const action = {
+    type: 'mcp_protected_tool',
+    resource: 'https://api.example.test/private?token=leak',
+    operation: 'prepare',
+    requiresCapability: 'mcp:read',
+    requiresFreshEvidence: true,
+    evidenceLookup: {
+      type: 'x402',
+      endpoint: 'https://paid.example.test/evidence?api_key=leak',
+      maxCostUsd: 0.05,
+    },
+  };
+
+  const trace = buildRuntimePolicyAuditTrace(identity, action, {
+    now: '2026-05-21T00:00:00Z',
+  });
+
+  assert.equal(trace.schemaVersion, RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION);
+  assert.equal(trace.mode, 'offline-local-runtime-policy-trace');
+  assert.equal(trace.generatedAt, '2026-05-21T00:00:00.000Z');
+  assert.equal(trace.decision, DECISIONS.ALLOW);
+  assert.equal(trace.subject.agentId, 'brainchain-test');
+  assert.equal(trace.subject.trustScoreBand, '80-89');
+  assert.equal(trace.subject.capabilityCount, 3);
+  assert.deepEqual(trace.action.evidenceLookup, {
+    type: 'x402',
+    configured: true,
+    maxCostUsd: 0.05,
+  });
+  assert.equal(trace.action.resourceKind, 'https:');
+  assert.equal(trace.guardrails.writesSolanaState, false);
+  assert.equal(trace.guardrails.usesKeypairs, false);
+  assert.equal(trace.guardrails.publishesPackages, false);
+
+  const serialized = JSON.stringify(trace);
+  assert.ok(!serialized.includes('super-secret-token'));
+  assert.ok(!serialized.includes('token=leak'));
+  assert.ok(!serialized.includes('api_key=leak'));
+  assert.ok(!serialized.includes('satp:private-write'));
+});
+
+test('redacts x402 lookup endpoints from audit trace checks', () => {
+  const trace = buildRuntimePolicyAuditTrace(
+    { ...baseIdentity, evidenceUpdatedAt: '2026-04-01T00:00:00Z' },
+    {
+      type: 'mcp_protected_tool',
+      requiresFreshEvidence: true,
+      evidenceLookup: {
+        type: 'x402',
+        endpoint: 'https://paid.example.test/evidence?api_key=leak',
+        maxCostUsd: 0.05,
+      },
+    },
+    { now: '2026-05-21T00:00:00Z' }
+  );
+
+  assert.equal(trace.decision, DECISIONS.NEEDS_APPROVAL);
+  assert.deepEqual(trace.action.evidenceLookup, {
+    type: 'x402',
+    configured: true,
+    maxCostUsd: 0.05,
+  });
+  assert.deepEqual(trace.checks.evidenceLookup, {
+    type: 'x402',
+    configured: true,
+    maxCostUsd: 0.05,
+  });
+  assert.ok(!JSON.stringify(trace).includes('api_key=leak'));
 });

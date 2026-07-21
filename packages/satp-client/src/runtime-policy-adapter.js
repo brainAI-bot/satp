@@ -34,6 +34,8 @@ const DEFAULT_POLICY = Object.freeze({
   staleEvidenceAfterMs: 7 * 24 * 60 * 60 * 1000,
 });
 
+const RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION = 'satp.runtimePolicyAuditTrace.v1';
+
 function evaluateRuntimePolicy(identityPayload, actionDescriptor, options = {}) {
   const policy = { ...DEFAULT_POLICY, ...(options.policy || {}) };
   const now = options.now ? new Date(options.now) : new Date();
@@ -107,6 +109,56 @@ function evaluateRuntimePolicy(identityPayload, actionDescriptor, options = {}) 
 
   reasonCodes.push(REASON_CODES.LOCAL_POLICY_ALLOW);
   return decision(DECISIONS.ALLOW, reasonCodes, checks, 'Local runtime policy allows the action.');
+}
+
+function buildRuntimePolicyAuditTrace(identityPayload, actionDescriptor, options = {}) {
+  const result = options.result || evaluateRuntimePolicy(identityPayload, actionDescriptor, options);
+  const identity = normalizeIdentity(identityPayload);
+  const action = normalizeAction(actionDescriptor);
+
+  return {
+    schemaVersion: RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION,
+    mode: 'offline-local-runtime-policy-trace',
+    generatedAt: safeIsoDate(options.now),
+    decision: result.decision,
+    reasonCodes: result.reasonCodes.slice(),
+    message: result.message,
+    subject: {
+      agentId: identity.agentId,
+      active: identity.active,
+      verified: identity.verified,
+      trustScoreBand: trustScoreBand(identity.trustScore),
+      evidenceUpdatedAt: identity.evidenceUpdatedAt,
+      capabilityCount: identity.capabilities.length,
+    },
+    action: {
+      type: action.type,
+      operation: action.operation,
+      resourceKind: resourceKind(action.resource),
+      requiresCapability: action.requiresCapability,
+      requiresFreshEvidence: action.requiresFreshEvidence,
+      protectedTool: action.protectedTool,
+      operatorApprovalRequired: action.operatorApprovalRequired,
+      costUsd: action.costUsd,
+      evidenceLookup: action.evidenceLookup
+        ? {
+            type: action.evidenceLookup.type || null,
+            configured: true,
+            maxCostUsd: action.evidenceLookup.maxCostUsd ?? null,
+          }
+        : null,
+    },
+    checks: sanitizeAuditChecks(result.checks),
+    guardrails: {
+      localDecisionOnly: true,
+      writesSolanaState: false,
+      usesKeypairs: false,
+      deploysPrograms: false,
+      publishesPackages: false,
+      authorizesPayment: false,
+      authorizesAgentActionFromPayment: false,
+    },
+  };
 }
 
 function staleEvidenceDecision(action, options, reasonCodes, checks) {
@@ -189,6 +241,41 @@ function clampScore(value) {
   return Math.max(0, Math.min(100, score));
 }
 
+function trustScoreBand(score) {
+  if (score >= 90) return '90-100';
+  if (score >= 80) return '80-89';
+  if (score >= 70) return '70-79';
+  if (score >= 50) return '50-69';
+  if (score >= 25) return '25-49';
+  return '0-24';
+}
+
+function sanitizeAuditChecks(checks = {}) {
+  const sanitized = { ...checks };
+  if (sanitized.evidenceLookup && typeof sanitized.evidenceLookup === 'object') {
+    sanitized.evidenceLookup = {
+      type: sanitized.evidenceLookup.type || null,
+      configured: true,
+      maxCostUsd: sanitized.evidenceLookup.maxCostUsd ?? null,
+    };
+  }
+  return sanitized;
+}
+
+function safeIsoDate(value) {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) return new Date().toISOString();
+  return date.toISOString();
+}
+
+function resourceKind(resource) {
+  if (!resource || typeof resource !== 'string') return null;
+  const schemeMatch = resource.match(/^([a-z][a-z0-9+.-]*):/i);
+  if (schemeMatch) return `${schemeMatch[1].toLowerCase()}:`;
+  if (resource.startsWith('/')) return 'path';
+  return 'opaque';
+}
+
 function isEvidenceFresh(identity, policy, now) {
   if (!identity.evidenceUpdatedAt) return false;
   const updatedAt = new Date(identity.evidenceUpdatedAt);
@@ -202,5 +289,7 @@ module.exports = {
   DECISIONS,
   DEFAULT_POLICY,
   REASON_CODES,
+  RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION,
+  buildRuntimePolicyAuditTrace,
   evaluateRuntimePolicy,
 };
