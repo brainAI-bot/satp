@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 'use strict';
 
-const { evaluateRuntimePolicy } = require('..');
+const {
+  buildRuntimePolicyAuditTrace,
+  evaluateRuntimePolicy,
+} = require('..');
 
 const trustedIdentity = {
   agentId: 'brainchain-demo',
@@ -73,3 +76,17 @@ for (const item of examples) {
   const result = evaluateRuntimePolicy(item.identity, item.action, item.options);
   console.log(JSON.stringify({ name: item.name, ...result }, null, 2));
 }
+
+const auditTrace = buildRuntimePolicyAuditTrace(
+  trustedIdentity,
+  {
+    type: 'mcp_protected_tool',
+    resource: 'mcp://protected/deploy-readiness',
+    operation: 'read',
+    requiresCapability: 'mcp:deploy-readiness',
+    requiresFreshEvidence: true,
+  },
+  { now: '2026-05-21T00:00:00Z' }
+);
+
+console.log(JSON.stringify({ name: 'Redacted audit trace', ...auditTrace }, null, 2));

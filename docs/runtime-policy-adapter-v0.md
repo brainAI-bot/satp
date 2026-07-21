@@ -29,6 +29,16 @@ const result = evaluateRuntimePolicy(identityPayload, actionDescriptor, {
 });
 ~~~
 
+For host logs or review queues, use the redacted audit-trace helper:
+
+~~~js
+const { buildRuntimePolicyAuditTrace } = require('@brainai/satp-client');
+
+const trace = buildRuntimePolicyAuditTrace(identityPayload, actionDescriptor, {
+  now: '2026-05-21T00:00:00Z',
+});
+~~~
+
 Input identity payload:
 
 ~~~json
@@ -95,6 +105,50 @@ Output:
 - X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION: payment only grants lookup/access to paid data.
 - LOCAL_POLICY_ALLOW: local checks allow the action.
 
+## Audit trace
+
+`buildRuntimePolicyAuditTrace` wraps `evaluateRuntimePolicy` and returns a host-log-friendly record:
+
+~~~json
+{
+  "schemaVersion": "satp.runtimePolicyAuditTrace.v1",
+  "mode": "offline-local-runtime-policy-trace",
+  "generatedAt": "2026-05-21T00:00:00.000Z",
+  "decision": "allow",
+  "reasonCodes": ["TRUST_SCORE_OK", "EVIDENCE_FRESH", "LOCAL_POLICY_ALLOW"],
+  "subject": {
+    "agentId": "brainchain-demo",
+    "active": true,
+    "verified": true,
+    "trustScoreBand": "80-89",
+    "evidenceUpdatedAt": "2026-05-21T00:00:00Z",
+    "capabilityCount": 2
+  },
+  "action": {
+    "type": "mcp_protected_tool",
+    "operation": "read",
+    "resourceKind": "mcp:",
+    "requiresCapability": "mcp:deploy-readiness",
+    "requiresFreshEvidence": true,
+    "protectedTool": true,
+    "operatorApprovalRequired": false,
+    "costUsd": 0,
+    "evidenceLookup": null
+  },
+  "guardrails": {
+    "localDecisionOnly": true,
+    "writesSolanaState": false,
+    "usesKeypairs": false,
+    "deploysPrograms": false,
+    "publishesPackages": false,
+    "authorizesPayment": false,
+    "authorizesAgentActionFromPayment": false
+  }
+}
+~~~
+
+The trace intentionally records score bands, capability counts, resource kind, and redacted x402 lookup metadata instead of raw capability lists, full URLs, private endpoint query strings, tokens, or key material.
+
 ## Examples
 
 MCP protected tool:
@@ -153,4 +207,4 @@ Policy decisions remain local to the host. SATP identity and host-provided trust
 
 ## SATP repo integration
 
-This PR integrates the adapter into @brainai/satp-client as packages/satp-client/src/runtime-policy-adapter.js and exports evaluateRuntimePolicy, DECISIONS, REASON_CODES, and DEFAULT_POLICY from the package root. The package path is branch/PR-only for review; no npm publish or dist-tag change is part of this artifact.
+This PR integrates the adapter into @brainai/satp-client as packages/satp-client/src/runtime-policy-adapter.js and exports evaluateRuntimePolicy, buildRuntimePolicyAuditTrace, DECISIONS, REASON_CODES, DEFAULT_POLICY, and RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION from the package root. The package path is branch/PR-only for review; no npm publish or dist-tag change is part of this artifact.

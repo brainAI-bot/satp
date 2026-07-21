@@ -787,6 +787,8 @@ const {
   DECISIONS,
   DEFAULT_POLICY,
   REASON_CODES,
+  RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION,
+  buildRuntimePolicyAuditTrace,
   evaluateRuntimePolicy,
 } = require('./runtime-policy-adapter');
 const walletControlChallenge = require('./wallet-control-challenge');
@@ -968,6 +970,8 @@ module.exports = {
   DECISIONS,
   DEFAULT_POLICY,
   REASON_CODES,
+  RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION,
+  buildRuntimePolicyAuditTrace,
   evaluateRuntimePolicy,
 
   // V3 Deserialization (local extracted scaffold)
