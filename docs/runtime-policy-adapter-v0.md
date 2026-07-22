@@ -39,6 +39,22 @@ const trace = buildRuntimePolicyAuditTrace(identityPayload, actionDescriptor, {
 });
 ~~~
 
+For host runtimes, build a normalized action descriptor before evaluation:
+
+~~~js
+const { buildRuntimePolicyActionDescriptor, evaluateRuntimePolicy } = require('@brainai/satp-client');
+
+const action = buildRuntimePolicyActionDescriptor({
+  type: 'mcp_protected_tool',
+  resource: 'mcp://protected/deploy-readiness',
+  capability: 'mcp:deploy-readiness'
+});
+
+const result = evaluateRuntimePolicy(identityPayload, action, {
+  now: '2026-05-21T00:00:00Z'
+});
+~~~
+
 Input identity payload:
 
 ~~~json
@@ -201,10 +217,27 @@ evaluateRuntimePolicy({ ...identity, evidenceUpdatedAt: null }, {
 });
 ~~~
 
+Host action descriptor builder:
+
+~~~js
+buildRuntimePolicyActionDescriptor({
+  type: 'agentfolio_trust_gate',
+  profileId: 'brainchain-demo',
+  minimumTrustScore: 80
+});
+
+buildRuntimePolicyActionDescriptor('x402_endpoint', {
+  resource: 'https://api.example.test/reputation',
+  costUsd: 0.05
+});
+~~~
+
+The descriptor builder is offline and only prepares local policy input. Its guardrails state that it does not write Solana state, use keypairs, deploy programs, publish packages, or require live payment.
+
 ## Security note
 
 Policy decisions remain local to the host. SATP identity and host-provided trust signals are inputs to local policy, not blanket authorization. x402 payment grants lookup or endpoint access only; it does not authorize the agent action, bypass protected-tool approval, or replace host policy.
 
 ## SATP repo integration
 
-This PR integrates the adapter into @brainai/satp-client as packages/satp-client/src/runtime-policy-adapter.js and exports evaluateRuntimePolicy, buildRuntimePolicyAuditTrace, DECISIONS, REASON_CODES, DEFAULT_POLICY, and RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION from the package root. The package path is branch/PR-only for review; no npm publish or dist-tag change is part of this artifact.
+This PR integrates the adapter into @brainai/satp-client as packages/satp-client/src/runtime-policy-adapter.js and exports evaluateRuntimePolicy, buildRuntimePolicyActionDescriptor, buildRuntimePolicyAuditTrace, DECISIONS, REASON_CODES, DEFAULT_POLICY, RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION, and RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION from the package root. The package path is branch/PR-only for review; no npm publish or dist-tag change is part of this artifact.

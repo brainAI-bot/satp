@@ -788,6 +788,8 @@ const {
   DEFAULT_POLICY,
   REASON_CODES,
   RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION,
+  RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION,
+  buildRuntimePolicyActionDescriptor,
   buildRuntimePolicyAuditTrace,
   evaluateRuntimePolicy,
 } = require('./runtime-policy-adapter');
@@ -971,6 +973,8 @@ module.exports = {
   DEFAULT_POLICY,
   REASON_CODES,
   RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION,
+  RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION,
+  buildRuntimePolicyActionDescriptor,
   buildRuntimePolicyAuditTrace,
   evaluateRuntimePolicy,
 

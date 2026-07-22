@@ -11,7 +11,7 @@ const metadataHash = '4d9678a7869c25f26a2e38e43f70fc7d0c4142d20b1743a43e50cd8fd0
 
 for (const [packageName, api, required] of [
   ['@brainai/satp', satp, ['core', 'solana', 'prepareIdentityAttestationRequest', 'buildSatpTrustPacket', 'getV3ProgramIds', 'getGenesisPDA', 'createSATPClient', 'buildSignerSeparationConfig']],
-  ['@brainai/satp-core', core, ['prepareIdentityAttestationRequest', 'buildSatpTrustPacket', 'validateSatpTrustPacket', 'evaluateRuntimePolicy', 'buildSignerSeparationConfig']],
+  ['@brainai/satp-core', core, ['prepareIdentityAttestationRequest', 'buildSatpTrustPacket', 'validateSatpTrustPacket', 'evaluateRuntimePolicy', 'buildRuntimePolicyActionDescriptor', 'buildSignerSeparationConfig']],
   ['@brainai/satp-solana', solana, ['getV3ProgramIds', 'hashAgentId', 'getGenesisPDA', 'createSATPClient', 'buildSignerSeparationConfig']],
 ]) {
   const missing = required.filter((key) => !(key in api));
@@ -52,6 +52,13 @@ const decision = satp.core.evaluateRuntimePolicy(
   { now: '2026-05-22T00:00:00Z' },
 );
 assert.equal(decision.decision, 'allow');
+
+const actionDescriptor = core.buildRuntimePolicyActionDescriptor({
+  type: 'agentfolio_trust_gate',
+  profileId: 'brainchain-demo',
+});
+assert.equal(actionDescriptor.operation, 'trust-score-read');
+assert.equal(actionDescriptor.guardrails.writesSolanaState, false);
 
 const ids = solana.getV3ProgramIds('devnet');
 assert.equal(typeof ids.IDENTITY.toBase58(), 'string');

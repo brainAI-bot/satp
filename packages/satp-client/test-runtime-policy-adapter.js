@@ -6,6 +6,8 @@ const {
   DECISIONS,
   REASON_CODES,
   RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION,
+  RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION,
+  buildRuntimePolicyActionDescriptor,
   buildRuntimePolicyAuditTrace,
   evaluateRuntimePolicy,
 } = require('./src');
@@ -35,6 +37,66 @@ test('allows verified identity with sufficient trust, capability, and fresh evid
   assert.equal(result.decision, DECISIONS.ALLOW);
   assert.ok(result.reasonCodes.includes(REASON_CODES.LOCAL_POLICY_ALLOW));
   assert.ok(result.reasonCodes.includes(REASON_CODES.EVIDENCE_FRESH));
+});
+
+test('builds an MCP protected-tool descriptor usable by the runtime adapter', () => {
+  const action = buildRuntimePolicyActionDescriptor({
+    type: 'mcp_protected_tool',
+    resource: 'mcp://protected/readiness',
+    capability: 'mcp:read',
+  });
+
+  assert.equal(action.schemaVersion, RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION);
+  assert.equal(action.operation, 'invoke');
+  assert.equal(action.requiresCapability, 'mcp:read');
+  assert.equal(action.requiresFreshEvidence, true);
+  assert.equal(action.protectedTool, true);
+  assert.equal(action.guardrails.writesSolanaState, false);
+
+  const result = evaluateRuntimePolicy(baseIdentity, action, { now: '2026-05-21T00:00:00Z' });
+  assert.equal(result.decision, DECISIONS.ALLOW);
+});
+
+test('builds an AgentFolio trust gate descriptor with degraded access path', () => {
+  const action = buildRuntimePolicyActionDescriptor({
+    type: 'agentfolio_trust_gate',
+    profileId: 'brainchain-demo',
+    minimumTrustScore: 90,
+  });
+
+  assert.equal(action.resource, 'https://agentfolio.bot/api/profile/brainchain-demo/trust-score');
+  assert.equal(action.operation, 'trust-score-read');
+  assert.equal(action.requiresCapability, 'agentfolio:trust-read');
+  assert.equal(action.allowDegraded, true);
+  assert.equal(action.requiresFreshEvidence, true);
+
+  const result = evaluateRuntimePolicy(
+    baseIdentity,
+    action,
+    { now: '2026-05-21T00:00:00Z' }
+  );
+
+  assert.equal(result.decision, DECISIONS.DEGRADE);
+  assert.ok(result.reasonCodes.includes(REASON_CODES.TRUST_SCORE_BELOW_MINIMUM));
+});
+
+test('builds an x402 endpoint descriptor without authorizing payment or action', () => {
+  const action = buildRuntimePolicyActionDescriptor('x402_endpoint', {
+    resource: 'https://api.example.test/reputation',
+    costUsd: 0.05,
+  });
+
+  assert.equal(action.operation, 'lookup');
+  assert.equal(action.protectedTool, false);
+  assert.equal(action.guardrails.livePaymentRequired, false);
+
+  const result = evaluateRuntimePolicy(baseIdentity, action, {
+    now: '2026-05-21T00:00:00Z',
+    policy: { maxAutoSpendUsd: 0.01 },
+  });
+
+  assert.equal(result.decision, DECISIONS.NEEDS_APPROVAL);
+  assert.ok(result.reasonCodes.includes(REASON_CODES.ACTION_PAYMENT_NEEDS_APPROVAL));
 });
 
 test('denies inactive identities before checking action details', () => {

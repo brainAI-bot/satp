@@ -35,6 +35,7 @@ const DEFAULT_POLICY = Object.freeze({
 });
 
 const RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION = 'satp.runtimePolicyAuditTrace.v1';
+const RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION = 'satp.runtimePolicyHostActionDescriptor.v1';
 
 function evaluateRuntimePolicy(identityPayload, actionDescriptor, options = {}) {
   const policy = { ...DEFAULT_POLICY, ...(options.policy || {}) };
@@ -161,6 +162,43 @@ function buildRuntimePolicyAuditTrace(identityPayload, actionDescriptor, options
   };
 }
 
+function buildRuntimePolicyActionDescriptor(input = {}, overrides = {}) {
+  const base = typeof input === 'string' ? { type: input } : input;
+  if (!base || typeof base !== 'object' || Array.isArray(base)) {
+    throw new Error('runtime policy action descriptor input must be an object or action type string');
+  }
+  if (!overrides || typeof overrides !== 'object' || Array.isArray(overrides)) {
+    throw new Error('runtime policy action descriptor overrides must be an object');
+  }
+
+  const action = { ...base, ...overrides };
+  const type = action.type || action.surface || 'generic';
+  const descriptor = {
+    schemaVersion: RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION,
+    type,
+    resource: firstDefined(action.resource, defaultResourceForAction(type, action)),
+    operation: firstDefined(action.operation, defaultOperationForAction(type)),
+    requiresCapability: firstDefined(action.requiresCapability, action.capability, defaultCapabilityForAction(type)),
+    minimumTrustScore: firstDefined(action.minimumTrustScore, action.trustScoreMinimum, defaultMinimumTrustScoreForAction(type)),
+    allowDegraded: firstDefined(action.allowDegraded, defaultAllowDegradedForAction(type)),
+    requiresFreshEvidence: firstDefined(action.requiresFreshEvidence, defaultRequiresFreshEvidenceForAction(type)),
+    costUsd: firstDefined(action.costUsd, defaultCostUsdForAction(type)),
+    protectedTool: firstDefined(action.protectedTool, type === 'mcp_protected_tool'),
+    operatorApprovalRequired: firstDefined(action.operatorApprovalRequired, false),
+    guardrails: {
+      localDecisionOnly: true,
+      writesSolanaState: false,
+      usesKeypairs: false,
+      deploysPrograms: false,
+      publishesPackages: false,
+      livePaymentRequired: false,
+    },
+  };
+
+  if (action.evidenceLookup !== undefined) descriptor.evidenceLookup = action.evidenceLookup;
+  return descriptor;
+}
+
 function staleEvidenceDecision(action, options, reasonCodes, checks) {
   const lookup = action.evidenceLookup || null;
   if (!lookup || lookup.type !== 'x402') {
@@ -262,6 +300,52 @@ function sanitizeAuditChecks(checks = {}) {
   return sanitized;
 }
 
+function firstDefined(...values) {
+  return values.find((value) => value !== undefined);
+}
+
+function defaultResourceForAction(type, action) {
+  if (type === 'mcp_protected_tool') return 'mcp://protected/tool';
+  if (type === 'agentfolio_trust_gate') {
+    if (action.profileId) {
+      return `https://agentfolio.bot/api/profile/${encodeURIComponent(String(action.profileId))}/trust-score`;
+    }
+    return 'https://agentfolio.bot/api/profile/:id/trust-score';
+  }
+  if (type === 'x402_endpoint') return 'x402://paid-endpoint';
+  return null;
+}
+
+function defaultOperationForAction(type) {
+  if (type === 'mcp_protected_tool') return 'invoke';
+  if (type === 'agentfolio_trust_gate') return 'trust-score-read';
+  if (type === 'x402_endpoint') return 'lookup';
+  return null;
+}
+
+function defaultCapabilityForAction(type) {
+  if (type === 'agentfolio_trust_gate') return 'agentfolio:trust-read';
+  return null;
+}
+
+function defaultMinimumTrustScoreForAction(type) {
+  if (type === 'agentfolio_trust_gate') return DEFAULT_POLICY.minimumTrustScore;
+  return null;
+}
+
+function defaultAllowDegradedForAction(type) {
+  return type === 'agentfolio_trust_gate';
+}
+
+function defaultRequiresFreshEvidenceForAction(type) {
+  return type === 'mcp_protected_tool' || type === 'agentfolio_trust_gate';
+}
+
+function defaultCostUsdForAction(type) {
+  if (type === 'x402_endpoint') return 0;
+  return 0;
+}
+
 function safeIsoDate(value) {
   const date = value ? new Date(value) : new Date();
   if (Number.isNaN(date.getTime())) return new Date().toISOString();
@@ -290,6 +374,8 @@ module.exports = {
   DEFAULT_POLICY,
   REASON_CODES,
   RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION,
+  RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION,
+  buildRuntimePolicyActionDescriptor,
   buildRuntimePolicyAuditTrace,
   evaluateRuntimePolicy,
 };
