@@ -22,6 +22,7 @@ const requiredExports = [
   'buildSatpTrustPacket',
   'validateSatpTrustPacket',
   'evaluateRuntimePolicy',
+  'buildRuntimePolicyActionDescriptor',
   'buildWalletControlChallenge',
   'canonicalWalletControlChallenge',
   'hashWalletControlChallenge',
@@ -80,6 +81,18 @@ const policyDecision = satp.evaluateRuntimePolicy(
 );
 if (policyDecision.decision !== 'allow') {
   throw new Error('evaluateRuntimePolicy did not return allow for verified local policy input');
+}
+
+const builtPolicyAction = satp.buildRuntimePolicyActionDescriptor({
+  type: 'mcp_protected_tool',
+  capability: 'mcp:read',
+});
+if (
+  builtPolicyAction.schemaVersion !== satp.RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION
+  || builtPolicyAction.requiresCapability !== 'mcp:read'
+  || builtPolicyAction.guardrails.writesSolanaState !== false
+) {
+  throw new Error('buildRuntimePolicyActionDescriptor did not return guarded host action metadata');
 }
 
 const signerConfig = satp.buildSignerSeparationConfig({

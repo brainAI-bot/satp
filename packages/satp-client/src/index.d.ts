@@ -151,11 +151,15 @@ export interface RuntimePolicyIdentityPayload {
 }
 
 export interface RuntimePolicyActionDescriptor {
+  schemaVersion?: string;
+  surface?: string;
   type?: string;
   resource?: string;
   operation?: string;
+  capability?: string;
   requiresCapability?: string;
   minimumTrustScore?: number;
+  trustScoreMinimum?: number;
   allowDegraded?: boolean;
   requiresFreshEvidence?: boolean;
   costUsd?: number;
@@ -166,6 +170,32 @@ export interface RuntimePolicyActionDescriptor {
     endpoint?: string;
     maxCostUsd?: number;
   } | X402EvidenceLookup;
+}
+
+export interface RuntimePolicyActionDescriptorBuildInput extends RuntimePolicyActionDescriptor {
+  profileId?: string;
+}
+
+export interface RuntimePolicyHostActionDescriptor extends RuntimePolicyActionDescriptor {
+  schemaVersion: 'satp.runtimePolicyHostActionDescriptor.v1';
+  type: string;
+  resource: string | null;
+  operation: string | null;
+  requiresCapability: string | null;
+  minimumTrustScore: number | null;
+  allowDegraded: boolean;
+  requiresFreshEvidence: boolean;
+  costUsd: number;
+  protectedTool: boolean;
+  operatorApprovalRequired: boolean;
+  guardrails: {
+    localDecisionOnly: true;
+    writesSolanaState: false;
+    usesKeypairs: false;
+    deploysPrograms: false;
+    publishesPackages: false;
+    livePaymentRequired: false;
+  };
 }
 
 export interface RuntimePolicyConfig {
@@ -301,6 +331,7 @@ export const DECISIONS: Readonly<{
 
 export const REASON_CODES: Readonly<Record<string, string>>;
 export const RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION: 'satp.runtimePolicyAuditTrace.v1';
+export const RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION: 'satp.runtimePolicyHostActionDescriptor.v1';
 export const DEFAULT_POLICY: Readonly<Required<RuntimePolicyConfig>>;
 
 export const SATP_SIGNER_ROLES: Readonly<{
@@ -324,6 +355,11 @@ export function evaluateRuntimePolicy(
   actionDescriptor: RuntimePolicyActionDescriptor,
   options?: RuntimePolicyOptions
 ): RuntimePolicyResult;
+
+export function buildRuntimePolicyActionDescriptor(
+  input?: RuntimePolicyActionDescriptorBuildInput | string,
+  overrides?: RuntimePolicyActionDescriptorBuildInput
+): RuntimePolicyHostActionDescriptor;
 
 export function buildRuntimePolicyAuditTrace(
   identityPayload: RuntimePolicyIdentityPayload,

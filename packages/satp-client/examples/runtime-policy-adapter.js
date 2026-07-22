@@ -2,6 +2,7 @@
 'use strict';
 
 const {
+  buildRuntimePolicyActionDescriptor,
   buildRuntimePolicyAuditTrace,
   evaluateRuntimePolicy,
 } = require('..');
@@ -11,7 +12,7 @@ const trustedIdentity = {
   active: true,
   satpVerified: true,
   trustScore: 88,
-  capabilities: ['mcp:deploy-readiness', 'satp:trust-read'],
+  capabilities: ['mcp:deploy-readiness', 'satp:trust-read', 'agentfolio:trust-read'],
   evidenceUpdatedAt: '2026-05-21T00:00:00Z',
 };
 
@@ -19,23 +20,24 @@ const examples = [
   {
     name: 'MCP protected tool',
     identity: trustedIdentity,
-    action: {
+    action: buildRuntimePolicyActionDescriptor({
       type: 'mcp_protected_tool',
       resource: 'mcp://protected/deploy-readiness',
       operation: 'read',
-      requiresCapability: 'mcp:deploy-readiness',
-      requiresFreshEvidence: true,
+      capability: 'mcp:deploy-readiness',
+    }),
+    options: {
+      now: '2026-05-21T00:00:00Z',
     },
   },
   {
     name: 'x402 paid endpoint',
     identity: trustedIdentity,
-    action: {
+    action: buildRuntimePolicyActionDescriptor('x402_endpoint', {
       type: 'x402_endpoint',
       resource: 'https://api.example.test/reputation',
-      operation: 'lookup',
       costUsd: 0.05,
-    },
+    }),
     options: {
       actionPaymentPreapproved: true,
       policy: { maxAutoSpendUsd: 0.01 },
@@ -44,12 +46,13 @@ const examples = [
   {
     name: 'Host trust-score degrade',
     identity: { ...trustedIdentity, trustScore: 62 },
-    action: {
-      type: 'host_trust_gate',
-      resource: 'satp://trust-score',
-      operation: 'gate',
+    action: buildRuntimePolicyActionDescriptor({
+      type: 'agentfolio_trust_gate',
+      profileId: 'brainchain-demo',
       minimumTrustScore: 80,
-      allowDegraded: true,
+    }),
+    options: {
+      now: '2026-05-21T00:00:00Z',
     },
   },
   {
