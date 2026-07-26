@@ -28,8 +28,8 @@ the client package through the migration window.
 | Surface | Current metadata | Consumer guidance |
 | --- | --- | --- |
 | Repository root package | `package.json` is named `@brainai/satp-client`, `private: true`, version `0.0.0-extraction`, with root exports pointing at `packages/satp-client/src/index.js` and `packages/satp-client/src/index.d.ts`. | Keep this shape for commit-addressed Git review installs only. It is not npm latest. |
-| Client package | `packages/satp-client/package.json` is named `@brainai/satp-client`, version `2.0.2-rc.0`, `private: false`, and publishes under the `rc` tag if a future release gate authorizes publish. | This is the SDK source package and the current stable consumer package family. |
-| npm `@brainai/satp-client` | Registry readback on 2026-07-01: `latest` is `2.0.1`, `rc` is `0.1.0-rc.0`, and published versions are `0.1.0-rc.0`, `2.0.0`, and `2.0.1`. | Stable consumers use `@brainai/satp-client@2.0.1` or `@brainai/satp-client`; rc validation should pin the reviewed rc artifact after promotion instead of relying on the moving `rc` tag. |
+| Client package | `packages/satp-client/package.json` is named `@brainai/satp-client`, version `2.0.3`, `private: false`, and publishes publicly if a future release gate authorizes another publish. | This is the SDK source package and the current stable consumer package family. |
+| npm `@brainai/satp-client` | Registry readback on 2026-07-26: `latest` is `2.0.3`, `rc` is `2.0.2`, and published versions are `0.1.0-rc.0`, `2.0.0`, `2.0.1`, `2.0.2`, and `2.0.3`. | Stable consumers use `@brainai/satp-client@2.0.3` or `@brainai/satp-client`; rc validation should use `@brainai/satp-client@rc` only when HQ explicitly assigns rc validation. |
 | Umbrella package | `packages/satp/package.json` is named `@brainai/satp`, `private: true`, version `0.0.0-extraction`, and depends on the client/core/Solana workspace surfaces. npm registry readback for `@brainai/satp` returned 404 on 2026-07-01. | Reserve as the long-term umbrella package. Do not tell consumers to install it until it is public and release-gated. |
 | Core package | `packages/satp-core/package.json` is named `@brainai/satp-core`, `private: true`, version `0.0.0-extraction`. | Keep private until a separate package-boundary release decision approves public install docs. |
 | Solana package | `packages/satp-solana/package.json` is named `@brainai/satp-solana`, `private: true`, version `0.0.0-extraction`. | Keep private until a separate package-boundary release decision approves public install docs. |
@@ -58,7 +58,7 @@ Current consumers should make no package-name change. Stable installs stay on:
 ```json
 {
   "dependencies": {
-    "@brainai/satp-client": "2.0.1"
+    "@brainai/satp-client": "2.0.3"
   }
 }
 ```

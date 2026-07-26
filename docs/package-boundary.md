@@ -8,7 +8,7 @@ Status: SATP S4 package-boundary hardening for branch/PR review. This document i
 | --- | --- | --- |
 | Git-installable root package | `package.json` is named `@brainai/satp-client`, `private: true`, and points `main`, `types`, and `exports["."]` at `packages/satp-client/src/index.js` and `packages/satp-client/src/index.d.ts`. | Keep this root shape only for branch/PR review consumers because clean Git install resolves `@brainai/satp-client` without a sibling tarball or review-branch publish. |
 | Workspaces | Root workspaces include `packages/satp-client`, `packages/satp-core`, `packages/satp-solana`, and `packages/satp`. | Keep workspace split as the target boundary; `packages/satp`, `packages/satp-core`, and `packages/satp-solana` expose PR-review entrypoints over the existing SDK implementation. |
-| Client package | `packages/satp-client/package.json` is named `@brainai/satp-client`, versioned as the reviewed RC-S6 artifact `2.0.2-rc.0`, with `main=src/index.js` and `types=src/index.d.ts`. The current stable consumer package remains npm `@brainai/satp-client@2.0.1`; historical rc-tag readback may still show `0.1.0-rc.0` until the rc channel is promoted. | Treat the client package as the SDK source surface while consumer docs keep stable installs on npm `2.0.1` and exact rc validation on `2.0.2-rc.0` after promotion. |
+| Client package | `packages/satp-client/package.json` is named `@brainai/satp-client`, versioned as the stable package artifact `2.0.3`, with `main=src/index.js` and `types=src/index.d.ts`. Registry readback on 2026-07-26 shows npm `latest` at `2.0.3` and `rc` at `2.0.2`. | Treat the client package as the SDK source surface while consumer docs keep stable installs on npm `2.0.3`; use `@rc` only when HQ assigns release-candidate validation. |
 | Umbrella package target | `packages/satp/package.json` is named `@brainai/satp`, private, version `0.0.0-extraction`, and exports `index.js`/`index.d.ts` for PR review. | Keep it private; do not expose it as install-ready until release review authorizes publish/install docs. |
 | Core/Solana packages | `@brainai/satp-core` and `@brainai/satp-solana` are private package entrypoints with explicit exports. | Keep them private; do not tell consumers to install them yet. |
 | Runtime dependencies | Root/client depend on `@solana/web3.js`, `borsh`, and `bs58`. | Keep dependencies explicit at the installable boundary; no undeclared `@brainai/satp-v3` dependency is allowed. |
@@ -17,12 +17,12 @@ Status: SATP S4 package-boundary hardening for branch/PR review. This document i
 ## Package naming and version proposal
 
 - Package naming decision: SATP uses a phased umbrella/client split. The stable
-  consumer install target today remains npm `@brainai/satp-client@2.0.1`; the
+  consumer install target today remains npm `@brainai/satp-client@2.0.3`; the
   long-term umbrella target is `@brainai/satp` only after a separate public
   release gate approves the package and install-ready docs. See
   [`docs/package-naming-decision.md`](./package-naming-decision.md).
-- Stable consumer package: use npm `@brainai/satp-client@2.0.1` unless a task explicitly requires branch-only review.
-- Reviewed RC-S6 package artifact: `@brainai/satp-client@2.0.2-rc.0`. Do not describe the older `0.1.0-rc.0` rc-tag readback as the current release-gate artifact.
+- Stable consumer package: use npm `@brainai/satp-client@2.0.3` unless a task explicitly requires branch-only review or rc validation.
+- Release-candidate tag: use `@brainai/satp-client@rc` only when HQ assigns rc validation. Registry readback on 2026-07-26 shows `rc` at `2.0.2`.
 - Branch/PR phase: Git-install the SATP repo from a reviewed commit only for active development or review; extraction-branch labels such as `0.0.0-extraction` are not the current consumer package.
 - Pre-release SDK phase: use explicit rc/alpha versions only after CI is green, consumer docs are current, and brainKID/brainForge approve the boundary.
 - Future umbrella target: `@brainai/satp`, `@brainai/satp-core`, and `@brainai/satp-solana` now have PR-review entrypoints and package-boundary tests, but remain private until release review authorizes publish/install docs. Do not replace the stable `@brainai/satp-client` consumer path with `@brainai/satp` until that release review lands.
@@ -35,7 +35,7 @@ Stable consumers should install the current npm package:
 ```json
 {
   "dependencies": {
-    "@brainai/satp-client": "2.0.1"
+    "@brainai/satp-client": "2.0.3"
   }
 }
 ```

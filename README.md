@@ -15,31 +15,29 @@ Choose the dependency source by release channel:
 
 | Channel | Use when | Dependency |
 | --- | --- | --- |
-| Stable npm | Production or default consumer installs that should follow the public stable package. | `npm install @brainai/satp-client@2.0.1` or `npm install @brainai/satp-client` |
-| Release candidate npm | Downstream apps are validating the reviewed rc package metadata or need reproducible rc manifests before promotion. | `npm install @brainai/satp-client@2.0.2-rc.0` or opt in to `npm install @brainai/satp-client@rc` |
+| Stable npm | Production or default consumer installs that should follow the public stable package. | `npm install @brainai/satp-client@2.0.3` or `npm install @brainai/satp-client` |
+| Release candidate tag | Downstream apps are validating an explicitly assigned historical rc package. | `npm install @brainai/satp-client@rc` |
 | Reviewed Git commit | PR coordination or unpublished review work where the exact repository commit is the artifact under review. | `git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
-The npm `latest` tag still resolves to `@brainai/satp-client@2.0.1`.
-Historical rc-tag readback may still show the older `0.1.0-rc.0` package until
-the rc channel is promoted. The reviewed RC-S6 artifact in this source tree is
-`@brainai/satp-client@2.0.2-rc.0`; downstream apps that need reproducible
-manifests should pin that exact version after promotion instead of depending on
-the moving `rc` dist-tag.
+Registry readback on 2026-07-26 shows npm `latest` resolves to
+`@brainai/satp-client@2.0.3` and the `rc` dist-tag resolves to `2.0.2`.
+Stable consumers should use `latest`/`2.0.3` unless HQ assigns an explicit
+release-candidate validation task.
 
 Stable consumers can pin the current published npm package:
 
     {
       "dependencies": {
-        "@brainai/satp-client": "2.0.1"
+        "@brainai/satp-client": "2.0.3"
       }
     }
 
-For rc validation, pin the exact rc package when the downstream lockfile is the
-auditable artifact:
+For rc validation, use the rc dist-tag only when HQ assigns that moving
+pre-stable artifact as the auditable target:
 
     {
       "dependencies": {
-        "@brainai/satp-client": "2.0.2-rc.0"
+        "@brainai/satp-client": "rc"
       }
     }
 
@@ -63,7 +61,7 @@ packet. This flow performs no RPC write, signing, live x402 payment, Solana
 deploy, keypair access, or npm publish.
 
 ```bash
-npm install @brainai/satp-client@2.0.1
+npm install @brainai/satp-client@2.0.3
 ```
 
 ```js

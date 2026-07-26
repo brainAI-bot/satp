@@ -15,17 +15,14 @@ publishes it and updates install-ready docs. See
 
 | Channel | Use when | Dependency |
 | --- | --- | --- |
-| Stable npm | Production or default AgentFolio and other consumer installs should stay on the stable public package. | `@brainai/satp-client@2.0.1` or `@brainai/satp-client` |
-| Release candidate npm | The app is validating the reviewed rc package metadata or needs reproducible rc manifests before promotion. | `@brainai/satp-client@2.0.2-rc.0` |
-| Release candidate tag | Short-lived rc opt-in where a moving dist-tag is acceptable. | `@brainai/satp-client@rc` |
+| Stable npm | Production or default AgentFolio and other consumer installs should stay on the stable public package. | `@brainai/satp-client@2.0.3` or `@brainai/satp-client` |
+| Release candidate tag | Explicit HQ-assigned rc validation where a moving dist-tag is acceptable. | `@brainai/satp-client@rc` |
 | Reviewed Git commit | HQ-assigned PR coordination or source-review installs tied to an exact reviewed SATP commit. | `git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
-The npm `latest` tag still resolves to `@brainai/satp-client@2.0.1`.
-Historical rc-tag readback may still show the older `0.1.0-rc.0` package until
-the rc channel is promoted. The reviewed RC-S6 artifact in this source tree is
-`@brainai/satp-client@2.0.2-rc.0`; downstream apps that need reproducible
-manifests for rc readback should pin that exact version after promotion instead
-of relying on the moving `@rc` tag.
+Registry readback on 2026-07-26 shows npm `latest` resolves to
+`@brainai/satp-client@2.0.3` and the `rc` dist-tag resolves to `2.0.2`.
+Stable consumers should use `latest`/`2.0.3` unless HQ assigns an explicit
+release-candidate validation task.
 
 ## RC-S6 semantic uncertainty compatibility
 
@@ -49,46 +46,40 @@ Consumers must not promote RC-S6 uncertainty outcomes into verified badges,
 ranking, eligibility, trust-score changes, payment state, escrow readiness,
 protected-action access, npm latest adoption, mainnet readiness, product launch
 copy, or AgentFolio product approval. Stable consumer installs should remain on
-`@brainai/satp-client@2.0.1` unless a separate promotion decision approves the
-RC package.
+`@brainai/satp-client@2.0.3` unless a separate HQ task assigns rc validation or
+commit-pinned review.
 
 ## Stable npm dependency path
 
 Use the current published npm package for stable consumer installs:
 
 ```bash
-npm install @brainai/satp-client@2.0.1
+npm install @brainai/satp-client@2.0.3
 ```
 
 ```json
 {
   "dependencies": {
-    "@brainai/satp-client": "2.0.1"
+    "@brainai/satp-client": "2.0.3"
   }
 }
 ```
 
 ## Release candidate dependency path
 
-Pin the exact rc package when downstream reproducibility or lockfile readback is
-the auditable artifact:
+Use the rc dist-tag only when downstream reproducibility or lockfile readback is
+explicitly assigned as the auditable artifact:
 
 ```bash
-npm install @brainai/satp-client@2.0.2-rc.0
+npm install @brainai/satp-client@rc
 ```
 
 ```json
 {
   "dependencies": {
-    "@brainai/satp-client": "2.0.2-rc.0"
+    "@brainai/satp-client": "rc"
   }
 }
-```
-
-Use the moving `rc` dist-tag only for short-lived rc opt-in:
-
-```bash
-npm install @brainai/satp-client@rc
 ```
 
 Branch-only development and PR review can still use a commit-addressed Git

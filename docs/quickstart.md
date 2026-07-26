@@ -12,9 +12,8 @@ candidate or a commit-addressed Git review pin.
 
 | Use case | Install |
 | --- | --- |
-| Stable app consumption | `npm install @brainai/satp-client@2.0.1` |
-| Exact release-candidate validation | `npm install @brainai/satp-client@2.0.2-rc.0` |
-| Short-lived rc opt-in | `npm install @brainai/satp-client@rc` |
+| Stable app consumption | `npm install @brainai/satp-client@2.0.3` |
+| HQ-assigned rc validation | `npm install @brainai/satp-client@rc` |
 | HQ-assigned source review | `npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
 Do not use `@brainai/satp` as the public install target yet. It remains a
