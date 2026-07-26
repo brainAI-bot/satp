@@ -3,7 +3,7 @@
 **Solana Agent Trust Protocol** - JavaScript/TypeScript SDK for reading and
 building reviewed SATP V3 program interactions.
 
-Current stable npm package: **@brainai/satp-client@2.0.1** | reviewed rc artifact: **@brainai/satp-client@2.0.2-rc.0** | Programs: **6**
+Current stable npm package: **@brainai/satp-client@2.0.3** | rc dist-tag: **@brainai/satp-client@2.0.2** | Programs: **6**
 
 ## Installation
 
@@ -11,31 +11,30 @@ Choose stable, rc, or Git based on what the consumer needs to prove:
 
 | Channel | Use when | Command |
 | --- | --- | --- |
-| Stable npm | Default production-style consumption of the stable public package. | `npm install @brainai/satp-client@2.0.1` |
-| Release candidate npm | Validating the reviewed rc package before promotion or producing reproducible rc manifests. | `npm install @brainai/satp-client@2.0.2-rc.0` |
-| Release candidate tag | Quick rc opt-in where a moving dist-tag is acceptable. | `npm install @brainai/satp-client@rc` |
+| Stable npm | Default production-style consumption of the stable public package. | `npm install @brainai/satp-client@2.0.3` |
+| Historical rc exact version | Explicit HQ-assigned reproduction or lockfile evidence for the historical pre-stable artifact. | `npm install @brainai/satp-client@2.0.2` |
+| Release candidate tag | Explicit HQ-assigned rc validation where a moving dist-tag is acceptable and the task names the tag as the target. | `npm install @brainai/satp-client@rc` |
 | Reviewed Git commit | PR coordination or source-review installs tied to an exact SATP commit. | `npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
-The npm `latest` tag still resolves to `@brainai/satp-client@2.0.1`.
-Historical rc-tag readback may still show the older `0.1.0-rc.0` package until
-the rc channel is promoted. The reviewed RC-S6 artifact in this source tree is
-`@brainai/satp-client@2.0.2-rc.0`; downstream apps that need reproducible
-manifests should pin that exact version after promotion instead of relying on
-the moving `@rc` tag.
+Registry readback on 2026-07-26 shows npm `latest` resolves to
+`@brainai/satp-client@2.0.3` and the `rc` dist-tag resolves to `2.0.2`.
+Stable consumers should use `latest`/`2.0.3` unless HQ assigns an explicit
+release-candidate validation task.
 
 For stable consumer installs, pin the current published npm package:
 
 ```bash
-npm install @brainai/satp-client@2.0.1
+npm install @brainai/satp-client@2.0.3
 ```
 
-For exact rc validation:
+For rc validation:
 
 ```bash
-npm install @brainai/satp-client@2.0.2-rc.0
+npm install @brainai/satp-client@2.0.2
 ```
 
-For short-lived rc opt-in:
+Use `@rc` only when the HQ task names the moving tag itself as the validation
+target:
 
 ```bash
 npm install @brainai/satp-client@rc
