@@ -16,13 +16,19 @@ publishes it and updates install-ready docs. See
 | Channel | Use when | Dependency |
 | --- | --- | --- |
 | Stable npm | Production or default AgentFolio and other consumer installs should stay on the stable public package. | `@brainai/satp-client@2.0.3` or `@brainai/satp-client` |
-| Release candidate tag | Explicit HQ-assigned rc validation where a moving dist-tag is acceptable. | `@brainai/satp-client@rc` |
+| Historical rc exact version | Explicit HQ-assigned reproduction or lockfile evidence for the historical pre-stable artifact. | `@brainai/satp-client@2.0.2` |
+| Release candidate tag | Explicit HQ-assigned rc validation where a moving dist-tag is acceptable and the task names the tag as the target. | `@brainai/satp-client@rc` |
 | Reviewed Git commit | HQ-assigned PR coordination or source-review installs tied to an exact reviewed SATP commit. | `git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
 Registry readback on 2026-07-26 shows npm `latest` resolves to
 `@brainai/satp-client@2.0.3` and the `rc` dist-tag resolves to `2.0.2`.
 Stable consumers should use `latest`/`2.0.3` unless HQ assigns an explicit
 release-candidate validation task.
+
+Stable 2.0.3 provenance: HQ task `TASK-cc897dc9` records the Owner-approved
+npm closeout for `@brainai/satp-client@2.0.3`, and `TASK-f53c7ecb` records the
+source alignment merge for PR #107. This PR documents that live registry state;
+it does not authorize a new publish or dist-tag mutation.
 
 ## RC-S6 semantic uncertainty compatibility
 
@@ -65,10 +71,25 @@ npm install @brainai/satp-client@2.0.3
 }
 ```
 
-## Release candidate dependency path
+## Historical release-candidate dependency path
 
-Use the rc dist-tag only when downstream reproducibility or lockfile readback is
-explicitly assigned as the auditable artifact:
+Use the exact historical rc package when downstream reproducibility or lockfile
+readback is explicitly assigned as the auditable artifact:
+
+```bash
+npm install @brainai/satp-client@2.0.2
+```
+
+```json
+{
+  "dependencies": {
+    "@brainai/satp-client": "2.0.2"
+  }
+}
+```
+
+Use the moving rc dist-tag only when HQ explicitly assigns the tag itself as the
+validation target and accepts that it is mutable:
 
 ```bash
 npm install @brainai/satp-client@rc
@@ -81,6 +102,10 @@ npm install @brainai/satp-client@rc
   }
 }
 ```
+
+The current `rc` tag resolves to the historical `2.0.2` package, which is older
+than stable `latest` `2.0.3`; it is not the default forward-looking consumer
+channel.
 
 Branch-only development and PR review can still use a commit-addressed Git
 dependency on the SATP repository root. The repo root is intentionally named

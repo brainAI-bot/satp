@@ -16,7 +16,8 @@ Choose the dependency source by release channel:
 | Channel | Use when | Dependency |
 | --- | --- | --- |
 | Stable npm | Production or default consumer installs that should follow the public stable package. | `npm install @brainai/satp-client@2.0.3` or `npm install @brainai/satp-client` |
-| Release candidate tag | Downstream apps are validating an explicitly assigned historical rc package. | `npm install @brainai/satp-client@rc` |
+| Historical rc exact version | Downstream apps need reproducible evidence for an explicitly assigned historical pre-stable package. | `npm install @brainai/satp-client@2.0.2` |
+| Release candidate tag | Downstream apps are validating the moving rc tag itself under an explicit HQ task. | `npm install @brainai/satp-client@rc` |
 | Reviewed Git commit | PR coordination or unpublished review work where the exact repository commit is the artifact under review. | `git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
 Registry readback on 2026-07-26 shows npm `latest` resolves to
@@ -38,6 +39,14 @@ pre-stable artifact as the auditable target:
     {
       "dependencies": {
         "@brainai/satp-client": "rc"
+      }
+    }
+
+For reproducible historical rc evidence, use the exact package version instead:
+
+    {
+      "dependencies": {
+        "@brainai/satp-client": "2.0.2"
       }
     }
 

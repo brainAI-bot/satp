@@ -12,7 +12,8 @@ Choose stable, rc, or Git based on what the consumer needs to prove:
 | Channel | Use when | Command |
 | --- | --- | --- |
 | Stable npm | Default production-style consumption of the stable public package. | `npm install @brainai/satp-client@2.0.3` |
-| Release candidate tag | Explicit HQ-assigned rc validation where a moving dist-tag is acceptable. | `npm install @brainai/satp-client@rc` |
+| Historical rc exact version | Explicit HQ-assigned reproduction or lockfile evidence for the historical pre-stable artifact. | `npm install @brainai/satp-client@2.0.2` |
+| Release candidate tag | Explicit HQ-assigned rc validation where a moving dist-tag is acceptable and the task names the tag as the target. | `npm install @brainai/satp-client@rc` |
 | Reviewed Git commit | PR coordination or source-review installs tied to an exact SATP commit. | `npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
 Registry readback on 2026-07-26 shows npm `latest` resolves to
@@ -27,6 +28,13 @@ npm install @brainai/satp-client@2.0.3
 ```
 
 For rc validation:
+
+```bash
+npm install @brainai/satp-client@2.0.2
+```
+
+Use `@rc` only when the HQ task names the moving tag itself as the validation
+target:
 
 ```bash
 npm install @brainai/satp-client@rc

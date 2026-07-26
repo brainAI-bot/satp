@@ -1,15 +1,26 @@
 # SATP npm RC-to-Stable Promotion Plan [#c6ac139d]
 
-Status: planning documentation only. This plan does not publish to npm, mutate
-npm dist-tags, use or expose credentials, write Solana state, change keypairs,
-deploy, restart production, spend funds, or change GitHub/DNS/org settings.
+Status: historical planning documentation only. This plan does not publish to
+npm, mutate npm dist-tags, use or expose credentials, write Solana state, change
+keypairs, deploy, restart production, spend funds, or change GitHub/DNS/org
+settings.
+
+Historical readback: the 2.0.2 release-candidate line has already been
+superseded. Registry readback on 2026-07-26 shows npm `latest` at
+`@brainai/satp-client@2.0.3` and the `rc` dist-tag at `2.0.2`. HQ task
+`TASK-cc897dc9` records the Owner-approved 2.0.3 npm closeout, and
+`TASK-f53c7ecb` records source alignment via PR #107. Do not use this document
+to move `latest` back to `2.0.2`, `2.0.2-rc.0`, or any other superseded
+artifact.
 
 ## Scope
 
-The current source-controlled npm release candidate is
-`@brainai/satp-client@2.0.2-rc.0` with `publishConfig.tag=rc`. Promotion to
-stable means turning a validated RC packet into an npm `latest` release under a
-separate, explicitly approved HQ release task.
+This document originally described the now-superseded
+`@brainai/satp-client@2.0.2-rc.0` candidate. Future stable promotion work must
+start from a fresh HQ release task that names the exact candidate version,
+current npm dist-tag state, release captain, credential holder, rollback target,
+and Owner approval record. Promotion means turning that validated candidate into
+an npm `latest` release under that separate, explicitly approved HQ task.
 
 This document covers `@brainai/satp-client` only. Workspace packages that remain
 private or unpublished are not promoted unless a later release packet explicitly
@@ -32,7 +43,8 @@ scope or dist-tag policy without a new HQ task.
 
 ## Promotion Path
 
-1. Confirm the RC packet is still the intended candidate:
+1. Confirm the HQ release task names the intended candidate and that the
+   candidate is not older than the current npm `latest`:
 
    ```sh
    git fetch origin main --tags
@@ -48,18 +60,19 @@ scope or dist-tag policy without a new HQ task.
    npm view @brainai/satp-client name version dist-tags versions --json
    ```
 
-3. If the RC has not been published yet, publish the candidate to the `rc`
-   dist-tag from a clean, reviewed commit:
+3. If the candidate has not been published yet, publish it to the assigned
+   pre-stable dist-tag from a clean, reviewed commit:
 
    ```sh
-   npm publish ./packages/satp-client --tag rc --access public
+   npm publish ./packages/satp-client --tag <approved-prestable-tag> --access public
    ```
 
-4. Verify the RC tarball and package entrypoints from a clean consumer install:
+4. Verify the candidate tarball and package entrypoints from a clean consumer
+   install:
 
    ```sh
-   npm view @brainai/satp-client@2.0.2-rc.0 dist.integrity dist.tarball --json
-   npm install @brainai/satp-client@2.0.2-rc.0
+   npm view @brainai/satp-client@<approved-candidate-version> dist.integrity dist.tarball --json
+   npm install @brainai/satp-client@<approved-candidate-version>
    node -e "const satp=require('@brainai/satp-client'); console.log(Object.keys(satp).sort())"
    ```
 
@@ -68,7 +81,7 @@ scope or dist-tag policy without a new HQ task.
    registry/account:
 
    ```sh
-   npm dist-tag add @brainai/satp-client@2.0.2-rc.0 latest
+   npm dist-tag add @brainai/satp-client@<approved-candidate-version> latest
    ```
 
 6. Keep the `rc` dist-tag on the same promoted version until the next RC line is
@@ -80,8 +93,8 @@ scope or dist-tag policy without a new HQ task.
 - Git: promotion source commit is on the reviewed PR branch or merged `main`,
   with no uncommitted package changes.
 - Metadata: `packages/satp-client/package.json` has `private:false`,
-  `publishConfig.access:"public"`, and an RC prerelease version newer than the
-  current npm `latest` before publish.
+  `publishConfig.access:"public"`, matches the exact HQ-approved candidate
+  version, and cannot move npm `latest` backward from current registry state.
 - Package surface: `npm pack --dry-run --json` includes only the expected SATP
   client files and no secret-shaped artifacts.
 - Tests: release metadata, package health, JS checks, export checks, package

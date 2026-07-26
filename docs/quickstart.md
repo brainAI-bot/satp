@@ -13,8 +13,14 @@ candidate or a commit-addressed Git review pin.
 | Use case | Install |
 | --- | --- |
 | Stable app consumption | `npm install @brainai/satp-client@2.0.3` |
-| HQ-assigned rc validation | `npm install @brainai/satp-client@rc` |
+| HQ-assigned historical rc reproduction | `npm install @brainai/satp-client@2.0.2` |
+| HQ-assigned moving rc-tag validation | `npm install @brainai/satp-client@rc` |
 | HQ-assigned source review | `npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
+
+The current npm `rc` tag resolves to historical package `2.0.2`, which is older
+than stable `latest` `2.0.3`. Use the exact `2.0.2` version when the review
+artifact must be reproducible; use `@rc` only when the HQ task names the moving
+tag as the target.
 
 Do not use `@brainai/satp` as the public install target yet. It remains a
 private workspace umbrella package until a separate release gate publishes it

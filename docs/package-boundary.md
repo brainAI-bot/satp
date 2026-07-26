@@ -22,7 +22,11 @@ Status: SATP S4 package-boundary hardening for branch/PR review. This document i
   release gate approves the package and install-ready docs. See
   [`docs/package-naming-decision.md`](./package-naming-decision.md).
 - Stable consumer package: use npm `@brainai/satp-client@2.0.3` unless a task explicitly requires branch-only review or rc validation.
-- Release-candidate tag: use `@brainai/satp-client@rc` only when HQ assigns rc validation. Registry readback on 2026-07-26 shows `rc` at `2.0.2`.
+- Historical rc exact version: use `@brainai/satp-client@2.0.2` only when HQ
+  assigns reproducible evidence for the historical pre-stable artifact.
+- Release-candidate tag: use `@brainai/satp-client@rc` only when HQ assigns
+  moving-tag validation. Registry readback on 2026-07-26 shows `rc` at
+  `2.0.2`, older than stable `latest` `2.0.3`.
 - Branch/PR phase: Git-install the SATP repo from a reviewed commit only for active development or review; extraction-branch labels such as `0.0.0-extraction` are not the current consumer package.
 - Pre-release SDK phase: use explicit rc/alpha versions only after CI is green, consumer docs are current, and brainKID/brainForge approve the boundary.
 - Future umbrella target: `@brainai/satp`, `@brainai/satp-core`, and `@brainai/satp-solana` now have PR-review entrypoints and package-boundary tests, but remain private until release review authorizes publish/install docs. Do not replace the stable `@brainai/satp-client` consumer path with `@brainai/satp` until that release review lands.
