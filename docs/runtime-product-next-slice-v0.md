@@ -3,6 +3,14 @@
 HQ task: `SATP-RUNTIME-PRODUCT-NEXT-SLICE-PR-20260726-2111Z`
 GitHub issue: [#14 SATP post-S6 roadmap](https://github.com/brainAI-bot/satp/issues/14)
 
+Issue #14 correction: Owner approval `REQ-cc84fa3a` supersedes the stale
+`2.0.1` npm target in the issue body. Line 13 should allow the already
+approved stable `@brainai/satp-client@2.0.2` target while preserving the ban on
+new npm publishes from this roadmap, and line 213 should make
+`AF-SATP-NPM-CONSUME-001` verify AgentFolio against
+`@brainai/satp-client@2.0.2`. That consume task is unblocked from the impossible
+`2.0.1` target, but remains limited to read-only consume verification.
+
 Status: PR-first implementation and design carrier. This document defines the
 next engineering slices needed to make SATP easier to consume from host
 runtimes while keeping all behavior offline, read-only, and reviewable.
