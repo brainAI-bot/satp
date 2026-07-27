@@ -11,11 +11,17 @@
       "types": "./index.d.ts",
       "default": "./index.js"
     },
+    "./wallet-control-challenge": {
+      "types": "./wallet-control-challenge.d.ts",
+      "default": "./wallet-control-challenge.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
     "index.js",
     "index.d.ts",
+    "wallet-control-challenge.js",
+    "wallet-control-challenge.d.ts",
     "README.md"
   ],
   "dependencies": {

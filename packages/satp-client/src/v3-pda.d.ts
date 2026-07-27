@@ -11,6 +11,8 @@ export interface V3ProgramIds {
   ESCROW: PublicKey;
 }
 
+export const V3_DEVNET_PROGRAM_IDS: V3ProgramIds;
+export const V3_MAINNET_PROGRAM_IDS: V3ProgramIds;
 export const SPL_TOKEN_PROGRAM_ID: PublicKey;
 export const ASSOCIATED_TOKEN_PROGRAM_ID: PublicKey;
 export const V3_DEVNET_TOKEN_MINTS: {

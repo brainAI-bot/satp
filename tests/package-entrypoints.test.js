@@ -3,6 +3,7 @@
 
 const assert = require('node:assert/strict');
 const satp = require('@brainai/satp');
+const satpWalletControlChallenge = require('@brainai/satp/wallet-control-challenge');
 const core = require('@brainai/satp-core');
 const solana = require('@brainai/satp-solana');
 
@@ -10,9 +11,9 @@ const subjectWallet = '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG';
 const metadataHash = '4d9678a7869c25f26a2e38e43f70fc7d0c4142d20b1743a43e50cd8fd012f3d7';
 
 for (const [packageName, api, required] of [
-  ['@brainai/satp', satp, ['core', 'solana', 'prepareIdentityAttestationRequest', 'buildSatpTrustPacket', 'getV3ProgramIds', 'getGenesisPDA', 'createSATPClient', 'buildSignerSeparationConfig']],
+  ['@brainai/satp', satp, ['core', 'solana', 'prepareIdentityAttestationRequest', 'buildSatpTrustPacket', 'V3_MAINNET_PROGRAM_IDS', 'getV3ProgramIds', 'getGenesisPDA', 'createSATPClient', 'buildSignerSeparationConfig']],
   ['@brainai/satp-core', core, ['prepareIdentityAttestationRequest', 'buildSatpTrustPacket', 'validateSatpTrustPacket', 'createRuntimePolicyAdapter', 'evaluateRuntimePolicy', 'buildRuntimePolicyActionDescriptor', 'buildSignerSeparationConfig']],
-  ['@brainai/satp-solana', solana, ['getV3ProgramIds', 'hashAgentId', 'getGenesisPDA', 'createSATPClient', 'buildSignerSeparationConfig']],
+  ['@brainai/satp-solana', solana, ['V3_DEVNET_PROGRAM_IDS', 'V3_MAINNET_PROGRAM_IDS', 'getV3ProgramIds', 'hashAgentId', 'getGenesisPDA', 'createSATPClient', 'buildSignerSeparationConfig']],
 ]) {
   const missing = required.filter((key) => !(key in api));
   assert.deepEqual(missing, [], `${packageName} missing exports`);
@@ -69,6 +70,13 @@ assert.equal(adapter.action({ capability: 'mcp:read' }).type, 'mcp_protected_too
 const ids = solana.getV3ProgramIds('devnet');
 assert.equal(typeof ids.IDENTITY.toBase58(), 'string');
 assert.equal(solana.hashAgentId('satp-package-boundary').length, 32);
+
+const mainnetIds = solana.getV3ProgramIds('mainnet');
+assert.equal(mainnetIds, solana.V3_MAINNET_PROGRAM_IDS);
+assert.equal(mainnetIds.IDENTITY.toBase58(), 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG');
+assert.equal(satp.V3_MAINNET_PROGRAM_IDS.IDENTITY.toBase58(), mainnetIds.IDENTITY.toBase58());
+assert.equal(typeof satpWalletControlChallenge.buildWalletControlChallenge, 'function');
+assert.equal(typeof satpWalletControlChallenge.verifyWalletControlChallengeSignature, 'function');
 
 const [genesisPda, genesisBump] = satp.solana.getGenesisPDA('satp-package-boundary', 'devnet');
 assert.equal(typeof genesisPda.toBase58(), 'string');
