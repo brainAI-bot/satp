@@ -40,6 +40,11 @@ conformance, security, release, and mainnet authority gates remain open.
 - The current repo package root is private and review-oriented. Stable consumers
   should continue using the published npm package unless a task explicitly
   requires a reviewed SATP Git commit or release-candidate package.
+- Issue #14 npm consume correction: Owner approval `REQ-cc84fa3a` supersedes the
+  stale `2.0.1` cap for `AF-SATP-NPM-CONSUME-001`; the AgentFolio consume check
+  is unblocked to verify `@brainai/satp-client@2.0.2` only, without authorizing
+  new npm publish, Solana writes, keypair movement, or AgentFolio product
+  changes.
 - No mainnet deploy, program extraction, keypair movement, npm publish,
   AgentFolio product change, public launch, or token work is authorized by this
   roadmap.
