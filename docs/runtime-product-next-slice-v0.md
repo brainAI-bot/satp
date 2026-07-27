@@ -7,6 +7,13 @@ Status: PR-first implementation and design carrier. This document defines the
 next engineering slices needed to make SATP easier to consume from host
 runtimes while keeping all behavior offline, read-only, and reviewable.
 
+Follow-up implementation:
+
+- `SATP-ISSUE14-NEXT-SLICE-AFTER-PR111-20260727-0217Z` adds the
+  `createRuntimePolicyAdapter` package-root helper, type declarations, core
+  package re-export, docs, and offline tests for the first SDK ergonomics
+  checklist item after PR #111.
+
 This slice does not publish npm packages, write to Solana devnet/mainnet, read
 or change keypairs, deploy or restart production systems, spend funds, contact
 clients, make public announcements, or replace AgentFolio product code.
@@ -230,4 +237,3 @@ AgentFolio-side acceptance should require:
 | AgentFolio reference-consumer follow-through | `AgentFolio reference-consumer follow-through` |
 | Issue #14 linkage | Header link to `brainAI-bot/satp#14` |
 | HQ task id linkage | Header task id |
-

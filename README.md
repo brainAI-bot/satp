@@ -113,12 +113,19 @@ follow-through lives in
       prepareIdentityAttestationRequest,
       buildSatpTrustPacket,
       validateSatpTrustPacket,
+      createRuntimePolicyAdapter,
       buildSignerSeparationConfig,
       validateSignerSeparationConfig,
     } = require('@brainai/satp-client');
 
 Subpath imports under @brainai/satp-client/src/* remain available for existing
 consumers during the review phase.
+
+`createRuntimePolicyAdapter(opts)` wraps the local runtime policy helpers for
+host runtimes that want stable `action`, `evaluate`, `auditTrace`, and
+`explain` methods from the package root. The adapter stays offline and local:
+it does not call RPC, read keypairs, approve payments, authorize actions from
+x402 payment, deploy, write Solana state, or publish packages.
 
 `buildSignerSeparationConfig(opts)` prepares a public-key-only policy packet for
 separating a low-privilege operational signer from the Owner-held upgrade

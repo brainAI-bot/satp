@@ -183,6 +183,34 @@ builds a runtime policy action descriptor. It asserts
 `paymentAuthorization: false`, `actionAuthorization: false`,
 `spendAuthorized: false`, and `livePaymentRequired: false`.
 
+### Runtime Policy Adapter Helper
+
+`createRuntimePolicyAdapter(opts)` provides a host-oriented wrapper around the
+offline runtime policy helpers:
+
+```javascript
+const { createRuntimePolicyAdapter } = require('@brainai/satp-client');
+
+const adapter = createRuntimePolicyAdapter({
+  defaultActionType: 'mcp_protected_tool',
+  now: () => '2026-05-21T00:00:00Z',
+  policy: { minimumTrustScore: 70, maxAutoSpendUsd: 0 },
+});
+
+const action = adapter.action({
+  resource: 'mcp://protected/readiness',
+  capability: 'mcp:read',
+});
+const result = adapter.evaluate(identityPayload, action);
+const trace = adapter.auditTrace(identityPayload, action, { result });
+const summary = adapter.explain(result);
+```
+
+The adapter only builds local descriptors, local decisions, redacted audit
+traces, and display-safe reason summaries. It does not call RPC, read keypairs,
+sign, send transactions, approve x402 spend, treat payment as action
+authorization, write Solana state, deploy, publish, or restart production.
+
 ### Wallet-Control Challenge Helpers
 
 `buildWalletControlChallenge(opts)` creates a canonical, offline challenge that
