@@ -19,6 +19,9 @@ The server in `src/server.js` exposes three read-only tools:
 | `satp.getPrograms({ network })` | Return SATP v3 program IDs for `devnet` or `mainnet`. |
 | `satp.resolveIdentity({ wallet, network, mode, rpcOptIn })` | Resolve a wallet from local fixtures by default; optional read-only RPC lookup requires `SATP_EXAMPLE_ALLOW_RPC=1` and `rpcOptIn: { enabled: true, readOnly: true }`. |
 | `satp.prepareAttestationRequest({ subjectWallet, claimType, metadataHash })` | Prepare a validated read-only SATP trust packet with unsigned request metadata, program IDs, Genesis PDA, attestation PDA, and no-sign/no-transaction flags. |
+| `satp.getConformanceFixtures()` | Return the offline SATP conformance fixture manifest for local runtime checks. |
+| `satp.evaluateProtectedToolPolicy({ toolName, operatorApproved })` | Example MCP protected-tool policy decision using `createRuntimePolicyAdapter`. |
+| `satp.evaluateX402EndpointPolicy({ actionPaymentPreapproved })` | Example x402 paid-endpoint policy decision using `createRuntimePolicyAdapter` without live payment. |
 
 ## Usage
 
@@ -39,6 +42,31 @@ const response = await server.callTool(
   { headers: { 'x-402-fixture': 'satp-fixture-pass' } }
 );
 console.log(response.result);
+```
+
+Protected MCP tool policy example:
+
+```js
+const { buildMcpProtectedToolPolicyExample } = require('./src/runtimePolicyExamples');
+
+const policy = buildMcpProtectedToolPolicyExample({
+  toolName: 'satp.getPrograms',
+  operatorApproved: true,
+});
+
+console.log(policy.result.decision, policy.result.reasonCodes);
+```
+
+x402 paid endpoint policy example:
+
+```js
+const { buildX402PaidEndpointPolicyExample } = require('./src/runtimePolicyExamples');
+
+const policy = buildX402PaidEndpointPolicyExample({
+  actionPaymentPreapproved: false,
+});
+
+console.log(policy.result.decision, policy.paymentBoundary.paymentIsNotActionAuthorization);
 ```
 
 ## Optional read-only RPC
