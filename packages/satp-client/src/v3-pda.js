@@ -15,7 +15,7 @@ const V3_DEVNET_PROGRAM_IDS = {
 };
 
 // Mainnet registry source: Anchor.toml [programs.mainnet], checked by
-// scripts/verify-v3-program-sources.mjs and docs/v3-program-source-verification.md.
+// scripts/verify-v3-program-sources.mjs and the D1 authority packet.
 // docs/mainnet-authority-decision-packet-6c8a5545.md remains the owner-gating
 // packet for deploy/key/publish actions. Keep V3 separate from legacy V2
 // MAINNET_PROGRAM_IDS in constants.js; do not fall back to V2 program IDs.
@@ -25,7 +25,7 @@ const V3_MAINNET_PROGRAM_IDS = {
   REPUTATION: new PublicKey('2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ'),
   ATTESTATIONS: new PublicKey('6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD'),
   VALIDATION: new PublicKey('6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV'),
-  ESCROW: new PublicKey('B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg'),
+  ESCROW: new PublicKey('HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C'),
 };
 const SPL_TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
 const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
