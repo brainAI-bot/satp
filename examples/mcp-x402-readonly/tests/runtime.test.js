@@ -13,6 +13,10 @@ const web3 = require('@solana/web3.js');
 const { createSatpReadonlyRuntime, assertRpcReadOnlyOptIn } = require('../src/satpReadonly');
 const { createMockX402Gate } = require('../src/x402Gate');
 const { createSatpMcpX402Server } = require('../src/server');
+const {
+  buildMcpProtectedToolPolicyExample,
+  buildX402PaidEndpointPolicyExample,
+} = require('../src/runtimePolicyExamples');
 
 const FIXTURE_WALLET = '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG';
 const FIXTURE_HASH = '4d9678a7869c25f26a2e38e43f70fc7d0c4142d20b1743a43e50cd8fd012f3d7';
@@ -128,6 +132,61 @@ test('MCP tool exposes conformance fixture classifications', async () => {
   );
 });
 
+test('MCP protected-tool example uses runtime policy approval before local allow', () => {
+  const needsApproval = buildMcpProtectedToolPolicyExample({
+    toolName: 'satp.getPrograms',
+    operatorApproved: false,
+  });
+  assert.equal(needsApproval.mode, 'offline-local-runtime-policy');
+  assert.equal(needsApproval.action.type, 'mcp_protected_tool');
+  assert.equal(needsApproval.action.protectedTool, true);
+  assert.equal(needsApproval.result.decision, 'needs_approval');
+  assert.ok(needsApproval.result.reasonCodes.includes('PROTECTED_TOOL_REQUIRES_APPROVAL'));
+  assert.equal(needsApproval.guardrails.writesSolanaState, false);
+
+  const allowed = buildMcpProtectedToolPolicyExample({
+    toolName: 'satp.getPrograms',
+    operatorApproved: true,
+  });
+  assert.equal(allowed.result.decision, 'allow');
+  assert.ok(allowed.result.reasonCodes.includes('LOCAL_POLICY_ALLOW'));
+  assert.equal(allowed.auditTrace.guardrails.authorizesAgentActionFromPayment, false);
+});
+
+test('x402 paid endpoint example separates payment approval from action authorization', () => {
+  const unpaid = buildX402PaidEndpointPolicyExample({ actionPaymentPreapproved: false });
+  assert.equal(unpaid.endpointKind, 'x402-paid-reputation-lookup');
+  assert.equal(unpaid.action.type, 'x402_endpoint');
+  assert.equal(unpaid.result.decision, 'needs_approval');
+  assert.ok(unpaid.result.reasonCodes.includes('ACTION_PAYMENT_NEEDS_APPROVAL'));
+  assert.equal(unpaid.paymentBoundary.livePaymentRequired, false);
+
+  const preapproved = buildX402PaidEndpointPolicyExample({ actionPaymentPreapproved: true });
+  assert.equal(preapproved.result.decision, 'allow');
+  assert.ok(preapproved.result.reasonCodes.includes('X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION'));
+  assert.equal(preapproved.paymentBoundary.paymentIsNotActionAuthorization, true);
+  assert.equal(preapproved.guardrails.authorizesAgentActionFromPayment, false);
+});
+
+test('MCP server exposes runtime adapter policy tools behind the mock x402 gate', async () => {
+  const server = createSatpMcpX402Server({ gate: createMockX402Gate() });
+  const denied = await server.callTool(
+    'satp.evaluateProtectedToolPolicy',
+    { toolName: 'satp.getPrograms', operatorApproved: true },
+    { headers: {} }
+  );
+  assert.equal(denied.ok, false);
+
+  const allowed = await server.callTool(
+    'satp.evaluateProtectedToolPolicy',
+    { toolName: 'satp.getPrograms', operatorApproved: true },
+    { headers: { 'x-402-fixture': 'satp-fixture-pass' } }
+  );
+  assert.equal(allowed.ok, true);
+  assert.equal(allowed.result.result.decision, 'allow');
+  assert.equal(allowed.result.guardrails.usesKeypairs, false);
+});
+
 test('satp.prepareAttestationRequest returns unsigned request metadata only', () => {
   const runtime = createSatpReadonlyRuntime();
   const result = runtime.prepareAttestationRequest({
@@ -240,6 +299,7 @@ test('invalid wallet inputs are rejected before any lookup', async () => {
 test('example source contains no keypair, transaction-send, publish, or deploy paths', () => {
   const source = [
     fs.readFileSync(path.join(__dirname, '..', 'src', 'satpReadonly.js'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, '..', 'src', 'runtimePolicyExamples.js'), 'utf8'),
     fs.readFileSync(path.join(__dirname, '..', 'src', 'server.js'), 'utf8'),
     fs.readFileSync(path.join(__dirname, '..', 'src', 'x402Gate.js'), 'utf8'),
   ].join('\n');

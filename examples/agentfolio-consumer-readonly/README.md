@@ -25,11 +25,16 @@ const {
   buildAgentFolioSatpConsumerRecord,
   verifyAgentFolioSatpConsumerRecord,
 } = require('./src/consumerRecord');
+const {
+  buildAgentFolioRuntimePolicyReference,
+} = require('./src/runtimePolicyReference');
 
 const record = buildAgentFolioSatpConsumerRecord({ profile, network: 'devnet' });
 const verification = verifyAgentFolioSatpConsumerRecord(record);
+const policyReference = buildAgentFolioRuntimePolicyReference({ profile });
 
 console.log(verification.ok, record.satp.trustInputs.map((input) => input.trustPacket.pda.attestation));
+console.log(policyReference.result.decision, policyReference.action.type);
 ```
 
 ## Consumer boundary
@@ -44,3 +49,17 @@ AgentFolio fixture profile
 ```
 
 Any future write path must be implemented outside this read-only runtime and reviewed as a separate branch/PR.
+
+## Runtime policy reference
+
+`src/runtimePolicyReference.js` shows how an AgentFolio-style consumer can use `createRuntimePolicyAdapter` after its SATP trust packet preflight passes:
+
+```text
+AgentFolio fixture profile
+  -> read-only SATP consumer record verification
+  -> createRuntimePolicyAdapter
+  -> agentfolio_trust_gate action
+  -> local allow, deny, degrade, or needs_approval decision
+```
+
+The reference keeps payment handling, Solana writes, keypair handling, deploys, package publishing, and production AgentFolio mutation out of scope.

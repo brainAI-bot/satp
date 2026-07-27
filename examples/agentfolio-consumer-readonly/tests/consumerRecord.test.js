@@ -7,6 +7,9 @@ const {
   buildAgentFolioSatpConsumerRecord,
   verifyAgentFolioSatpConsumerRecord,
 } = require('../src/consumerRecord');
+const {
+  buildAgentFolioRuntimePolicyReference,
+} = require('../src/runtimePolicyReference');
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -41,6 +44,33 @@ test('builds offline SATP trust inputs for an AgentFolio-style consumer', () => 
 test('verifies prepared consumer records without network or signing', () => {
   const record = buildAgentFolioSatpConsumerRecord({ profile });
   assert.deepEqual(verifyAgentFolioSatpConsumerRecord(record), { ok: true, errors: [] });
+});
+
+test('builds an AgentFolio runtime policy reference consumer plan', () => {
+  const reference = buildAgentFolioRuntimePolicyReference({ profile });
+
+  assert.equal(reference.mode, 'offline-local-reference-consumer-plan');
+  assert.equal(reference.recordVerified, true);
+  assert.deepEqual(reference.verificationErrors, []);
+  assert.equal(reference.action.type, 'agentfolio_trust_gate');
+  assert.equal(reference.action.requiresCapability, 'agentfolio:trust-read');
+  assert.equal(reference.result.decision, 'allow');
+  assert.ok(reference.result.reasonCodes.includes('LOCAL_POLICY_ALLOW'));
+  assert.equal(reference.auditTrace.guardrails.writesSolanaState, false);
+  assert.equal(reference.guardrails.publishesPackages, false);
+  assert.ok(reference.integrationPlan.some((step) => step.includes('createRuntimePolicyAdapter')));
+});
+
+test('AgentFolio runtime policy reference degrades below the local trust threshold', () => {
+  const reference = buildAgentFolioRuntimePolicyReference({
+    profile,
+    trustScore: 62,
+  });
+
+  assert.equal(reference.result.decision, 'degrade');
+  assert.ok(reference.result.reasonCodes.includes('TRUST_SCORE_BELOW_MINIMUM'));
+  assert.equal(reference.action.allowDegraded, true);
+  assert.equal(reference.guardrails.livePaymentRequired, false);
 });
 
 test('detects changed trust metadata before an app treats the record as valid', () => {
