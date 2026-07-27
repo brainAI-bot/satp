@@ -96,6 +96,11 @@ For a longer consumer walkthrough covering stable npm, release candidates,
 Git-review pins, conformance checks, and network boundaries, see
 [`docs/quickstart.md`](./docs/quickstart.md).
 
+The runtime/product next-slice plan for SDK ergonomics, local attestation
+request verification, MCP/x402 examples, and AgentFolio reference-consumer
+follow-through lives in
+[`docs/runtime-product-next-slice-v0.md`](./docs/runtime-product-next-slice-v0.md).
+
 ## API Surface
 
     const {
