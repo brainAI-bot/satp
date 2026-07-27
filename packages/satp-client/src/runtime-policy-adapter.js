@@ -80,7 +80,7 @@ function createRuntimePolicyAdapter(config = {}) {
     },
 
     auditTrace(identityPayload, actionDescriptor, options = {}) {
-      const traceAction = redact ? redactActionResource(actionDescriptor, redact) : actionDescriptor;
+      const traceAction = redact ? attachRedactedResourceLabel(actionDescriptor, redact) : actionDescriptor;
       return buildRuntimePolicyAuditTrace(identityPayload, traceAction, adapterOptions(options));
     },
 
@@ -189,6 +189,7 @@ function buildRuntimePolicyAuditTrace(identityPayload, actionDescriptor, options
       type: action.type,
       operation: action.operation,
       resourceKind: resourceKind(action.resource),
+      resourceLabel: action.resourceLabel,
       requiresCapability: action.requiresCapability,
       requiresFreshEvidence: action.requiresFreshEvidence,
       protectedTool: action.protectedTool,
@@ -301,6 +302,7 @@ function normalizeAction(action = {}) {
   return {
     type: action.type || 'generic',
     resource: action.resource || null,
+    resourceLabel: action.resourceLabel || null,
     operation: action.operation || null,
     requiresCapability: action.requiresCapability || null,
     minimumTrustScore: Number.isFinite(action.minimumTrustScore) ? action.minimumTrustScore : null,
@@ -425,7 +427,7 @@ function isValidDateInput(value) {
   return !Number.isNaN(date.getTime());
 }
 
-function redactActionResource(actionDescriptor, redact) {
+function attachRedactedResourceLabel(actionDescriptor, redact) {
   if (!actionDescriptor || typeof actionDescriptor !== 'object' || Array.isArray(actionDescriptor)) {
     return actionDescriptor;
   }
@@ -433,7 +435,7 @@ function redactActionResource(actionDescriptor, redact) {
   const redacted = redact(actionDescriptor.resource);
   return {
     ...actionDescriptor,
-    resource: typeof redacted === 'string' ? redacted : '[redacted]',
+    resourceLabel: typeof redacted === 'string' ? redacted : '[redacted]',
   };
 }
 

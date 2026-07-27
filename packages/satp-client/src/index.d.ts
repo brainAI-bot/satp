@@ -247,6 +247,7 @@ export interface RuntimePolicyAuditTrace {
     type: string;
     operation: string | null;
     resourceKind: string | null;
+    resourceLabel: string | null;
     requiresCapability: string | null;
     requiresFreshEvidence: boolean;
     protectedTool: boolean;

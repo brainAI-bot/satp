@@ -113,7 +113,7 @@ test('creates a host-oriented runtime policy adapter with default action type an
 test('runtime policy adapter emits redacted audit traces without changing evaluation input', () => {
   const adapter = createRuntimePolicyAdapter({
     now: '2026-05-21T00:00:00Z',
-    redact: () => 'mcp://redacted/tool',
+    redact: () => 'redacted private API endpoint',
   });
   const action = adapter.action({
     type: 'mcp_protected_tool',
@@ -125,7 +125,8 @@ test('runtime policy adapter emits redacted audit traces without changing evalua
 
   assert.equal(result.decision, DECISIONS.ALLOW);
   assert.equal(trace.generatedAt, '2026-05-21T00:00:00.000Z');
-  assert.equal(trace.action.resourceKind, 'mcp:');
+  assert.equal(trace.action.resourceKind, 'https:');
+  assert.equal(trace.action.resourceLabel, 'redacted private API endpoint');
   assert.ok(!JSON.stringify(trace).includes('token=leak'));
 });
 
