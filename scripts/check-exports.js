@@ -21,6 +21,7 @@ const requiredExports = [
   'prepareIdentityAttestationRequest',
   'buildSatpTrustPacket',
   'validateSatpTrustPacket',
+  'createRuntimePolicyAdapter',
   'evaluateRuntimePolicy',
   'buildRuntimePolicyActionDescriptor',
   'buildWalletControlChallenge',
@@ -93,6 +94,25 @@ if (
   || builtPolicyAction.guardrails.writesSolanaState !== false
 ) {
   throw new Error('buildRuntimePolicyActionDescriptor did not return guarded host action metadata');
+}
+
+const policyAdapter = satp.createRuntimePolicyAdapter({
+  defaultActionType: 'mcp_protected_tool',
+  now: '2026-05-22T00:00:00Z',
+});
+const adapterAction = policyAdapter.action({ capability: 'mcp:read' });
+const adapterDecision = policyAdapter.evaluate(
+  {
+    active: true,
+    satpVerified: true,
+    agentFolioTrustScore: 90,
+    capabilities: ['mcp:read'],
+    evidenceUpdatedAt: '2026-05-21T00:00:00Z',
+  },
+  adapterAction,
+);
+if (adapterDecision.decision !== 'allow' || !policyAdapter.explain(adapterDecision).length) {
+  throw new Error('createRuntimePolicyAdapter did not expose a working local host adapter');
 }
 
 const signerConfig = satp.buildSignerSeparationConfig({

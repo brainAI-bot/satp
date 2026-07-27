@@ -791,6 +791,7 @@ const {
   RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION,
   buildRuntimePolicyActionDescriptor,
   buildRuntimePolicyAuditTrace,
+  createRuntimePolicyAdapter,
   evaluateRuntimePolicy,
 } = require('./runtime-policy-adapter');
 const walletControlChallenge = require('./wallet-control-challenge');
@@ -976,6 +977,7 @@ module.exports = {
   RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION,
   buildRuntimePolicyActionDescriptor,
   buildRuntimePolicyAuditTrace,
+  createRuntimePolicyAdapter,
   evaluateRuntimePolicy,
 
   // V3 Deserialization (local extracted scaffold)

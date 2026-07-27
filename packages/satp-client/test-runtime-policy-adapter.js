@@ -9,6 +9,7 @@ const {
   RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION,
   buildRuntimePolicyActionDescriptor,
   buildRuntimePolicyAuditTrace,
+  createRuntimePolicyAdapter,
   evaluateRuntimePolicy,
 } = require('./src');
 
@@ -78,6 +79,54 @@ test('builds an AgentFolio trust gate descriptor with degraded access path', () 
 
   assert.equal(result.decision, DECISIONS.DEGRADE);
   assert.ok(result.reasonCodes.includes(REASON_CODES.TRUST_SCORE_BELOW_MINIMUM));
+});
+
+test('creates a host-oriented runtime policy adapter with default action type and policy', () => {
+  const adapter = createRuntimePolicyAdapter({
+    defaultActionType: 'mcp_protected_tool',
+    now: () => '2026-05-21T00:00:00Z',
+    policy: {
+      minimumTrustScore: 80,
+      maxAutoSpendUsd: 0,
+    },
+  });
+
+  const action = adapter.action({
+    resource: 'mcp://protected/readiness',
+    capability: 'mcp:read',
+    operatorApprovalRequired: true,
+  });
+
+  assert.equal(action.type, 'mcp_protected_tool');
+  assert.equal(action.operation, 'invoke');
+  assert.equal(action.requiresFreshEvidence, true);
+
+  const needsApproval = adapter.evaluate(baseIdentity, action);
+  assert.equal(needsApproval.decision, DECISIONS.NEEDS_APPROVAL);
+  assert.ok(needsApproval.reasonCodes.includes(REASON_CODES.PROTECTED_TOOL_REQUIRES_APPROVAL));
+
+  const allowed = adapter.evaluate(baseIdentity, action, { operatorApproved: true });
+  assert.equal(allowed.decision, DECISIONS.ALLOW);
+  assert.ok(adapter.explain(allowed).includes('The local host policy allows the action.'));
+});
+
+test('runtime policy adapter emits redacted audit traces without changing evaluation input', () => {
+  const adapter = createRuntimePolicyAdapter({
+    now: '2026-05-21T00:00:00Z',
+    redact: () => 'mcp://redacted/tool',
+  });
+  const action = adapter.action({
+    type: 'mcp_protected_tool',
+    resource: 'https://api.example.test/private?token=leak',
+    capability: 'mcp:read',
+  });
+  const result = adapter.evaluate(baseIdentity, action);
+  const trace = adapter.auditTrace(baseIdentity, action, { result });
+
+  assert.equal(result.decision, DECISIONS.ALLOW);
+  assert.equal(trace.generatedAt, '2026-05-21T00:00:00.000Z');
+  assert.equal(trace.action.resourceKind, 'mcp:');
+  assert.ok(!JSON.stringify(trace).includes('token=leak'));
 });
 
 test('builds an x402 endpoint descriptor without authorizing payment or action', () => {

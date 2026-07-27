@@ -37,6 +37,59 @@ const DEFAULT_POLICY = Object.freeze({
 const RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION = 'satp.runtimePolicyAuditTrace.v1';
 const RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION = 'satp.runtimePolicyHostActionDescriptor.v1';
 
+function createRuntimePolicyAdapter(config = {}) {
+  if (!config || typeof config !== 'object' || Array.isArray(config)) {
+    throw new Error('runtime policy adapter config must be an object');
+  }
+
+  const adapterPolicy = normalizePolicy(config.policy);
+  const defaultActionType = config.defaultActionType || null;
+  const nowProvider = config.now;
+  const redact = config.redact;
+
+  if (nowProvider !== undefined && typeof nowProvider !== 'function' && !isValidDateInput(nowProvider)) {
+    throw new Error('runtime policy adapter now must be a function or valid date input');
+  }
+  if (redact !== undefined && typeof redact !== 'function') {
+    throw new Error('runtime policy adapter redact must be a function');
+  }
+
+  function adapterOptions(options = {}) {
+    if (!options || typeof options !== 'object' || Array.isArray(options)) {
+      throw new Error('runtime policy adapter method options must be an object');
+    }
+
+    return {
+      ...options,
+      now: resolveAdapterNow(nowProvider, options.now),
+      policy: {
+        ...adapterPolicy,
+        ...(options.policy || {}),
+      },
+    };
+  }
+
+  return Object.freeze({
+    action(input = {}, overrides = {}) {
+      const base = applyDefaultActionType(input, defaultActionType);
+      return buildRuntimePolicyActionDescriptor(base, overrides);
+    },
+
+    evaluate(identityPayload, actionDescriptor, options = {}) {
+      return evaluateRuntimePolicy(identityPayload, actionDescriptor, adapterOptions(options));
+    },
+
+    auditTrace(identityPayload, actionDescriptor, options = {}) {
+      const traceAction = redact ? redactActionResource(actionDescriptor, redact) : actionDescriptor;
+      return buildRuntimePolicyAuditTrace(identityPayload, traceAction, adapterOptions(options));
+    },
+
+    explain(result) {
+      return explainRuntimePolicyResult(result);
+    },
+  });
+}
+
 function evaluateRuntimePolicy(identityPayload, actionDescriptor, options = {}) {
   const policy = { ...DEFAULT_POLICY, ...(options.policy || {}) };
   const now = options.now ? new Date(options.now) : new Date();
@@ -346,6 +399,68 @@ function defaultCostUsdForAction(type) {
   return 0;
 }
 
+function normalizePolicy(policy) {
+  if (policy === undefined) return {};
+  if (!policy || typeof policy !== 'object' || Array.isArray(policy)) {
+    throw new Error('runtime policy adapter policy must be an object');
+  }
+  return { ...policy };
+}
+
+function applyDefaultActionType(input, defaultActionType) {
+  if (!defaultActionType || typeof input === 'string') return input;
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return input;
+  if (input.type || input.surface) return input;
+  return { type: defaultActionType, ...input };
+}
+
+function resolveAdapterNow(nowProvider, methodNow) {
+  if (methodNow !== undefined) return methodNow;
+  if (typeof nowProvider === 'function') return nowProvider();
+  return nowProvider;
+}
+
+function isValidDateInput(value) {
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime());
+}
+
+function redactActionResource(actionDescriptor, redact) {
+  if (!actionDescriptor || typeof actionDescriptor !== 'object' || Array.isArray(actionDescriptor)) {
+    return actionDescriptor;
+  }
+  if (typeof actionDescriptor.resource !== 'string') return actionDescriptor;
+  const redacted = redact(actionDescriptor.resource);
+  return {
+    ...actionDescriptor,
+    resource: typeof redacted === 'string' ? redacted : '[redacted]',
+  };
+}
+
+function explainRuntimePolicyResult(result = {}) {
+  const reasonCodes = Array.isArray(result.reasonCodes) ? result.reasonCodes : [];
+  return reasonCodes.map((code) => RUNTIME_POLICY_EXPLANATIONS[code] || `Runtime policy returned ${code}.`);
+}
+
+const RUNTIME_POLICY_EXPLANATIONS = Object.freeze({
+  [REASON_CODES.ACTION_PAYMENT_NEEDS_APPROVAL]: 'The action cost exceeds the host auto-spend policy and needs approval.',
+  [REASON_CODES.ACTION_PAYMENT_PREAPPROVED]: 'The host preapproved payment for this action.',
+  [REASON_CODES.EVIDENCE_FRESH]: 'The identity evidence is fresh enough for this action.',
+  [REASON_CODES.EVIDENCE_STALE_OR_MISSING]: 'The identity evidence is stale or missing.',
+  [REASON_CODES.IDENTITY_INACTIVE]: 'The identity is inactive.',
+  [REASON_CODES.IDENTITY_UNVERIFIED]: 'The identity is not verified by the host policy.',
+  [REASON_CODES.INVALID_ACTION_COST_USD]: 'The action cost must be a finite non-negative number.',
+  [REASON_CODES.LOCAL_POLICY_ALLOW]: 'The local host policy allows the action.',
+  [REASON_CODES.MISSING_CAPABILITY]: 'The identity is missing the capability required by this action.',
+  [REASON_CODES.PROTECTED_TOOL_REQUIRES_APPROVAL]: 'The protected tool requires operator approval.',
+  [REASON_CODES.TRUST_SCORE_BELOW_DENY_FLOOR]: 'The trust score is below the host deny floor.',
+  [REASON_CODES.TRUST_SCORE_BELOW_MINIMUM]: 'The trust score is below the minimum for this action.',
+  [REASON_CODES.TRUST_SCORE_OK]: 'The trust score satisfies the local policy.',
+  [REASON_CODES.X402_LOOKUP_PAYMENT_PREAPPROVED]: 'The host preapproved payment for the x402 evidence lookup.',
+  [REASON_CODES.X402_LOOKUP_REQUIRES_APPROVAL]: 'The x402 evidence lookup requires payment approval.',
+  [REASON_CODES.X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION]: 'x402 payment does not authorize the agent action.',
+});
+
 function safeIsoDate(value) {
   const date = value ? new Date(value) : new Date();
   if (Number.isNaN(date.getTime())) return new Date().toISOString();
@@ -377,5 +492,6 @@ module.exports = {
   RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION,
   buildRuntimePolicyActionDescriptor,
   buildRuntimePolicyAuditTrace,
+  createRuntimePolicyAdapter,
   evaluateRuntimePolicy,
 };

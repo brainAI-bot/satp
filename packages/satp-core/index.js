@@ -11,6 +11,7 @@ module.exports = {
   DEFAULT_POLICY: client.DEFAULT_POLICY,
   REASON_CODES: client.REASON_CODES,
   RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION: client.RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION,
+  createRuntimePolicyAdapter: client.createRuntimePolicyAdapter,
   buildRuntimePolicyActionDescriptor: client.buildRuntimePolicyActionDescriptor,
   evaluateRuntimePolicy: client.evaluateRuntimePolicy,
   X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION: client.X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION,

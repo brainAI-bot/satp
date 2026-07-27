@@ -7,6 +7,7 @@ export {
   DEFAULT_POLICY,
   REASON_CODES,
   RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION,
+  createRuntimePolicyAdapter,
   buildRuntimePolicyActionDescriptor,
   evaluateRuntimePolicy,
   X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION,

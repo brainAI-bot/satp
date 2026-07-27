@@ -214,6 +214,13 @@ export interface RuntimePolicyOptions {
   policy?: RuntimePolicyConfig;
 }
 
+export interface RuntimePolicyAdapterOptions {
+  policy?: RuntimePolicyConfig;
+  now?: string | number | Date | (() => string | number | Date);
+  redact?: (value: string) => string;
+  defaultActionType?: string;
+}
+
 export interface RuntimePolicyResult {
   decision: RuntimePolicyDecision;
   reasonCodes: string[];
@@ -261,6 +268,24 @@ export interface RuntimePolicyAuditTrace {
     authorizesPayment: false;
     authorizesAgentActionFromPayment: false;
   };
+}
+
+export interface RuntimePolicyAdapter {
+  action(
+    input?: RuntimePolicyActionDescriptorBuildInput | string,
+    overrides?: RuntimePolicyActionDescriptorBuildInput
+  ): RuntimePolicyHostActionDescriptor;
+  evaluate(
+    identityPayload: RuntimePolicyIdentityPayload,
+    actionDescriptor: RuntimePolicyActionDescriptor,
+    options?: RuntimePolicyOptions
+  ): RuntimePolicyResult;
+  auditTrace(
+    identityPayload: RuntimePolicyIdentityPayload,
+    actionDescriptor: RuntimePolicyActionDescriptor,
+    options?: RuntimePolicyOptions & { result?: RuntimePolicyResult }
+  ): RuntimePolicyAuditTrace;
+  explain(result: RuntimePolicyResult): string[];
 }
 
 export type SatpSignerRole = 'operational_signer' | 'owner_upgrade_authority';
@@ -366,6 +391,10 @@ export function buildRuntimePolicyAuditTrace(
   actionDescriptor: RuntimePolicyActionDescriptor,
   options?: RuntimePolicyOptions & { result?: RuntimePolicyResult }
 ): RuntimePolicyAuditTrace;
+
+export function createRuntimePolicyAdapter(
+  options?: RuntimePolicyAdapterOptions
+): RuntimePolicyAdapter;
 
 export interface WalletControlChallengeOptions {
   agentId: string;
