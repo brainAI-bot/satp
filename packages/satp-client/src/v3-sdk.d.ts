@@ -48,7 +48,9 @@ export interface GenesisRecord {
   metadataUri: string;
   reputationScore: number;
   verificationLevel: number;
-  isActive: boolean;
+  isActive: boolean | null;
+  layout?: 'idl-with-is-active' | 'deployed-no-is-active';
+  hasIsActiveField?: boolean;
   createdAt: number;
   updatedAt: number;
   pendingAuthority: string | null;

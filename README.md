@@ -127,6 +127,11 @@ host runtimes that want stable `action`, `evaluate`, `auditTrace`, and
 it does not call RPC, read keypairs, approve payments, authorize actions from
 x402 payment, deploy, write Solana state, or publish packages.
 
+Legacy `SATPSDK` is the V2 compatibility surface. It defaults to devnet and
+fails closed for `network: 'mainnet'` unless callers explicitly pass
+`allowLegacyV2Mainnet: true`. New V3 integrations should use `SATPV3SDK` or
+`createSATPClient`.
+
 `buildSignerSeparationConfig(opts)` prepares a public-key-only policy packet for
 separating a low-privilege operational signer from the Owner-held upgrade
 authority. It does not read keypairs, generate keys, transfer authority, deploy,
@@ -171,6 +176,11 @@ freshly derived packet.
 npm run ci validates committed IDLs, syntax-checks client sources, verifies the
 public export surface, runs a clean external-consumer install smoke test, and
 runs the offline SDK/Borsh tests.
+
+`deserializeGenesisRecord(data)` and `SATPV3SDK#getGenesisRecord()` use the same
+shared decoder. The parsed result includes `layout` and `hasIsActiveField` so
+reviewers can distinguish IDL records that carry `is_active` from deployed
+records where that byte is absent.
 
 RC-S6 conformance fixture coverage is tracked in `docs/conformance.md`. The
 fixture suite is executable offline through `npm run test:conformance:rc-s6`

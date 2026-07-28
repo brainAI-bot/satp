@@ -26,6 +26,7 @@ const {
   SPL_TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } = require('./v3-pda');
+const { deserializeGenesisRecord } = require('./borsh-reader');
 
 const DEVNET_RPC = 'https://api.devnet.solana.com';
 const MAINNET_RPC = 'https://api.mainnet-beta.solana.com';
@@ -1960,78 +1961,9 @@ class SATPV3SDK {
     if (!acct) return null;
 
     try {
-      const data = acct.data.slice(8); // skip Anchor discriminator
-      let offset = 0;
-
-      const agentIdHash = data.slice(offset, offset + 32); offset += 32;
-
-      // Read strings
-      const readString = () => {
-        const len = data.readUInt32LE(offset); offset += 4;
-        const str = data.slice(offset, offset + len).toString('utf8'); offset += len;
-        return str;
-      };
-
-      const readVecString = () => {
-        const count = data.readUInt32LE(offset); offset += 4;
-        const arr = [];
-        for (let i = 0; i < count; i++) arr.push(readString());
-        return arr;
-      };
-
-      const agentName = readString();
-      const description = readString();
-      const category = readString();
-      const capabilities = readVecString();
-      const metadataUri = readString();
-      const faceImage = readString();
-      const faceMint = new PublicKey(data.slice(offset, offset + 32)); offset += 32;
-      const faceBurnTx = readString();
-      const genesisRecord = Number(data.readBigInt64LE(offset)); offset += 8;
-      const isActive = data[offset] === 1; offset += 1;
-      const authority = new PublicKey(data.slice(offset, offset + 32)); offset += 32;
-
-      // Option<Pubkey> — Borsh: 0x00 = None (1 byte only), 0x01 + 32 bytes = Some
-      const hasPending = data[offset] === 1; offset += 1;
-      let pendingAuthority = null;
-      if (hasPending) {
-        pendingAuthority = new PublicKey(data.slice(offset, offset + 32)).toBase58();
-        offset += 32;
-      }
-
-      const reputationScore = Number(data.readBigUInt64LE(offset)); offset += 8;
-      const verificationLevel = data[offset]; offset += 1;
-      const reputationUpdatedAt = Number(data.readBigInt64LE(offset)); offset += 8;
-      const verificationUpdatedAt = Number(data.readBigInt64LE(offset)); offset += 8;
-      const createdAt = Number(data.readBigInt64LE(offset)); offset += 8;
-      const updatedAt = Number(data.readBigInt64LE(offset)); offset += 8;
-      const bump = data[offset]; offset += 1;
-
-      const isBorn = genesisRecord !== 0;
-
       return {
+        ...deserializeGenesisRecord(acct.data),
         pda: pda.toBase58(),
-        agentIdHash: Buffer.from(agentIdHash).toString('hex'),
-        agentName,
-        description,
-        category,
-        capabilities,
-        metadataUri,
-        faceImage: faceImage || null,
-        faceMint: faceMint.equals(PublicKey.default) ? null : faceMint.toBase58(),
-        faceBurnTx: faceBurnTx || null,
-        genesisRecord,
-        isBorn,
-        isActive,
-        authority: authority.toBase58(),
-        pendingAuthority,
-        reputationScore,
-        verificationLevel,
-        reputationUpdatedAt,
-        verificationUpdatedAt,
-        createdAt,
-        updatedAt,
-        bump,
       };
     } catch (e) {
       return { pda: pda.toBase58(), raw: acct.data.toString('hex'), error: e.message };

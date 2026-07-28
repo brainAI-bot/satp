@@ -46,10 +46,15 @@ class SATPSDK {
    */
   constructor(opts = {}) {
     this.network = opts.network || 'devnet';
+    if (this.network === 'mainnet' && opts.allowLegacyV2Mainnet !== true) {
+      throw new Error('Legacy SATPSDK V2 mainnet access is fenced; use SATPV3SDK for V3 or pass allowLegacyV2Mainnet: true for explicit read-only legacy V2 access');
+    }
     this.rpcUrl = opts.rpcUrl || getRpcUrl(this.network);
     this.commitment = opts.commitment || 'confirmed';
     this.connection = new Connection(this.rpcUrl, this.commitment);
-    this.programIds = getProgramIds(this.network);
+    this.programIds = getProgramIds(this.network, {
+      allowLegacyV2Mainnet: opts.allowLegacyV2Mainnet === true,
+    });
   }
 
   // ─── Identity ──────────────────────────────────────────
@@ -822,71 +827,6 @@ function createSATPClient(opts = {}) {
 const borshReader = require('./borsh-reader');
 
 
-// Fixed genesis deserializer — matches actual on-chain struct (no isActive field)
-function _deserializeGenesisFixed(data) {
-  if (!data || data.length < 8) return null;
-  try {
-    const { PublicKey } = require('@solana/web3.js');
-    let offset = 8; // skip discriminator
-    const agentIdHashBytes = data.slice(offset, offset + 32); offset += 32;
-    const readString = () => {
-      const len = data.readUInt32LE(offset); offset += 4;
-      const str = data.slice(offset, offset + len).toString('utf8'); offset += len;
-      return str;
-    };
-    const readVecString = () => {
-      const count = data.readUInt32LE(offset); offset += 4;
-      const arr = [];
-      for (let i = 0; i < count; i++) arr.push(readString());
-      return arr;
-    };
-    const agentName = readString();
-    const description = readString();
-    const category = readString();
-    const capabilities = readVecString();
-    const metadataUri = readString();
-    const faceImage = readString();
-    const faceMint = new PublicKey(data.slice(offset, offset + 32)); offset += 32;
-    const faceBurnTx = readString();
-    const genesisRecord = Number(data.readBigInt64LE(offset)); offset += 8;
-    // NOTE: No isActive field in deployed program (SDK bug — has phantom isActive)
-    const authority = new PublicKey(data.slice(offset, offset + 32)); offset += 32;
-    const hasPending = data[offset]; offset += 1;
-    let pendingAuthority = null;
-    if (hasPending === 1) {
-      pendingAuthority = new PublicKey(data.slice(offset, offset + 32)).toBase58();
-      offset += 32;
-    }
-    const reputationScore = Number(data.readBigUInt64LE(offset)); offset += 8;
-    const verificationLevel = data[offset]; offset += 1;
-    const reputationUpdatedAt = Number(data.readBigInt64LE(offset)); offset += 8;
-    const verificationUpdatedAt = Number(data.readBigInt64LE(offset)); offset += 8;
-    const createdAt = Number(data.readBigInt64LE(offset)); offset += 8;
-    const updatedAt = Number(data.readBigInt64LE(offset)); offset += 8;
-    const bump = data[offset]; offset += 1;
-    return {
-      agentIdHash: Array.from(agentIdHashBytes),
-      agentName, description, category, capabilities, metadataUri, faceImage,
-      faceMint: faceMint.toBase58(),
-      faceBurnTx,
-      genesisRecord,
-      isBorn: genesisRecord > 0,
-      authority: authority.toBase58(),
-      pendingAuthority,
-      reputationScore,
-      verificationLevel,
-      verificationLabel: ['Unverified','Registered','Verified','Established','Trusted','Sovereign'][verificationLevel] || 'Unknown',
-      reputationPct: (reputationScore / 10000).toFixed(2),
-      reputationUpdatedAt, verificationUpdatedAt,
-      createdAt: createdAt > 0 ? new Date(createdAt * 1000).toISOString() : null,
-      updatedAt: updatedAt > 0 ? new Date(updatedAt * 1000).toISOString() : null,
-      bump,
-    };
-  } catch (e) {
-    return { error: e.message, raw: data.toString('hex').slice(0, 200) };
-  }
-}
-
 module.exports = {
   // V2 SDK (backward compatible — legacy, kept for escrow V2 / old paths)
   SATPSDK,
@@ -981,10 +921,8 @@ module.exports = {
   evaluateRuntimePolicy,
 
   // V3 Deserialization (local extracted scaffold)
-  // NOTE: v3sdk.deserializeGenesis has isActive field mismatch with deployed program
-  // Using corrected manual parser until SDK v3.6+ fixes struct alignment
-  deserializeGenesis: _deserializeGenesisFixed,
-  deserializeGenesisRecord: _deserializeGenesisFixed, // alias for old name
+  deserializeGenesis: v3Borsh.deserializeGenesisRecord,
+  deserializeGenesisRecord: v3Borsh.deserializeGenesisRecord,
   deserializeLinkedWallet: v3Borsh.deserializeLinkedWallet,
   deserializeMintTracker: v3Borsh.deserializeMintTracker,
   deserializeNameRegistry: v3Borsh.deserializeNameRegistry,
