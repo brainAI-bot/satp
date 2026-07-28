@@ -127,7 +127,7 @@ const tx = await sdk.buildCreateIdentity(creatorPubkey, 'myAgent', {
 | `attestations_v3` | `6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD` | Third-party attestations & proofs |
 | `reputation_v3` | `2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ` | Weighted reputation scoring (CPI → identity) |
 | `validation_v3` | `6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV` | Validation level computation (CPI → identity) |
-| `escrow_v3` | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` | SOL escrow for agent jobs |
+| `escrow_v3` | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | SOL escrow for agent jobs |
 
 ## API Reference
 

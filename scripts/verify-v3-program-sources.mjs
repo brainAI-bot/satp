@@ -36,7 +36,7 @@ const programs = [
   },
   {
     name: 'escrow_v3',
-    devnet: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
+    devnet: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
     mainnet: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
   },
 ];

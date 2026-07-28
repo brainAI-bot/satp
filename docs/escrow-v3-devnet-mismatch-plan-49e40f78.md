@@ -1,9 +1,10 @@
-# Escrow V3 Devnet Mismatch No-Write Repair Plan
+# Escrow V3 Canonical ID Build Comparison and Former Devnet Mismatch Plan
 
 Marker: `[#49e40f78]`
 
-Status: read-only diagnosis complete. This plan does not deploy, upgrade,
-publish an IDL, rotate keys, or change program authority.
+Status: 2026-07-28 owner decision superseded the prior devnet candidate ID.
+This record does not deploy, upgrade, publish an IDL, rotate keys, or change
+program authority.
 
 ## Read-Only Evidence
 
@@ -11,34 +12,33 @@ publish an IDL, rotate keys, or change program authority.
 | --- | --- |
 | SATP source commit | `42cf9b39caa454fc39b5f2291c93a553a664562a` |
 | Source path | `programs/escrow_v3` |
-| Devnet program ID | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` |
+| Canonical escrow program ID | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` |
+| Historical devnet program ID, superseded 2026-07-28 | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` |
 | Local build command | `cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml` |
 | Local built artifact | `target/deploy/escrow_v3.so` |
-| Local built artifact hash | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` |
-| Devnet dump command | `solana program dump -u devnet B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg /tmp/escrow_v3-devnet.so` |
-| Devnet dumped artifact hash | `9426908b0c3084f316fc963a9824bd6aad55c2487da22ffe213bbfa3b772f82b` |
-| Devnet ProgramData | `7m4t1wqt26s5haqS1n2HsRNoewMvLnTbzPkfFGkpZDD5` |
-| Devnet upgrade authority | `Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc` |
-| Devnet last deployed slot | `453440913` |
-| Devnet data length | `290680 (0x46f78)` |
-| Anchor devnet IDL fetch | `AccountNotFound: pubkey=FivN5ANqf55Js5THDVzYU7tjq8mYkjdSE6xawpTAa3Ni` |
+| Local built artifact hash after canonical ID correction | `173ab0ddfdb4a68cf6bfae389f2f430eb97333501d49d6cad588525de2bfc55b` |
+| Mainnet dump command | `solana program dump -u mainnet-beta HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C /tmp/escrow_v3-hxcuwkr2-mainnet.so` |
+| Mainnet dumped artifact hash | `b70a7a7ea55f43da7bd3fc4f666e1374436bb9c8aeaa83cb2f0a2a970b603094` |
+| Comparison result | `DIFFER` |
+| Historical devnet dumped artifact hash for superseded `B1Se8SP...` | `9426908b0c3084f316fc963a9824bd6aad55c2487da22ffe213bbfa3b772f82b` |
+| Historical devnet ProgramData for superseded `B1Se8SP...` | `7m4t1wqt26s5haqS1n2HsRNoewMvLnTbzPkfFGkpZDD5` |
+| Historical devnet upgrade authority for superseded `B1Se8SP...` | `Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc` |
+| Historical devnet last deployed slot for superseded `B1Se8SP...` | `453440913` |
+| Historical Anchor devnet IDL fetch for superseded `B1Se8SP...` | `AccountNotFound: pubkey=FivN5ANqf55Js5THDVzYU7tjq8mYkjdSE6xawpTAa3Ni` |
 | Offline source checks | `npm run verify:v3-program-sources` passed |
 | Offline IDL checks | `npm run validate:idls` passed |
 
 ## Diagnosis
 
-The checked-in escrow source and repository IDL are internally consistent for
-offline use, but the current `programs/escrow_v3` build does not match the
-bytes deployed at the devnet program ID above. The deployed devnet hash is
-`9426908b...`, while the rebuilt source hash is `fe866c0f...`.
+The checked-in escrow source now declares the owner-selected canonical program
+ID `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C`. Rebuilding from that source
+does not produce byte-identical output to the deployed mainnet ELF: the rebuilt
+source hash is `173ab0dd...`, while the dumped mainnet hash is `b70a7a7e...`.
 
-The Anchor IDL account derived for the devnet program ID is not fetchable from
-devnet. Because the deployed bytes mismatch the current source and the devnet
-IDL cannot be fetched, the current state does not prove
-`source == deployed == IDL` for AgentFolio escrow consumption.
-
-AgentFolio should therefore treat the devnet escrow program as unverified until
-HQ authorizes one of the repair tracks below.
+Because corrected source identity and deployed mainnet bytes differ, the current
+state still does not prove `source == deployed == IDL` for AgentFolio escrow
+consumption. AgentFolio should therefore keep live escrow writes gated until the
+source/deployed/IDL proof is resolved or explicitly accepted through HQ.
 
 ## No-Write Repair Plan
 

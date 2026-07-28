@@ -13,7 +13,7 @@ This repository carries the extracted SATP V3 Anchor program sources from
 | attestations_v3 | `programs/attestations_v3` | `55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw` | `6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD` |
 | reputation_v3 | `programs/reputation_v3` | `CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9` | `2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ` |
 | validation_v3 | `programs/validation_v3` | `DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj` | `6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV` |
-| escrow_v3 | `programs/escrow_v3` | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` |
+| escrow_v3 | `programs/escrow_v3` | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` |
 
 The checked-in `Anchor.toml` uses devnet as the default read/build cluster and
 keeps a repo-local placeholder wallet path. Do not replace that placeholder
@@ -37,15 +37,27 @@ nested IDL JSON files, and rejects committed `.env`, memory, target,
 program tree. The Rust workspace check requires Rust 1.89.0 or newer because
 the resolved Solana crate set rejects older compilers.
 
-Current post-merge source tree SHA-256:
+Current post-merge source tree SHA-256 after the 2026-07-28 owner decision to
+adopt `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` as the canonical escrow V3
+program ID:
 
 ```text
-da3540f726a72228f5082c15807a6a3cbf8d0393cf7febddf4a8c5824af05037
+82100f8df592983bfd349a838dac24159938476f77696b399e518f31da270fd9
 ```
 
 The `escrow_v3` SBF proof requires platform-tools `v1.52`; the Solana CLI
 2.1.21 default platform-tools are too old for the Solana 3.x dependency graph
 and fail before compilation on edition-2024 transitive crates.
+
+The 2026-07-28 rebuild from corrected committed source produced
+`target/deploy/escrow_v3.so` SHA-256
+`173ab0ddfdb4a68cf6bfae389f2f430eb97333501d49d6cad588525de2bfc55b`.
+The deployed mainnet ELF dumped from
+`HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` produced SHA-256
+`b70a7a7ea55f43da7bd3fc4f666e1374436bb9c8aeaa83cb2f0a2a970b603094`.
+These hashes differ, so corrected repo identity now matches the owner-selected
+program ID but the rebuilt source is not byte-identical to the deployed
+mainnet program.
 
 ## Anchor Verify
 
@@ -61,8 +73,9 @@ anchor verify 3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk --provider.cluster de
 anchor verify 55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw --provider.cluster devnet
 anchor verify CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9 --provider.cluster devnet
 anchor verify DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj --provider.cluster devnet
-anchor verify B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg --provider.cluster devnet
+anchor verify HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C --provider.cluster devnet
 ```
 
-In the cron environment used for this extraction, `anchor` and `solana` were not
-installed, so the full deployed-bytecode comparison could not be executed there.
+On 2026-07-28, `anchor 0.31.1`, `solana-cli 2.1.21`, and
+`cargo 1.86.0` were available in the brainChain runner; the SBF build and
+mainnet program dump completed, and the comparison result was `DIFFER`.
