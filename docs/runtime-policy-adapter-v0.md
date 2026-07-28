@@ -193,15 +193,17 @@ evaluateRuntimePolicy(identity, {
 });
 ~~~
 
-Host trust-score gate:
+AgentFolio trust-score gate:
 
 ~~~js
 evaluateRuntimePolicy({ ...identity, trustScore: 62 }, {
-  type: 'host_trust_gate',
+  type: 'agentfolio_trust_gate',
   minimumTrustScore: 80,
   allowDegraded: true,
 });
 ~~~
+
+Hosts that expose this as a generic runtime trust-score gate can use `host_trust_gate`; it maps to the same AgentFolio trust-score resource, `agentfolio:trust-read` capability, and degraded-access behavior.
 
 Optional paid x402 reputation/evidence lookup when local evidence is missing or stale:
 
