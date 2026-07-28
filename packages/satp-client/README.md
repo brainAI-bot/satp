@@ -183,6 +183,15 @@ builds a runtime policy action descriptor. It asserts
 `paymentAuthorization: false`, `actionAuthorization: false`,
 `spendAuthorized: false`, and `livePaymentRequired: false`.
 
+The proposed issue #14 Track C endpoint spec for third-party SATP reputation
+and evidence consumers lives in
+[`docs/x402-reputation-evidence-lookup-api.md`](../../docs/x402-reputation-evidence-lookup-api.md).
+Its companion offline caller example is runnable with:
+
+```bash
+node packages/satp-client/examples/x402-reputation-evidence-lookup-client.js
+```
+
 ### Runtime Policy Adapter Helper
 
 `createRuntimePolicyAdapter(opts)` provides a host-oriented wrapper around the

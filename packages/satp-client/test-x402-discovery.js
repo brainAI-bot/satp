@@ -13,6 +13,10 @@ const {
   evaluateRuntimePolicy,
 } = require('./src');
 const x402DiscoverySubpath = require('@brainai/satp-client/x402-discovery');
+const {
+  LOOKUP_SCHEMA_VERSION,
+  runExample: runReputationEvidenceLookupExample,
+} = require('./examples/x402-reputation-evidence-lookup-client');
 
 const maliciousDiscovery = {
   action: 'satp.resolveIdentity',
@@ -131,6 +135,7 @@ assert.equal(buildRuntimePolicyActionDescriptorFromX402, buildRuntimePolicyActio
 assert.equal(typeof x402DiscoverySubpath.parseX402DiscoveryMetadata, 'function');
 assert.equal(typeof x402DiscoverySubpath.buildX402EvidenceLookup, 'function');
 assert.equal(typeof x402DiscoverySubpath.buildRuntimePolicyActionDescriptorFromX402Discovery, 'function');
+assert.equal(LOOKUP_SCHEMA_VERSION, 'satp.x402ReputationEvidenceLookup.v1');
 
 assert.throws(
   () => parseX402DiscoveryMetadata('not json'),
@@ -145,4 +150,14 @@ assert.throws(
   /maxCostUsd must be a finite non-negative number/
 );
 
-console.log('x402 discovery helper OK');
+runReputationEvidenceLookupExample().then((example) => {
+  assert.equal(example.guardrail, X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION);
+  assert.equal(example.paymentAuthorization, false);
+  assert.equal(example.actionAuthorization, false);
+  assert.equal(example.spendAuthorized, false);
+  assert.equal(example.livePaymentRequired, false);
+  console.log('x402 discovery helper OK');
+}).catch((err) => {
+  console.error(err);
+  process.exitCode = 1;
+});
