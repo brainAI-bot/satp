@@ -7,7 +7,7 @@ const DEVNET_PROGRAM_IDS = {
   REPUTATION: new PublicKey('4y4W2Mdfpu91C4iVowiDyJTmdKSjo8bmSDQrX2c84WQF'),
   ATTESTATIONS: new PublicKey('9xT3eNcndkmnqZtJqDQ1ggckHK7Dxo5EsAt5mHqsPBhP'),
   VALIDATION: new PublicKey('8jLaqodAzfM7oCxP7aedFeszeNjnJ5ik56dzhDU2HQgc'),
-  ESCROW: new PublicKey('HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C'),
+  ESCROW: new PublicKey('UpJ7jmUzHkQ7EdBKiBv3zq8Dr1fVh6GVWKa7nYtwQ22'),
 };
 
 const LEGACY_V2_MAINNET_FENCE_MESSAGE = 'Legacy SATP V2 mainnet program IDs are fenced; use getV3ProgramIds("mainnet") for V3 or pass allowLegacyV2Mainnet: true for explicit read-only legacy V2 access';

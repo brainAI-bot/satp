@@ -120,7 +120,7 @@ const tx = await sdk.buildCreateIdentity(creatorPubkey, 'myAgent', {
 
 ## Programs & Program IDs
 
-| Program | Devnet | Description |
+| Program | Mainnet | Description |
 |---------|--------|-------------|
 | `identity_v3` | `GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG` | Agent identity, names, wallets, face/birth |
 | `reviews_v3` | `r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4` | Peer reviews with 1-5 star ratings |

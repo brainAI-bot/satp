@@ -26,7 +26,7 @@ const DEVNET_PROGRAMS = {
   reputation: 'CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9',
   attestations: '55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw',
   validation: 'DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj',
-  escrow: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
+  escrow: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
 };
 const originalRpcEnv = process.env.SATP_EXAMPLE_ALLOW_RPC;
 

@@ -2,9 +2,10 @@
 
 Marker: `[#49e40f78]`
 
-Status: 2026-07-28 owner decision superseded the prior devnet candidate ID.
-This record does not deploy, upgrade, publish an IDL, rotate keys, or change
-program authority.
+Status: 2026-07-28 owner decision selected the mainnet canonical ID while the
+devnet registry remains scoped to the existing devnet deployment. This record
+does not deploy, upgrade, publish an IDL, rotate keys, or change program
+authority.
 
 ## Read-Only Evidence
 
@@ -12,19 +13,19 @@ program authority.
 | --- | --- |
 | SATP source commit | `42cf9b39caa454fc39b5f2291c93a553a664562a` |
 | Source path | `programs/escrow_v3` |
-| Canonical escrow program ID | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` |
-| Historical devnet program ID, superseded 2026-07-28 | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` |
+| Canonical mainnet escrow program ID | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` |
+| Current devnet escrow program ID | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` |
 | Local build command | `cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml` |
 | Local built artifact | `target/deploy/escrow_v3.so` |
 | Local built artifact hash after canonical ID correction | `173ab0ddfdb4a68cf6bfae389f2f430eb97333501d49d6cad588525de2bfc55b` |
 | Mainnet dump command | `solana program dump -u mainnet-beta HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C /tmp/escrow_v3-hxcuwkr2-mainnet.so` |
 | Mainnet dumped artifact hash | `b70a7a7ea55f43da7bd3fc4f666e1374436bb9c8aeaa83cb2f0a2a970b603094` |
 | Comparison result | `DIFFER` |
-| Historical devnet dumped artifact hash for superseded `B1Se8SP...` | `9426908b0c3084f316fc963a9824bd6aad55c2487da22ffe213bbfa3b772f82b` |
-| Historical devnet ProgramData for superseded `B1Se8SP...` | `7m4t1wqt26s5haqS1n2HsRNoewMvLnTbzPkfFGkpZDD5` |
-| Historical devnet upgrade authority for superseded `B1Se8SP...` | `Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc` |
-| Historical devnet last deployed slot for superseded `B1Se8SP...` | `453440913` |
-| Historical Anchor devnet IDL fetch for superseded `B1Se8SP...` | `AccountNotFound: pubkey=FivN5ANqf55Js5THDVzYU7tjq8mYkjdSE6xawpTAa3Ni` |
+| Devnet dumped artifact hash for `B1Se8SP...` | `9426908b0c3084f316fc963a9824bd6aad55c2487da22ffe213bbfa3b772f82b` |
+| Devnet ProgramData for `B1Se8SP...` | `7m4t1wqt26s5haqS1n2HsRNoewMvLnTbzPkfFGkpZDD5` |
+| Devnet upgrade authority for `B1Se8SP...` | `Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc` |
+| Devnet last deployed slot for `B1Se8SP...` | `453440913` |
+| Anchor devnet IDL fetch for `B1Se8SP...` | `AccountNotFound: pubkey=FivN5ANqf55Js5THDVzYU7tjq8mYkjdSE6xawpTAa3Ni` |
 | Offline source checks | `npm run verify:v3-program-sources` passed |
 | Offline IDL checks | `npm run validate:idls` passed |
 
@@ -46,8 +47,8 @@ source/deployed/IDL proof is resolved or explicitly accepted through HQ.
    The current source and checked-in IDL may be used for local/offline SDK
    tests, but must not be represented as matching the deployed mainnet program.
 2. Preserve the read-only evidence above in SATP docs and HQ task evidence so
-   later repair work has the exact canonical program ID, local build hash,
-   mainnet dump hash, comparison result, and historical/superseded devnet
+   later repair work has the exact canonical mainnet program ID, devnet program
+   ID, local build hash, mainnet dump hash, comparison result, and devnet
    disposition.
 3. Choose one future write-approved track in HQ:
    - Mainnet acceptance track: explicitly accept through HQ that current SATP

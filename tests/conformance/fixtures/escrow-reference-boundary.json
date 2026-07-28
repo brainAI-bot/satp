@@ -28,8 +28,8 @@
       "genesisPda": "8pCsrc91rvEpee2KqDJNmcAZH6jw8jvasuvQWThKLtXw"
     },
     "payer": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgBNG",
-    "escrowPda": "7bKvQVPTiBM3TP1fbRB2iFmkNJ4EnW2WfUcbDygyUqJm",
-    "escrowBump": 254,
+    "escrowPda": "2oBigekWeqH9WzfaQYeQvqJ7zovNAqnmvkpsa6JHvGT4",
+    "escrowBump": 255,
     "descriptionHash": "322bf7a8c7cd0222c352577ce6bf4f7b5f08dccc1bf8585cd1dcf0386351cbb8",
     "nonce": 42,
     "state": "reference_only",
@@ -49,7 +49,7 @@
       ]
     },
     "programs": {
-      "escrow": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C"
+      "escrow": "B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg"
     }
   }
 }

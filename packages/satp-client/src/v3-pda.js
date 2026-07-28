@@ -11,7 +11,7 @@ const V3_DEVNET_PROGRAM_IDS = {
   REPUTATION: new PublicKey('CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9'),
   ATTESTATIONS: new PublicKey('55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw'),
   VALIDATION: new PublicKey('DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj'),
-  ESCROW: new PublicKey('HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C'),
+  ESCROW: new PublicKey('B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg'),
 };
 
 // Mainnet registry source: Anchor.toml [programs.mainnet], checked by

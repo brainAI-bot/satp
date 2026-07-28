@@ -7,7 +7,7 @@ skip-lint = false
 
 [programs.devnet]
 attestations_v3 = "55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw"
-escrow_v3 = "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C"
+escrow_v3 = "B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg"
 identity_v3 = "7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ"
 reputation_v3 = "CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9"
 reviews_v3 = "3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk"
@@ -16,7 +16,7 @@ validation_v3 = "DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj"
 
 [programs.localnet]
 attestations_v3 = "55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw"
-escrow_v3 = "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C"
+escrow_v3 = "B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg"
 identity_v3 = "7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ"
 reputation_v3 = "CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9"
 reviews_v3 = "3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk"
