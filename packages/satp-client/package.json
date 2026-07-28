@@ -26,6 +26,7 @@
     "README.md"
   ],
   "scripts": {
+    "check:package-health": "node ../../scripts/check-satp-client-package-health.js",
     "test": "node test.js",
     "test:runtime-policy": "node --test test-runtime-policy-adapter.js",
     "runtime-policy:example": "node examples/runtime-policy-adapter.js",
