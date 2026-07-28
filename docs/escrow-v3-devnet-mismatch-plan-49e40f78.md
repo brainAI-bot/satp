@@ -42,25 +42,30 @@ source/deployed/IDL proof is resolved or explicitly accepted through HQ.
 
 ## No-Write Repair Plan
 
-1. Keep AgentFolio escrow rebuild status gated as "unverified devnet escrow".
+1. Keep AgentFolio escrow rebuild status gated as "unverified canonical escrow".
    The current source and checked-in IDL may be used for local/offline SDK
-   tests, but must not be represented as matching the deployed devnet program.
+   tests, but must not be represented as matching the deployed mainnet program.
 2. Preserve the read-only evidence above in SATP docs and HQ task evidence so
-   later repair work has the exact program ID, ProgramData account, deployed
-   slot, authority, local hash, deployed hash, and missing IDL account.
+   later repair work has the exact canonical program ID, local build hash,
+   mainnet dump hash, comparison result, and historical/superseded devnet
+   disposition.
 3. Choose one future write-approved track in HQ:
-   - Replacement track: explicitly approve a devnet write task to deploy or
-     upgrade `programs/escrow_v3` from the current source, publish the matching
-     Anchor IDL, then rerun the same dump/hash/IDL fetch proof.
-   - Recovery track: locate the exact source and IDL that produced the current
-     devnet hash `9426908b...`, commit or archive that evidence, and rerun the
-     same proof against the deployed program without writing to devnet.
+   - Mainnet acceptance track: explicitly accept through HQ that current SATP
+     source, checked-in IDL, and the deployed mainnet bytes differ; keep live
+     escrow writes gated or document the accepted risk and consumer boundary.
+   - Mainnet source-recovery track: locate the exact source and IDL that
+     produced the current mainnet hash `b70a7a7e...`, commit or archive that
+     evidence, and rerun the same proof against the deployed program without
+     writing to mainnet.
+   - Replacement track: explicitly approve a future write task to deploy or
+     upgrade `programs/escrow_v3` from the reviewed source, publish the matching
+     Anchor IDL where applicable, then rerun the same dump/hash/IDL fetch proof.
 4. Before any future write, require an HQ task naming the intended program ID,
    signer/authority owner, deploy command, IDL publish command, rollback path,
    and post-write proof commands. No implicit signer or keypair discovery should
    be used.
 5. After an approved repair, accept the program only when all of these pass:
-   source rebuild hash equals devnet dump hash; Anchor IDL fetch succeeds; the
+   source rebuild hash equals mainnet dump hash; Anchor IDL fetch succeeds; the
    fetched IDL hash equals the canonical checked-in IDL; `npm run
    verify:v3-program-sources` passes; `npm run validate:idls` passes.
 
