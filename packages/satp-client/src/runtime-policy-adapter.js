@@ -36,6 +36,7 @@ const DEFAULT_POLICY = Object.freeze({
 
 const RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION = 'satp.runtimePolicyAuditTrace.v1';
 const RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION = 'satp.runtimePolicyHostActionDescriptor.v1';
+const TRUST_SCORE_GATE_TYPES = new Set(['agentfolio_trust_gate', 'host_trust_gate']);
 
 function createRuntimePolicyAdapter(config = {}) {
   if (!config || typeof config !== 'object' || Array.isArray(config)) {
@@ -361,7 +362,7 @@ function firstDefined(...values) {
 
 function defaultResourceForAction(type, action) {
   if (type === 'mcp_protected_tool') return 'mcp://protected/tool';
-  if (type === 'agentfolio_trust_gate') {
+  if (TRUST_SCORE_GATE_TYPES.has(type)) {
     if (action.profileId) {
       return `https://agentfolio.bot/api/profile/${encodeURIComponent(String(action.profileId))}/trust-score`;
     }
@@ -373,27 +374,27 @@ function defaultResourceForAction(type, action) {
 
 function defaultOperationForAction(type) {
   if (type === 'mcp_protected_tool') return 'invoke';
-  if (type === 'agentfolio_trust_gate') return 'trust-score-read';
+  if (TRUST_SCORE_GATE_TYPES.has(type)) return 'trust-score-read';
   if (type === 'x402_endpoint') return 'lookup';
   return null;
 }
 
 function defaultCapabilityForAction(type) {
-  if (type === 'agentfolio_trust_gate') return 'agentfolio:trust-read';
+  if (TRUST_SCORE_GATE_TYPES.has(type)) return 'agentfolio:trust-read';
   return null;
 }
 
 function defaultMinimumTrustScoreForAction(type) {
-  if (type === 'agentfolio_trust_gate') return DEFAULT_POLICY.minimumTrustScore;
+  if (TRUST_SCORE_GATE_TYPES.has(type)) return DEFAULT_POLICY.minimumTrustScore;
   return null;
 }
 
 function defaultAllowDegradedForAction(type) {
-  return type === 'agentfolio_trust_gate';
+  return TRUST_SCORE_GATE_TYPES.has(type);
 }
 
 function defaultRequiresFreshEvidenceForAction(type) {
-  return type === 'mcp_protected_tool' || type === 'agentfolio_trust_gate';
+  return type === 'mcp_protected_tool' || TRUST_SCORE_GATE_TYPES.has(type);
 }
 
 function defaultCostUsdForAction(type) {

@@ -44,10 +44,22 @@ const examples = [
     },
   },
   {
-    name: 'Host trust-score degrade',
+    name: 'AgentFolio trust-score degrade',
     identity: { ...trustedIdentity, trustScore: 62 },
     action: buildRuntimePolicyActionDescriptor({
       type: 'agentfolio_trust_gate',
+      profileId: 'brainchain-demo',
+      minimumTrustScore: 80,
+    }),
+    options: {
+      now: '2026-05-21T00:00:00Z',
+    },
+  },
+  {
+    name: 'Host trust-score gate alias',
+    identity: { ...trustedIdentity, trustScore: 74 },
+    action: buildRuntimePolicyActionDescriptor({
+      type: 'host_trust_gate',
       profileId: 'brainchain-demo',
       minimumTrustScore: 80,
     }),

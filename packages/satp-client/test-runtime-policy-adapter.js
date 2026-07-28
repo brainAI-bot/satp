@@ -81,6 +81,76 @@ test('builds an AgentFolio trust gate descriptor with degraded access path', () 
   assert.ok(result.reasonCodes.includes(REASON_CODES.TRUST_SCORE_BELOW_MINIMUM));
 });
 
+test('treats host trust-score gates as AgentFolio trust-score reads', () => {
+  const action = buildRuntimePolicyActionDescriptor({
+    type: 'host_trust_gate',
+    profileId: 'brainchain-demo',
+    minimumTrustScore: 80,
+  });
+
+  assert.equal(action.resource, 'https://agentfolio.bot/api/profile/brainchain-demo/trust-score');
+  assert.equal(action.operation, 'trust-score-read');
+  assert.equal(action.requiresCapability, 'agentfolio:trust-read');
+  assert.equal(action.allowDegraded, true);
+  assert.equal(action.requiresFreshEvidence, true);
+
+  const result = evaluateRuntimePolicy(
+    { ...baseIdentity, agentFolioTrustScore: 74 },
+    action,
+    { now: '2026-05-21T00:00:00Z' }
+  );
+
+  assert.equal(result.decision, DECISIONS.DEGRADE);
+  assert.ok(result.reasonCodes.includes(REASON_CODES.TRUST_SCORE_BELOW_MINIMUM));
+});
+
+test('covers runtime adapter allow, deny, degrade, and needs_approval outcomes', () => {
+  const outcomes = [
+    evaluateRuntimePolicy(
+      baseIdentity,
+      {
+        type: 'mcp_protected_tool',
+        requiresCapability: 'mcp:read',
+      },
+      { now: '2026-05-21T00:00:00Z' }
+    ).decision,
+    evaluateRuntimePolicy(
+      { ...baseIdentity, active: false },
+      {
+        type: 'mcp_protected_tool',
+        requiresCapability: 'mcp:read',
+      },
+      { now: '2026-05-21T00:00:00Z' }
+    ).decision,
+    evaluateRuntimePolicy(
+      { ...baseIdentity, agentFolioTrustScore: 60 },
+      {
+        type: 'host_trust_gate',
+        minimumTrustScore: 80,
+        allowDegraded: true,
+      },
+      { now: '2026-05-21T00:00:00Z' }
+    ).decision,
+    evaluateRuntimePolicy(
+      baseIdentity,
+      {
+        type: 'mcp_protected_tool',
+        requiresCapability: 'mcp:read',
+        protectedTool: true,
+        operatorApprovalRequired: true,
+      },
+      { now: '2026-05-21T00:00:00Z' }
+    ).decision,
+  ];
+
+  assert.deepEqual(new Set(outcomes), new Set([
+    DECISIONS.ALLOW,
+    DECISIONS.DENY,
+    DECISIONS.DEGRADE,
+    DECISIONS.NEEDS_APPROVAL,
+  ]));
+});
+
 test('creates a host-oriented runtime policy adapter with default action type and policy', () => {
   const adapter = createRuntimePolicyAdapter({
     defaultActionType: 'mcp_protected_tool',
