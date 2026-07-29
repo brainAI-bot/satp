@@ -11,6 +11,7 @@ Successful local proof command:
 
 ```sh
 cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml
+node scripts/verify-escrow-v3-build-proof.mjs
 ```
 
 Artifact hash from the successful local build:
@@ -18,6 +19,20 @@ Artifact hash from the successful local build:
 ```text
 fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31  target/deploy/escrow_v3.so
 ```
+
+The build-proof workflow now validates the produced `target/deploy/escrow_v3.so`
+against `docs/escrow-v3-build-proof-reference.json`. That reference pins the
+source build command, Solana CLI `2.1.21`, SBF platform-tools `v1.52`, the
+expected rebuilt source artifact hash, and the real read-only devnet dump hash
+recorded in `docs/escrow-v3-devnet-mismatch-plan-49e40f78.md`.
+
+Current source-to-chain status: mismatch. The rebuilt source artifact hash is
+`fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31`; the
+read-only devnet dump hash is
+`9426908b0c3084f316fc963a9824bd6aad55c2487da22ffe213bbfa3b772f82b`.
+`node scripts/verify-escrow-v3-build-proof.mjs` therefore fails until HQ
+authorizes either a devnet write repair or recovery of the exact deployed
+source. This is intentional: the build proof is no longer a hash-printing no-op.
 
 Lockfile compatibility pins keep proc-macro TOML parser crates on
 Cargo-1.85-compatible versions while still satisfying their declared semver

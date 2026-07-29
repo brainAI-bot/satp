@@ -10,6 +10,8 @@ on:
       - "rust-toolchain.toml"
       - "programs/escrow_v3/**"
       - "docs/escrow-v3-build-proof.md"
+      - "docs/escrow-v3-build-proof-reference.json"
+      - "scripts/verify-escrow-v3-build-proof.mjs"
   push:
     branches:
       - main
@@ -21,6 +23,8 @@ on:
       - "rust-toolchain.toml"
       - "programs/escrow_v3/**"
       - "docs/escrow-v3-build-proof.md"
+      - "docs/escrow-v3-build-proof-reference.json"
+      - "scripts/verify-escrow-v3-build-proof.mjs"
 
 permissions:
   contents: read
@@ -68,10 +72,8 @@ jobs:
       - name: Prepare Solana platform-tools cache
         run: mkdir -p "$HOME/.cache/solana"
 
-      - name: Build escrow_v3 program
+      - name: Build escrow_v3 program with pinned SBF toolchain
         run: cargo build-sbf --tools-version "${SBF_TOOLS_VERSION}" --manifest-path programs/escrow_v3/Cargo.toml
 
-      - name: Emit escrow_v3 artifact hash
-        run: |
-          test -f target/deploy/escrow_v3.so
-          shasum -a 256 target/deploy/escrow_v3.so
+      - name: Verify escrow_v3 source-to-chain build proof
+        run: node scripts/verify-escrow-v3-build-proof.mjs
