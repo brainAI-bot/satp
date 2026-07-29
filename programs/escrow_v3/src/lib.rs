@@ -1570,7 +1570,7 @@ pub enum EscrowV3Error {
     #[msg("Agent ID exceeds 64 characters")]
     AgentIdTooLong,
 
-    #[msg("Verification level must be 0-5")]
+    #[msg("Verification level must be 0-5 red proof")]
     InvalidVerificationLevel,
 
     #[msg("Agent identity account has invalid owner (not identity_v3)")]

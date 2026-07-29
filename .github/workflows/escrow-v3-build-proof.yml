@@ -15,6 +15,7 @@ on:
   push:
     branches:
       - main
+      - brainchain/satp-build-proof-red-scratch-20260729
     paths:
       - ".github/workflows/escrow-v3-build-proof.yml"
       - "Anchor.toml"
