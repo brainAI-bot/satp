@@ -19,6 +19,12 @@ stale `target/deploy/escrow_v3.so` that was not produced from the checked-out
 source. The job prints the fresh artifact hash immediately after the build and
 the verifier then compares that same artifact against live programdata.
 
+The devnet escrow artifact was deployed from a macOS SBF build. The proof job
+therefore runs on a macOS GitHub runner; the same pinned Solana/SBF/Rust inputs
+on Ubuntu produce a different ELF hash, which is useful mismatch evidence but
+does not prove the currently deployed devnet artifact came from the checked-out
+source.
+
 Successful local proof command:
 
 ```sh

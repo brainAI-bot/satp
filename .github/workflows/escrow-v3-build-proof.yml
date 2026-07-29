@@ -36,7 +36,7 @@ env:
 jobs:
   escrow-v3-build-proof:
     name: Escrow V3 build proof
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     timeout-minutes: 45
 
     steps:
