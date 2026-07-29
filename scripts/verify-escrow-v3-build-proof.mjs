@@ -175,10 +175,12 @@ for (const target of reference.targets) {
   const chain = await fetchProgramDataBytes(target);
   const chainSha256 = sha256(chain.bytes);
   const verdict = artifactSha256 === chainSha256 ? 'MATCH' : 'DIFFER';
-  const expected = target.expected_verdict || 'MATCH';
-  const ok = verdict === expected;
+  const gate = target.gate || 'required';
+  const expected = target.expected_verdict || (gate === 'required' ? 'MATCH' : null);
+  const ok = gate === 'required' ? verdict === expected : true;
   results.push({
     cluster: target.cluster,
+    gate,
     program_id: target.program_id,
     program_data: chain.program_data,
     last_deployed_slot: chain.last_deployed_slot,
@@ -186,7 +188,7 @@ for (const target of reference.targets) {
     artifact_sha256: artifactSha256,
     on_chain_sha256: chainSha256,
     verdict,
-    expected_verdict: expected,
+    expected_verdict: expected || undefined,
     ok,
     artifact_length: artifact.length,
     on_chain_elf_length: chain.elf_length,
@@ -208,7 +210,8 @@ console.log(JSON.stringify({
 }, null, 2));
 
 for (const result of results) {
-  console.log(`${result.cluster}: built_sha256=${result.artifact_sha256} on_chain_sha256=${result.on_chain_sha256} verdict=${result.verdict} expected=${result.expected_verdict}`);
+  const expected = result.expected_verdict ? ` expected=${result.expected_verdict}` : '';
+  console.log(`${result.cluster}: gate=${result.gate} built_sha256=${result.artifact_sha256} on_chain_sha256=${result.on_chain_sha256} verdict=${result.verdict}${expected}`);
 }
 
 if (!ok) {

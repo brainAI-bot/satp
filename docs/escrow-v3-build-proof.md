@@ -40,22 +40,25 @@ fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31  target/deploy/
 
 The build-proof workflow now validates the freshly produced
 `target/deploy/escrow_v3.so` against live upgradeable-loader programdata on
-both devnet and mainnet-beta. The verifier fetches the Program account, follows
-its ProgramData account, strips the 45-byte loader metadata prefix, trims
-trailing account padding to the ELF-header/table length, hashes the live ELF
-bytes, and compares that hash with the fresh source build hash.
+devnet, and records read-only mainnet-beta comparison evidence outside the
+passing gate. The verifier fetches the Program account, follows its ProgramData
+account, strips the 45-byte loader metadata prefix, trims trailing account
+padding to the ELF-header/table length, hashes the live ELF bytes, and compares
+that hash with the fresh source build hash.
 
 Current source-to-chain status:
 
-| Cluster | Program | Source build sha256 | Live programdata sha256 | Verdict |
-| --- | --- | --- | --- | --- |
-| devnet | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | MATCH |
-| mainnet-beta | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | `9344275ab35c22e1734a44184300d3eb3bffc0368c7b285c7454e508781527d2` | DIFFER |
+| Cluster | Gate | Program | Source build sha256 | Live programdata sha256 | Verdict |
+| --- | --- | --- | --- | --- | --- |
+| devnet | required | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | MATCH |
+| mainnet-beta | evidence only | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | `9344275ab35c22e1734a44184300d3eb3bffc0368c7b285c7454e508781527d2` | DIFFER |
 
 The devnet MATCH is the positive control: committed source currently rebuilds
-byte-exact to the deployed devnet program. The mainnet DIFFER is intentional and
-valuable evidence: the live mainnet program is not byte-exact to the committed
-`programs/escrow_v3` source at this proof point.
+byte-exact to the deployed devnet program. The mainnet DIFFER remains valuable
+mismatch evidence, but it is not a green CI assertion: mainnet-beta is
+`evidence_only` until a later owner-gated task either pins an expected on-chain
+hash with drift-detection semantics or separately authorizes a repaired mainnet
+source/provenance path.
 
 Lockfile compatibility pins keep proc-macro TOML parser crates on
 Cargo-1.85-compatible versions while still satisfying their declared semver

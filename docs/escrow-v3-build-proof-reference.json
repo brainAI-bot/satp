@@ -13,13 +13,14 @@
       "cluster": "devnet",
       "anchor_cluster": "devnet",
       "program_id": "B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg",
+      "gate": "required",
       "expected_verdict": "MATCH"
     },
     {
       "cluster": "mainnet-beta",
       "anchor_cluster": "mainnet",
       "program_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
-      "expected_verdict": "DIFFER"
+      "gate": "evidence_only"
     }
   ]
 }
