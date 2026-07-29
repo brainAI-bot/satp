@@ -36,7 +36,10 @@ const programs = [
   },
   {
     name: 'escrow_v3',
-    source: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
+    source: {
+      devnet: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
+      mainnet: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
+    },
     devnet: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
     mainnet: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
   },
@@ -83,6 +86,20 @@ function assertIncludes(haystack, needle, label) {
   if (!haystack.includes(needle)) fail(`${label} missing ${needle}`);
 }
 
+function assertSourceIdentity(sourceText, program) {
+  if (!program.source || typeof program.source === 'string') {
+    const sourceProgramId = program.source || program.devnet;
+    assertIncludes(sourceText, `declare_id!("${sourceProgramId}")`, `${program.name} source declare_id`);
+    return sourceProgramId;
+  }
+
+  assertIncludes(sourceText, '#[cfg(feature = "mainnet")]', `${program.name} mainnet source cfg`);
+  assertIncludes(sourceText, `declare_id!("${program.source.mainnet}")`, `${program.name} mainnet source declare_id`);
+  assertIncludes(sourceText, '#[cfg(not(feature = "mainnet"))]', `${program.name} devnet source cfg`);
+  assertIncludes(sourceText, `declare_id!("${program.source.devnet}")`, `${program.name} devnet source declare_id`);
+  return program.source;
+}
+
 const anchorToml = read(anchorPath);
 const workspaceCargo = read(cargoPath);
 assertIncludes(workspaceCargo, '"programs/*"', 'workspace Cargo.toml');
@@ -101,8 +118,7 @@ for (const program of programs) {
 
   const sourceText = read(source);
   const cargoText = read(cargo);
-  const sourceProgramId = program.source || program.devnet;
-  assertIncludes(sourceText, `declare_id!("${sourceProgramId}")`, `${program.name} source declare_id`);
+  const sourceProgramId = assertSourceIdentity(sourceText, program);
   assertIncludes(sourceText, '#[program]', `${program.name} Anchor program module`);
   assertIncludes(cargoText, 'anchor-lang = "1.0.0"', `${program.name} Cargo.toml`);
   assertIncludes(anchorToml, `${program.name} = "${program.devnet}"`, `${program.name} devnet Anchor.toml entry`);

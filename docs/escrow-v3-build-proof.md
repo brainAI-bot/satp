@@ -53,11 +53,13 @@ Current source-to-chain status:
 | devnet | required | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | MATCH |
 | mainnet-beta | evidence only | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | `9344275ab35c22e1734a44184300d3eb3bffc0368c7b285c7454e508781527d2` | DIFFER |
 
-The devnet MATCH is the positive control: committed source currently rebuilds
-byte-exact to the deployed devnet program. The mainnet DIFFER remains valuable
-mismatch evidence, but it is not a green CI assertion: mainnet-beta is
-`evidence_only` until a later owner-gated task either pins an expected on-chain
-hash with drift-detection semantics or separately authorizes a repaired mainnet
+The devnet MATCH is the positive control: the default source target declares
+the devnet escrow ID and rebuilds byte-exact to the deployed devnet program.
+The same source file also preserves the canonical mainnet escrow ID behind the
+`mainnet` Cargo feature. The mainnet DIFFER remains valuable mismatch evidence,
+but it is not a green CI assertion: mainnet-beta is `evidence_only` until a
+later owner-gated task either pins an expected on-chain hash with
+drift-detection semantics or separately authorizes a repaired mainnet
 source/provenance path.
 
 Lockfile compatibility pins keep proc-macro TOML parser crates on

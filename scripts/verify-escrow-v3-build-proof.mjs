@@ -2,7 +2,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
-import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
+import { pathToFileURL } from 'node:url';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const referencePath = resolve(root, 'docs/escrow-v3-build-proof-reference.json');
@@ -10,6 +10,8 @@ const upgradeableLoader = 'BPFLoaderUpgradeab1e11111111111111111111111';
 const programStateTag = 2;
 const programDataStateTag = 3;
 const programDataElfOffset = 45;
+const gateValues = new Set(['required', 'evidence_only']);
+const verdictValues = new Set(['MATCH', 'DIFFER']);
 
 function fail(message) {
   console.error(`escrow_v3 build proof failed: ${message}`);
@@ -26,6 +28,29 @@ function sha256(bytes) {
 
 function assertIncludes(haystack, needle, label) {
   if (!haystack.includes(needle)) fail(`${label} missing ${needle}`);
+}
+
+export function validateReference(reference) {
+  if (!Array.isArray(reference.targets) || reference.targets.length === 0) {
+    throw new Error('reference targets must be a non-empty array');
+  }
+
+  let requiredTargets = 0;
+  reference.targets.forEach((target, index) => {
+    const label = `reference target[${index}]`;
+    if (!target || typeof target !== 'object') throw new Error(`${label} must be an object`);
+    if (!gateValues.has(target.gate)) {
+      throw new Error(`${label} gate must be one of required|evidence_only`);
+    }
+    if (target.gate === 'required') requiredTargets += 1;
+    if (target.expected_verdict !== undefined && !verdictValues.has(target.expected_verdict)) {
+      throw new Error(`${label} expected_verdict must be MATCH or DIFFER`);
+    }
+  });
+
+  if (requiredTargets === 0) {
+    throw new Error('reference targets must include at least one required gate');
+  }
 }
 
 function readU64Le(buf, offset) {
@@ -92,6 +117,7 @@ function parseElfLength(bytes) {
 }
 
 async function fetchProgramDataBytes(target) {
+  const { Connection, PublicKey, clusterApiUrl } = await import('@solana/web3.js');
   const url = target.rpc_url || clusterApiUrl(target.cluster);
   const connection = new Connection(url, 'confirmed');
   const programId = new PublicKey(target.program_id);
@@ -152,72 +178,83 @@ function assertToolchain(reference) {
   }
 }
 
-if (!existsSync(referencePath)) fail(`missing reference ${relative(root, referencePath)}`);
+async function main() {
+  if (!existsSync(referencePath)) fail(`missing reference ${relative(root, referencePath)}`);
 
-const reference = JSON.parse(readText(referencePath));
-const artifactPath = resolve(root, reference.artifact_path);
-if (!existsSync(artifactPath)) fail(`missing built artifact ${reference.artifact_path}`);
+  const reference = JSON.parse(readText(referencePath));
+  try {
+    validateReference(reference);
+  } catch (error) {
+    fail(error.message);
+  }
+  const artifactPath = resolve(root, reference.artifact_path);
+  if (!existsSync(artifactPath)) fail(`missing built artifact ${reference.artifact_path}`);
 
-const anchorToml = readText(resolve(root, 'Anchor.toml'));
-const cargoToml = readText(resolve(root, 'Cargo.toml'));
-const toolchainToml = readText(resolve(root, 'rust-toolchain.toml'));
-const artifact = readFileSync(artifactPath);
-const artifactSha256 = sha256(artifact);
+  const anchorToml = readText(resolve(root, 'Anchor.toml'));
+  const cargoToml = readText(resolve(root, 'Cargo.toml'));
+  const toolchainToml = readText(resolve(root, 'rust-toolchain.toml'));
+  const artifact = readFileSync(artifactPath);
+  const artifactSha256 = sha256(artifact);
 
-assertIncludes(cargoToml, '"programs/*"', 'workspace Cargo.toml');
-assertIncludes(toolchainToml, 'channel = "1.86.0"', 'rust-toolchain.toml');
-assertToolchain(reference);
+  assertIncludes(cargoToml, '"programs/*"', 'workspace Cargo.toml');
+  assertIncludes(toolchainToml, 'channel = "1.86.0"', 'rust-toolchain.toml');
+  assertToolchain(reference);
 
-const results = [];
-for (const target of reference.targets) {
-  assertIncludes(anchorToml, `[programs.${target.anchor_cluster}]`, `Anchor.toml ${target.cluster}`);
-  assertIncludes(anchorToml, `${reference.program} = "${target.program_id}"`, `Anchor.toml ${target.cluster} program id`);
-  const chain = await fetchProgramDataBytes(target);
-  const chainSha256 = sha256(chain.bytes);
-  const verdict = artifactSha256 === chainSha256 ? 'MATCH' : 'DIFFER';
-  const gate = target.gate || 'required';
-  const expected = target.expected_verdict || (gate === 'required' ? 'MATCH' : null);
-  const ok = gate === 'required' ? verdict === expected : true;
-  results.push({
-    cluster: target.cluster,
-    gate,
-    program_id: target.program_id,
-    program_data: chain.program_data,
-    last_deployed_slot: chain.last_deployed_slot,
-    artifact_path: reference.artifact_path,
-    artifact_sha256: artifactSha256,
-    on_chain_sha256: chainSha256,
-    verdict,
-    expected_verdict: expected || undefined,
+  const results = [];
+  for (const target of reference.targets) {
+    assertIncludes(anchorToml, `[programs.${target.anchor_cluster}]`, `Anchor.toml ${target.cluster}`);
+    assertIncludes(anchorToml, `${reference.program} = "${target.program_id}"`, `Anchor.toml ${target.cluster} program id`);
+    const chain = await fetchProgramDataBytes(target);
+    const chainSha256 = sha256(chain.bytes);
+    const verdict = artifactSha256 === chainSha256 ? 'MATCH' : 'DIFFER';
+    const gate = target.gate;
+    const expected = target.expected_verdict || (gate === 'required' ? 'MATCH' : null);
+    const ok = gate === 'required' ? verdict === expected : true;
+    results.push({
+      cluster: target.cluster,
+      gate,
+      program_id: target.program_id,
+      program_data: chain.program_data,
+      last_deployed_slot: chain.last_deployed_slot,
+      artifact_path: reference.artifact_path,
+      artifact_sha256: artifactSha256,
+      on_chain_sha256: chainSha256,
+      verdict,
+      expected_verdict: expected || undefined,
+      ok,
+      artifact_length: artifact.length,
+      on_chain_elf_length: chain.elf_length,
+      programdata_account_data_length: chain.account_data_length,
+      loader_metadata_length: chain.loader_metadata_length,
+    });
+  }
+
+  const ok = results.every((result) => result.ok);
+  console.log(JSON.stringify({
     ok,
-    artifact_length: artifact.length,
-    on_chain_elf_length: chain.elf_length,
-    programdata_account_data_length: chain.account_data_length,
-    loader_metadata_length: chain.loader_metadata_length,
-  });
+    program: reference.program,
+    reference: relative(root, referencePath),
+    declared_toolchain: {
+      solana_cli_version: reference.toolchain.solana_cli_version,
+      sbf_tools_version: reference.toolchain.sbf_tools_version,
+    },
+    results,
+  }, null, 2));
+
+  for (const result of results) {
+    const expected = result.expected_verdict ? ` expected=${result.expected_verdict}` : '';
+    console.log(`${result.cluster}: gate=${result.gate} built_sha256=${result.artifact_sha256} on_chain_sha256=${result.on_chain_sha256} verdict=${result.verdict}${expected}`);
+  }
+
+  if (!ok) {
+    const failures = results
+      .filter((result) => !result.ok)
+      .map((result) => `${result.cluster} expected ${result.expected_verdict} got ${result.verdict}`)
+      .join('; ');
+    fail(failures);
+  }
 }
 
-const ok = results.every((result) => result.ok);
-console.log(JSON.stringify({
-  ok,
-  program: reference.program,
-  reference: relative(root, referencePath),
-  declared_toolchain: {
-    solana_cli_version: reference.toolchain.solana_cli_version,
-    sbf_tools_version: reference.toolchain.sbf_tools_version,
-  },
-  results,
-}, null, 2));
-
-for (const result of results) {
-  const expected = result.expected_verdict ? ` expected=${result.expected_verdict}` : '';
-  console.log(`${result.cluster}: gate=${result.gate} built_sha256=${result.artifact_sha256} on_chain_sha256=${result.on_chain_sha256} verdict=${result.verdict}${expected}`);
-}
-
-if (!ok) {
-  const failures = results
-    .filter((result) => !result.ok)
-    .map((result) => `${result.cluster} expected ${result.expected_verdict} got ${result.verdict}`)
-    .join('; ');
-  fail(failures);
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await main();
 }
