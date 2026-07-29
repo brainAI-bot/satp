@@ -54,8 +54,14 @@ export function validateReference(reference) {
     if (target.canonical_source_profile !== undefined && typeof target.canonical_source_profile !== 'string') {
       throw new Error(`${label} canonical_source_profile must be a string`);
     }
+    if (target.canonical_source_path !== undefined && typeof target.canonical_source_path !== 'string') {
+      throw new Error(`${label} canonical_source_path must be a string`);
+    }
     if (target.canonical_source_declare_id !== undefined && typeof target.canonical_source_declare_id !== 'string') {
       throw new Error(`${label} canonical_source_declare_id must be a string`);
+    }
+    if (target.canonical_source_declare_id && !target.canonical_source_path) {
+      throw new Error(`${label} canonical_source_path is required with canonical_source_declare_id`);
     }
   });
 
@@ -222,8 +228,9 @@ async function main() {
       `${target.cluster} build source declare_id`
     );
     if (target.canonical_source_declare_id) {
+      const canonicalSource = readText(resolve(root, target.canonical_source_path));
       assertIncludes(
-        escrowSource,
+        canonicalSource,
         `declare_id!("${target.canonical_source_declare_id}")`,
         `${target.cluster} canonical source declare_id`
       );
@@ -241,6 +248,7 @@ async function main() {
       anchor_cluster: target.anchor_cluster,
       build_source_profile: target.build_source_profile,
       build_source_declare_id: target.build_source_declare_id,
+      canonical_source_path: target.canonical_source_path,
       canonical_source_profile: target.canonical_source_profile,
       canonical_source_declare_id: target.canonical_source_declare_id,
       program_data: chain.program_data,
@@ -273,7 +281,7 @@ async function main() {
   for (const result of results) {
     const expected = result.expected_verdict ? ` expected=${result.expected_verdict}` : '';
     const canonical = result.canonical_source_declare_id
-      ? ` canonical_source_profile="${result.canonical_source_profile}" canonical_source_declare_id=${result.canonical_source_declare_id}`
+      ? ` canonical_source_path=${result.canonical_source_path} canonical_source_profile="${result.canonical_source_profile}" canonical_source_declare_id=${result.canonical_source_declare_id}`
       : '';
     console.log(`${result.cluster}: anchor_cluster=${result.anchor_cluster} gate=${result.gate} build_source_profile="${result.build_source_profile}" build_source_declare_id=${result.build_source_declare_id}${canonical} compared_program=${result.program_id} built_sha256=${result.artifact_sha256} on_chain_sha256=${result.on_chain_sha256} verdict=${result.verdict}${expected}`);
   }

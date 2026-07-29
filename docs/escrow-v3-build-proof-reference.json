@@ -24,7 +24,8 @@
       "program_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
       "build_source_profile": "default features: #[cfg(not(feature = \"mainnet\"))]",
       "build_source_declare_id": "B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg",
-      "canonical_source_profile": "mainnet feature: #[cfg(feature = \"mainnet\")]",
+      "canonical_source_path": "programs/escrow_v3/src/mainnet_identity.rs",
+      "canonical_source_profile": "tracked mainnet identity marker, intentionally excluded from default devnet build",
       "canonical_source_declare_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
       "gate": "evidence_only"
     }

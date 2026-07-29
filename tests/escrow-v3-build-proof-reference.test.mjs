@@ -14,6 +14,7 @@ const validReference = {
       gate: 'evidence_only',
       build_source_profile: 'default',
       build_source_declare_id: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
+      canonical_source_path: 'programs/escrow_v3/src/mainnet_identity.rs',
       canonical_source_profile: 'mainnet',
       canonical_source_declare_id: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
     },
@@ -55,5 +56,20 @@ test('rejects targets without explicit build source metadata', () => {
   assert.throws(
     () => validateReference({ targets: [{ gate: 'required', expected_verdict: 'MATCH' }] }),
     /build_source_profile must be a non-empty string/
+  );
+});
+
+test('rejects canonical source metadata without a canonical source path', () => {
+  assert.throws(
+    () => validateReference({
+      targets: [
+        withRequiredSourceMetadata({
+          gate: 'required',
+          expected_verdict: 'MATCH',
+          canonical_source_declare_id: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
+        }),
+      ],
+    }),
+    /canonical_source_path is required/
   );
 });

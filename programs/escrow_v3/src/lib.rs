@@ -8,9 +8,6 @@ use anchor_lang::solana_program::{
 use solana_sha256_hasher::hash as sol_hash;
 use std::str::FromStr;
 
-#[cfg(feature = "mainnet")]
-declare_id!("HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C");
-#[cfg(not(feature = "mainnet"))]
 declare_id!("B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg");
 
 /// SATP V3 Escrow Program

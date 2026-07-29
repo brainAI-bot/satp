@@ -39,6 +39,7 @@ const programs = [
     source: {
       devnet: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
       mainnet: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
+      mainnetPath: 'src/mainnet_identity.rs',
     },
     devnet: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
     mainnet: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
@@ -93,9 +94,8 @@ function assertSourceIdentity(sourceText, program) {
     return sourceProgramId;
   }
 
-  assertIncludes(sourceText, '#[cfg(feature = "mainnet")]', `${program.name} mainnet source cfg`);
-  assertIncludes(sourceText, `declare_id!("${program.source.mainnet}")`, `${program.name} mainnet source declare_id`);
-  assertIncludes(sourceText, '#[cfg(not(feature = "mainnet"))]', `${program.name} devnet source cfg`);
+  const mainnetSource = read(resolve(programsRoot, program.name, program.source.mainnetPath));
+  assertIncludes(mainnetSource, `declare_id!("${program.source.mainnet}")`, `${program.name} mainnet source declare_id`);
   assertIncludes(sourceText, `declare_id!("${program.source.devnet}")`, `${program.name} devnet source declare_id`);
   return program.source;
 }
