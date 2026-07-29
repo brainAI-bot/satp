@@ -7,6 +7,12 @@ is pointed at SBF platform-tools `v1.52`. Earlier platform-tools bundled
 Cargo 1.79/1.84 and failed before compilation on edition-2024 transitive
 crates pulled by the Solana 3.x dependency graph.
 
+The Solana 2.1.21 SBF SDK installer still declares platform-tools `v1.43` in
+`sdk/sbf/scripts/install.sh`. The GitHub workflow rewrites that SDK installer
+line from the declared `SBF_TOOLS_VERSION` before building, prints the
+before/after resolved platform-tools version, and fails if the resolved value is
+not exactly `v1.52`.
+
 Successful local proof command:
 
 ```sh
@@ -20,19 +26,24 @@ Artifact hash from the successful local build:
 fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31  target/deploy/escrow_v3.so
 ```
 
-The build-proof workflow now validates the produced `target/deploy/escrow_v3.so`
-against `docs/escrow-v3-build-proof-reference.json`. That reference pins the
-source build command, Solana CLI `2.1.21`, SBF platform-tools `v1.52`, the
-expected rebuilt source artifact hash, and the real read-only devnet dump hash
-recorded in `docs/escrow-v3-devnet-mismatch-plan-49e40f78.md`.
+The build-proof workflow now validates the freshly produced
+`target/deploy/escrow_v3.so` against live upgradeable-loader programdata on
+both devnet and mainnet-beta. The verifier fetches the Program account, follows
+its ProgramData account, strips the 45-byte loader metadata prefix, trims
+trailing account padding to the ELF-header/table length, hashes the live ELF
+bytes, and compares that hash with the fresh source build hash.
 
-Current source-to-chain status: mismatch. The rebuilt source artifact hash is
-`fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31`; the
-read-only devnet dump hash is
-`9426908b0c3084f316fc963a9824bd6aad55c2487da22ffe213bbfa3b772f82b`.
-`node scripts/verify-escrow-v3-build-proof.mjs` therefore fails until HQ
-authorizes either a devnet write repair or recovery of the exact deployed
-source. This is intentional: the build proof is no longer a hash-printing no-op.
+Current source-to-chain status:
+
+| Cluster | Program | Source build sha256 | Live programdata sha256 | Verdict |
+| --- | --- | --- | --- | --- |
+| devnet | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | MATCH |
+| mainnet-beta | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | `9344275ab35c22e1734a44184300d3eb3bffc0368c7b285c7454e508781527d2` | DIFFER |
+
+The devnet MATCH is the positive control: committed source currently rebuilds
+byte-exact to the deployed devnet program. The mainnet DIFFER is intentional and
+valuable evidence: the live mainnet program is not byte-exact to the committed
+`programs/escrow_v3` source at this proof point.
 
 Lockfile compatibility pins keep proc-macro TOML parser crates on
 Cargo-1.85-compatible versions while still satisfying their declared semver

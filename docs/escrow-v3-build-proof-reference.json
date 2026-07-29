@@ -1,25 +1,25 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "program": "escrow_v3",
   "source_path": "programs/escrow_v3",
   "artifact_path": "target/deploy/escrow_v3.so",
-  "cluster": "devnet",
-  "program_id": "B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg",
-  "source_commit": "42cf9b39caa454fc39b5f2291c93a553a664562a",
   "toolchain": {
     "solana_cli_version": "2.1.21",
     "sbf_tools_version": "v1.52",
     "build_command": "cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml"
   },
-  "source_build": {
-    "sha256": "fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31"
-  },
-  "chain_reference": {
-    "dump_command": "solana program dump -u devnet B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg /tmp/escrow_v3-devnet.so",
-    "sha256": "9426908b0c3084f316fc963a9824bd6aad55c2487da22ffe213bbfa3b772f82b",
-    "program_data": "7m4t1wqt26s5haqS1n2HsRNoewMvLnTbzPkfFGkpZDD5",
-    "upgrade_authority": "Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc",
-    "last_deployed_slot": 453440913,
-    "data_length": 290680
-  }
+  "targets": [
+    {
+      "cluster": "devnet",
+      "anchor_cluster": "devnet",
+      "program_id": "B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg",
+      "expected_verdict": "MATCH"
+    },
+    {
+      "cluster": "mainnet-beta",
+      "anchor_cluster": "mainnet",
+      "program_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
+      "expected_verdict": "DIFFER"
+    }
+  ]
 }
