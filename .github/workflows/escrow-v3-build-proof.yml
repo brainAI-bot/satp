@@ -48,6 +48,7 @@ jobs:
         with:
           toolchain: "1.86.0"
           components: rustfmt, clippy
+          cache: false
 
       - name: Cache Cargo registry and git indexes
         uses: actions/cache@v4
@@ -86,7 +87,10 @@ jobs:
       - name: Build escrow_v3 program with pinned SBF toolchain
         run: |
           set -euo pipefail
+          cargo clean --manifest-path programs/escrow_v3/Cargo.toml
           cargo build-sbf --force-tools-install --tools-version "${SBF_TOOLS_VERSION}" --manifest-path programs/escrow_v3/Cargo.toml 2>&1 | tee build-sbf.log
+          echo "fresh escrow_v3 artifact sha256:"
+          shasum -a 256 target/deploy/escrow_v3.so
 
       - name: Install verifier dependencies
         run: npm ci --ignore-scripts

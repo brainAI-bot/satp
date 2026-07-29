@@ -13,6 +13,12 @@ line from the declared `SBF_TOOLS_VERSION` before building, prints the
 before/after resolved platform-tools version, and fails if the resolved value is
 not exactly `v1.52`.
 
+This proof job intentionally disables restored Rust target caching and runs
+`cargo clean` immediately before `cargo build-sbf`; otherwise CI can reuse a
+stale `target/deploy/escrow_v3.so` that was not produced from the checked-out
+source. The job prints the fresh artifact hash immediately after the build and
+the verifier then compares that same artifact against live programdata.
+
 Successful local proof command:
 
 ```sh
