@@ -77,6 +77,12 @@ assert.throws(
 const v2Default = new SATPSDK();
 assert.equal(v2Default.network, 'devnet');
 assert.equal(v2Default.rpcUrl, DEVNET_RPC);
+assert.equal(v2Default.programIds.ESCROW.toBase58(), 'UpJ7jmUzHkQ7EdBKiBv3zq8Dr1fVh6GVWKa7nYtwQ22');
+
+const v3DevnetIds = getV3ProgramIds('devnet');
+assert.equal(v3DevnetIds.ESCROW.toBase58(), 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg');
+assert.notEqual(v2Default.programIds.ESCROW.toBase58(), v3MainnetIds.ESCROW.toBase58());
+assert.notEqual(v3DevnetIds.ESCROW.toBase58(), v3MainnetIds.ESCROW.toBase58());
 
 assert.throws(
   () => new SATPSDK({ network: 'mainnet' }),

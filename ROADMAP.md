@@ -70,9 +70,12 @@ conformance, security, release, and mainnet authority gates remain open.
 - Apache-2.0 LICENSE file present at repo root with package.json license set to
   match, per the locked license decision. [#638f976b] [shipped]
 - Program source for all 6 V3 Anchor programs extracted from clawd-brainchain
-  into this repo under programs/ after a secret/agent-memory scrub and anchor
-  verify src==deployed, so third parties can verify independently (open-core;
-  ARCHITECTURE section 5 mandate; approved 2026-07-06). [#3faa5445] [shipped]
+  into this repo under programs/ after a secret/agent-memory scrub, so third
+  parties can inspect the open-core source independently (ARCHITECTURE section
+  5 mandate; approved 2026-07-06). [#3faa5445] [shipped]
+- Anchor source-to-deployed verification remains open: PR #124 reports
+  source_matches_chain=false, so src==deployed is not currently verified on any
+  network. [#3faa5445] [pending]
 
 ## Phase 2 - SDK package and consumer boundary
 
@@ -111,8 +114,10 @@ conformance, security, release, and mainnet authority gates remain open.
   logs, screenshots, packages, and public PRs. [shipped]
 - Security review by brainShield is driven through HQ tasking once tokened, with
   independent evidence required before release promotion. [#feb0ea11] [shipped]
-- brainShield independent review of the mainnet-authority readiness doc
-  (delivered 2026-07-05), with cross-host-auditable evidence. [#dd682623] [shipped]
+- brainShield independent review of the mainnet-authority readiness doc was
+  delivered by SATP-MAINNET-AUTHORITY-INDEPENDENT-BRAINSHIELD-20260707 on
+  2026-07-06, with cross-host-auditable evidence independent of the brainForge
+  builder-domain review. [#dd682623] [shipped]
 - Assemble the single Owner mainnet-authority decision packet: public authority
   inventory, upgrade-custody choice, fee-payer separation, issuer registry and
   trust-class boundary, escrow/funds authority and dispute model,
