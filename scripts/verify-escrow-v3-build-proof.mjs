@@ -46,6 +46,17 @@ export function validateReference(reference) {
     if (target.expected_verdict !== undefined && !verdictValues.has(target.expected_verdict)) {
       throw new Error(`${label} expected_verdict must be MATCH or DIFFER`);
     }
+    for (const field of ['build_source_profile', 'build_source_declare_id']) {
+      if (typeof target[field] !== 'string' || target[field].length === 0) {
+        throw new Error(`${label} ${field} must be a non-empty string`);
+      }
+    }
+    if (target.canonical_source_profile !== undefined && typeof target.canonical_source_profile !== 'string') {
+      throw new Error(`${label} canonical_source_profile must be a string`);
+    }
+    if (target.canonical_source_declare_id !== undefined && typeof target.canonical_source_declare_id !== 'string') {
+      throw new Error(`${label} canonical_source_declare_id must be a string`);
+    }
   });
 
   if (requiredTargets === 0) {
@@ -193,6 +204,7 @@ async function main() {
   const anchorToml = readText(resolve(root, 'Anchor.toml'));
   const cargoToml = readText(resolve(root, 'Cargo.toml'));
   const toolchainToml = readText(resolve(root, 'rust-toolchain.toml'));
+  const escrowSource = readText(resolve(root, reference.source_path, 'src/lib.rs'));
   const artifact = readFileSync(artifactPath);
   const artifactSha256 = sha256(artifact);
 
@@ -204,6 +216,18 @@ async function main() {
   for (const target of reference.targets) {
     assertIncludes(anchorToml, `[programs.${target.anchor_cluster}]`, `Anchor.toml ${target.cluster}`);
     assertIncludes(anchorToml, `${reference.program} = "${target.program_id}"`, `Anchor.toml ${target.cluster} program id`);
+    assertIncludes(
+      escrowSource,
+      `declare_id!("${target.build_source_declare_id}")`,
+      `${target.cluster} build source declare_id`
+    );
+    if (target.canonical_source_declare_id) {
+      assertIncludes(
+        escrowSource,
+        `declare_id!("${target.canonical_source_declare_id}")`,
+        `${target.cluster} canonical source declare_id`
+      );
+    }
     const chain = await fetchProgramDataBytes(target);
     const chainSha256 = sha256(chain.bytes);
     const verdict = artifactSha256 === chainSha256 ? 'MATCH' : 'DIFFER';
@@ -214,6 +238,11 @@ async function main() {
       cluster: target.cluster,
       gate,
       program_id: target.program_id,
+      anchor_cluster: target.anchor_cluster,
+      build_source_profile: target.build_source_profile,
+      build_source_declare_id: target.build_source_declare_id,
+      canonical_source_profile: target.canonical_source_profile,
+      canonical_source_declare_id: target.canonical_source_declare_id,
       program_data: chain.program_data,
       last_deployed_slot: chain.last_deployed_slot,
       artifact_path: reference.artifact_path,
@@ -243,7 +272,10 @@ async function main() {
 
   for (const result of results) {
     const expected = result.expected_verdict ? ` expected=${result.expected_verdict}` : '';
-    console.log(`${result.cluster}: gate=${result.gate} built_sha256=${result.artifact_sha256} on_chain_sha256=${result.on_chain_sha256} verdict=${result.verdict}${expected}`);
+    const canonical = result.canonical_source_declare_id
+      ? ` canonical_source_profile="${result.canonical_source_profile}" canonical_source_declare_id=${result.canonical_source_declare_id}`
+      : '';
+    console.log(`${result.cluster}: anchor_cluster=${result.anchor_cluster} gate=${result.gate} build_source_profile="${result.build_source_profile}" build_source_declare_id=${result.build_source_declare_id}${canonical} compared_program=${result.program_id} built_sha256=${result.artifact_sha256} on_chain_sha256=${result.on_chain_sha256} verdict=${result.verdict}${expected}`);
   }
 
   if (!ok) {

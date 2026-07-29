@@ -13,7 +13,7 @@ This repository carries the extracted SATP V3 Anchor program sources from
 | attestations_v3 | `programs/attestations_v3` | `55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw` | `55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw` | `6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD` | devnet source identity |
 | reputation_v3 | `programs/reputation_v3` | `CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9` | `CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9` | `2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ` | devnet source identity |
 | validation_v3 | `programs/validation_v3` | `DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj` | `DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj` | `6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV` | devnet source identity |
-| escrow_v3 | `programs/escrow_v3` | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | devnet source identity; mainnet remains canonical owner-selected registry identity |
+| escrow_v3 | `programs/escrow_v3` | default: `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg`; `mainnet` feature: `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | devnet proof source identity; canonical mainnet source identity preserved behind the `mainnet` feature |
 
 The checked-in `Anchor.toml` uses devnet as the default read/build cluster and
 keeps a repo-local placeholder wallet path. Do not replace that placeholder
@@ -31,8 +31,9 @@ cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.t
 
 `npm run verify:v3-program-sources` performs offline readback of all six program
 directories, checks each `declare_id!` against the source identity table above,
-checks devnet and mainnet registry entries in `Anchor.toml`, parses nested IDL
-JSON files, and rejects
+including the split escrow default/mainnet-feature declarations, checks devnet
+and mainnet registry entries in `Anchor.toml`, parses nested IDL JSON files,
+and rejects
 committed `.env`, memory, target,
 `.program-state`, keypair, secret, or env-style secret material in the V3
 program tree. The Rust workspace check requires Rust 1.89.0 or newer because
@@ -57,8 +58,8 @@ The deployed mainnet ELF dumped from
 `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` produced SHA-256
 `b70a7a7ea55f43da7bd3fc4f666e1374436bb9c8aeaa83cb2f0a2a970b603094`.
 These hashes differ, so the source tree preserves the owner-selected mainnet
-registry ID in `Anchor.toml` and client metadata, while the checked-in escrow
-source remains the byte-exact devnet proof target.
+registry ID in source, `Anchor.toml`, and client metadata, while the checked-in
+escrow default source profile remains the byte-exact devnet proof target.
 
 ## Anchor Verify
 
