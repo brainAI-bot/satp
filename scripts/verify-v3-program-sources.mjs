@@ -36,6 +36,7 @@ const programs = [
   },
   {
     name: 'escrow_v3',
+    source: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
     devnet: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
     mainnet: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
   },
@@ -100,7 +101,8 @@ for (const program of programs) {
 
   const sourceText = read(source);
   const cargoText = read(cargo);
-  assertIncludes(sourceText, `declare_id!("${program.devnet}")`, `${program.name} source declare_id`);
+  const sourceProgramId = program.source || program.devnet;
+  assertIncludes(sourceText, `declare_id!("${sourceProgramId}")`, `${program.name} source declare_id`);
   assertIncludes(sourceText, '#[program]', `${program.name} Anchor program module`);
   assertIncludes(cargoText, 'anchor-lang = "1.0.0"', `${program.name} Cargo.toml`);
   assertIncludes(anchorToml, `${program.name} = "${program.devnet}"`, `${program.name} devnet Anchor.toml entry`);
@@ -123,6 +125,7 @@ for (const program of programs) {
   checked.push({
     name: program.name,
     path: relative(root, dir),
+    source_program_id: sourceProgramId,
     devnet_program_id: program.devnet,
     mainnet_registry_id: program.mainnet,
     files: files.map((file) => relative(root, file)),

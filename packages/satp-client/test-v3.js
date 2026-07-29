@@ -48,7 +48,7 @@ assert(ids.REVIEWS.toBase58() === '3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk'
 assert(ids.REPUTATION.toBase58() === 'CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9', 'Reputation V3 program ID');
 assert(ids.ATTESTATIONS.toBase58() === '55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw', 'Attestations V3 program ID');
 assert(ids.VALIDATION.toBase58() === 'DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj', 'Validation V3 program ID');
-assert(ids.ESCROW.toBase58() === 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg', 'Escrow V3 program ID');
+assert(ids.ESCROW.toBase58() === 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg', 'Escrow V3 devnet program ID');
 assert(ids === V3_DEVNET_PROGRAM_IDS, 'Devnet getV3ProgramIds returns the devnet V3 ID set');
 
 const mainnetIds = getV3ProgramIds('mainnet');
@@ -243,7 +243,7 @@ assert(!escrowPDA1.equals(escrowPDA4), 'Different description produces different
 console.log('\n=== Escrow V3 SDK Methods ===');
 
 // Program ID check
-assert(sdk.programIds.ESCROW.toBase58() === 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg', 'Escrow V3 program ID correct');
+assert(sdk.programIds.ESCROW.toBase58() === 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg', 'Escrow V3 devnet program ID correct');
 
 // Method existence
 assert(typeof sdk.buildCreateEscrow === 'function', 'SDK has buildCreateEscrow');
