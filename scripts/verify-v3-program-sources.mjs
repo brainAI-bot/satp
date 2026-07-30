@@ -2,8 +2,9 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = resolve(new URL('..', import.meta.url).pathname);
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const programsRoot = resolve(root, 'programs');
 const anchorPath = resolve(root, 'Anchor.toml');
 const cargoPath = resolve(root, 'Cargo.toml');
@@ -36,7 +37,10 @@ const programs = [
   },
   {
     name: 'escrow_v3',
-    source: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
+    source: {
+      devnet: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
+      mainnet: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
+    },
     devnet: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
     mainnet: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
   },
@@ -83,6 +87,31 @@ function assertIncludes(haystack, needle, label) {
   if (!haystack.includes(needle)) fail(`${label} missing ${needle}`);
 }
 
+function assertPattern(haystack, pattern, label) {
+  if (!pattern.test(haystack)) fail(`${label} missing`);
+}
+
+function assertSourceIdentity(sourceText, program) {
+  if (!program.source || typeof program.source === 'string') {
+    const sourceProgramId = program.source || program.devnet;
+    assertIncludes(sourceText, `declare_id!("${sourceProgramId}")`, `${program.name} source declare_id`);
+    return sourceProgramId;
+  }
+
+  assertPattern(
+    sourceText,
+    new RegExp(`#\\[cfg\\(feature = "devnet"\\)\\]\\s*declare_id!\\("${program.source.devnet}"\\)`, 'm'),
+    `${program.name} devnet feature declare_id`
+  );
+  assertPattern(
+    sourceText,
+    new RegExp(`#\\[cfg\\(not\\(feature = "devnet"\\)\\)\\]\\s*declare_id!\\("${program.source.mainnet}"\\)`, 'm'),
+    `${program.name} canonical default declare_id`
+  );
+  assertIncludes(sourceText, 'compile_error!("enable at most one escrow_v3 source identity feature")', `${program.name} mutually exclusive identity guard`);
+  return program.source;
+}
+
 const anchorToml = read(anchorPath);
 const workspaceCargo = read(cargoPath);
 assertIncludes(workspaceCargo, '"programs/*"', 'workspace Cargo.toml');
@@ -101,8 +130,7 @@ for (const program of programs) {
 
   const sourceText = read(source);
   const cargoText = read(cargo);
-  const sourceProgramId = program.source || program.devnet;
-  assertIncludes(sourceText, `declare_id!("${sourceProgramId}")`, `${program.name} source declare_id`);
+  const sourceProgramId = assertSourceIdentity(sourceText, program);
   assertIncludes(sourceText, '#[program]', `${program.name} Anchor program module`);
   assertIncludes(cargoText, 'anchor-lang = "1.0.0"', `${program.name} Cargo.toml`);
   assertIncludes(anchorToml, `${program.name} = "${program.devnet}"`, `${program.name} devnet Anchor.toml entry`);

@@ -8,6 +8,13 @@ use anchor_lang::solana_program::{
 use solana_sha256_hasher::hash as sol_hash;
 use std::str::FromStr;
 
+#[cfg(all(feature = "devnet", feature = "mainnet"))]
+compile_error!("enable at most one escrow_v3 source identity feature");
+
+#[cfg(feature = "devnet")]
+declare_id!("B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg");
+
+#[cfg(not(feature = "devnet"))]
 declare_id!("HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C");
 
 /// SATP V3 Escrow Program
