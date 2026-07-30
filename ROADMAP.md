@@ -75,7 +75,7 @@ conformance, security, release, and mainnet authority gates remain open.
   5 mandate; approved 2026-07-06). [#3faa5445] [shipped]
 - Anchor source-to-deployed verification remains open: PR #124 reports
   source_matches_chain=false, so src==deployed is not currently verified on any
-  network. [#3faa5445] [pending]
+  network. [#3faa5445] [#6c477338] [shipped]
 
 ## Phase 2 - SDK package and consumer boundary
 
