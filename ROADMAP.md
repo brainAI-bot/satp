@@ -175,8 +175,10 @@ conformance, security, release, and mainnet authority gates remain open.
   vault PDA, ATAs, transfer_checked); SOL-first is fine to launch, USDC is v2.
   [#14fa5837] [shipped]
 - D1 SDK wiring: V3_MAINNET_PROGRAM_IDS populated behind the approved
-  mainnet-authority decision packet; the V2 mainnet fence is not shipped until
-  the client is republished after the fence PR merges. [#bd298672] [shipped]
+  mainnet-authority decision packet. [#bd298672] [shipped]
+- Published-client V2 mainnet fence remains open until the client is
+  republished after the fence PR merges; no npm publish is authorized by this
+  roadmap item. [#a8e875a7] [in flight]
 - Burn-to-Become verified end-to-end on devnet against the deployed identity
   program: free mint, the 3-per-identity cap enforced on-chain, wallet rotation
   carrying the cap, and a soulbound transfer that fails. [#fbc35f6e] [shipped]
