@@ -73,9 +73,10 @@ conformance, security, release, and mainnet authority gates remain open.
   into this repo under programs/ after a secret/agent-memory scrub, so third
   parties can inspect the open-core source independently (ARCHITECTURE section
   5 mandate; approved 2026-07-06). [#3faa5445] [shipped]
-- Anchor source-to-deployed verification remains open: PR #124 reports
-  source_matches_chain=false, so src==deployed is not currently verified on any
-  network. [#3faa5445] [pending]
+- cfg-bound source-identity gate records the reviewed source package, while
+  source-to-chain byte equality remains evidence-only and unverified:
+  src==deployed is not currently verified on any network. [#3faa5445]
+  [#6c477338] [shipped]
 
 ## Phase 2 - SDK package and consumer boundary
 
