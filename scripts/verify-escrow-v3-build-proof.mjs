@@ -63,6 +63,13 @@ export function validateReference(reference) {
   }
 
   let requiredTargets = 0;
+  const requiredCanonicalFields = [
+    'canonical_source_path',
+    'canonical_source_profile',
+    'canonical_source_cfg',
+    'canonical_source_declare_id',
+  ];
+  let canonicalSourceContract;
   reference.targets.forEach((target, index) => {
     const label = `reference target[${index}]`;
     if (!target || typeof target !== 'object') throw new Error(`${label} must be an object`);
@@ -97,6 +104,21 @@ export function validateReference(reference) {
     }
     if (target.canonical_source_declare_id && !target.canonical_source_path) {
       throw new Error(`${label} canonical_source_path is required with canonical_source_declare_id`);
+    }
+    if (reference.source_identity_gate === 'required') {
+      for (const field of requiredCanonicalFields) {
+        if (typeof target[field] !== 'string' || target[field].length === 0) {
+          throw new Error(`${label} ${field} must be a non-empty string when source_identity_gate is required`);
+        }
+      }
+      const targetCanonicalSourceContract = requiredCanonicalFields
+        .map((field) => `${field}=${target[field]}`)
+        .join('\n');
+      if (canonicalSourceContract === undefined) {
+        canonicalSourceContract = targetCanonicalSourceContract;
+      } else if (canonicalSourceContract !== targetCanonicalSourceContract) {
+        throw new Error(`${label} canonical source contract must match other targets`);
+      }
     }
   });
 
@@ -262,13 +284,7 @@ async function main() {
   assertToolchain(reference);
 
   const results = [];
-  const sourceIdentityGate = reference.source_identity_gate === 'required'
-    ? {
-        gate: 'required',
-        ok: true,
-        source_path: reference.source_path,
-      }
-    : undefined;
+  let sourceIdentityAssertions = 0;
   for (const target of reference.targets) {
     assertIncludes(anchorToml, `[programs.${target.anchor_cluster}]`, `Anchor.toml ${target.cluster}`);
     assertIncludes(anchorToml, `${reference.program} = "${target.program_id}"`, `Anchor.toml ${target.cluster} program id`);
@@ -276,6 +292,7 @@ async function main() {
     if (target.canonical_source_declare_id) {
       const canonicalSource = readText(resolve(root, target.canonical_source_path));
       assertDeclareIdProfile(canonicalSource, target, 'canonical_source_declare_id', `${target.cluster} canonical source declare_id`);
+      sourceIdentityAssertions += 1;
     }
     const chain = await fetchProgramDataBytes(target);
     const chainSha256 = sha256(chain.bytes);
@@ -310,7 +327,20 @@ async function main() {
     });
   }
 
-  const ok = results.every((result) => result.ok);
+  const chainOk = results.every((result) => result.ok);
+  const sourceIdentityGate = reference.source_identity_gate === 'required'
+    ? {
+        gate: 'required',
+        ok: sourceIdentityAssertions === reference.targets.length,
+        source_path: reference.source_path,
+        canonical_source_path: reference.targets[0].canonical_source_path,
+        canonical_source_profile: reference.targets[0].canonical_source_profile,
+        canonical_source_cfg: reference.targets[0].canonical_source_cfg,
+        canonical_source_declare_id: reference.targets[0].canonical_source_declare_id,
+        assertions: sourceIdentityAssertions,
+      }
+    : undefined;
+  const ok = chainOk && (sourceIdentityGate ? sourceIdentityGate.ok : true);
   console.log(JSON.stringify({
     ok,
     program: reference.program,

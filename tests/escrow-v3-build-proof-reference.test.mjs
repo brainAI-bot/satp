@@ -10,6 +10,10 @@ const validReference = {
       build_source_profile: 'devnet feature',
       build_source_cfg: 'feature = "devnet"',
       build_source_declare_id: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
+      canonical_source_path: 'programs/escrow_v3/src/lib.rs',
+      canonical_source_profile: 'default',
+      canonical_source_cfg: 'not(feature = "devnet")',
+      canonical_source_declare_id: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
     },
     {
       gate: 'evidence_only',
@@ -93,5 +97,44 @@ test('rejects canonical source metadata without a canonical source path', () => 
       ],
     }),
     /canonical_source_path is required/
+  );
+});
+
+test('rejects a required source identity gate without canonical source metadata', () => {
+  assert.throws(
+    () => validateReference({
+      source_identity_gate: 'required',
+      targets: [
+        {
+          gate: 'evidence_only',
+          build_source_profile: 'devnet feature',
+          build_source_cfg: 'feature = "devnet"',
+          build_source_declare_id: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
+        },
+      ],
+    }),
+    /canonical_source_path must be a non-empty string when source_identity_gate is required/
+  );
+});
+
+test('rejects inconsistent canonical source contracts under a required source identity gate', () => {
+  assert.throws(
+    () => validateReference({
+      source_identity_gate: 'required',
+      targets: [
+        ...validReference.targets,
+        {
+          gate: 'evidence_only',
+          build_source_profile: 'devnet feature',
+          build_source_cfg: 'feature = "devnet"',
+          build_source_declare_id: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
+          canonical_source_path: 'programs/escrow_v3/src/lib.rs',
+          canonical_source_profile: 'alternate default',
+          canonical_source_cfg: 'not(feature = "devnet")',
+          canonical_source_declare_id: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
+        },
+      ],
+    }),
+    /canonical source contract must match other targets/
   );
 });
