@@ -3,19 +3,22 @@ import test from 'node:test';
 import { validateReference } from '../scripts/verify-escrow-v3-build-proof.mjs';
 
 const validReference = {
+  source_identity_gate: 'required',
   targets: [
     {
-      gate: 'required',
-      expected_verdict: 'MATCH',
-      build_source_profile: 'default',
+      gate: 'evidence_only',
+      build_source_profile: 'devnet feature',
+      build_source_cfg: 'feature = "devnet"',
       build_source_declare_id: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
     },
     {
       gate: 'evidence_only',
-      build_source_profile: 'default',
+      build_source_profile: 'devnet feature',
+      build_source_cfg: 'feature = "devnet"',
       build_source_declare_id: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
-      canonical_source_path: 'programs/escrow_v3/src/mainnet_identity.rs',
-      canonical_source_profile: 'mainnet',
+      canonical_source_path: 'programs/escrow_v3/src/lib.rs',
+      canonical_source_profile: 'default',
+      canonical_source_cfg: 'not(feature = "devnet")',
       canonical_source_declare_id: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
     },
   ],
@@ -27,7 +30,7 @@ const withRequiredSourceMetadata = (target) => ({
   ...target,
 });
 
-test('accepts explicit required and evidence_only gates with a required target', () => {
+test('accepts evidence_only chain targets with a required source identity gate', () => {
   assert.doesNotThrow(() => validateReference(validReference));
 });
 
@@ -49,6 +52,25 @@ test('rejects references with no required target', () => {
   assert.throws(
     () => validateReference({ targets: [withRequiredSourceMetadata({ gate: 'evidence_only' })] }),
     /must include at least one required gate/
+  );
+});
+
+test('rejects unknown source identity gate values', () => {
+  assert.throws(
+    () => validateReference({
+      source_identity_gate: 'optional',
+      targets: [withRequiredSourceMetadata({ gate: 'evidence_only' })],
+    }),
+    /source_identity_gate must be required/
+  );
+});
+
+test('rejects a required gate that expects mismatch', () => {
+  assert.throws(
+    () => validateReference({
+      targets: [withRequiredSourceMetadata({ gate: 'required', expected_verdict: 'DIFFER' })],
+    }),
+    /required gate expected_verdict must be MATCH/
   );
 });
 

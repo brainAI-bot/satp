@@ -28,14 +28,16 @@ source.
 Successful local proof command:
 
 ```sh
-cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml
-node scripts/verify-escrow-v3-build-proof.mjs
+export SOLANA_VERSION=2.1.21
+export SBF_TOOLS_VERSION=v1.52
+cargo build-sbf --tools-version "$SBF_TOOLS_VERSION" --manifest-path programs/escrow_v3/Cargo.toml --features devnet 2>&1 | tee build-sbf.log
+BUILD_SBF_LOG=build-sbf.log node scripts/verify-escrow-v3-build-proof.mjs
 ```
 
-Artifact hash from the successful local build:
+Artifact hash from the GitHub macOS build-proof readback for this repair:
 
 ```text
-fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31  target/deploy/escrow_v3.so
+aae78fc35770a8d25b9aabc95416d55315c0803f1b854cff2fb24ca3c6c0e092  target/deploy/escrow_v3.so
 ```
 
 The build-proof workflow now validates the freshly produced
@@ -46,30 +48,32 @@ account, strips the 45-byte loader metadata prefix, trims trailing account
 padding to the ELF-header/table length, hashes the live ELF bytes, and compares
 that hash with the fresh source build hash.
 
-The built artifact is the default escrow source profile in
-`programs/escrow_v3/src/lib.rs`, which declares the devnet escrow ID. The
-same checked-in program source tree also preserves the canonical mainnet
-identity in `programs/escrow_v3/src/mainnet_identity.rs`, which declares
-`HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` and is intentionally excluded
-from the default devnet build so the proof stays byte-exact against the
-deployed devnet program. That mainnet identity remains present in tracked
-source, `Anchor.toml`, and client metadata.
+The checked-in default escrow source profile in `programs/escrow_v3/src/lib.rs`
+declares the owner-approved canonical mainnet escrow ID
+`HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` under
+`#[cfg(not(feature = "devnet"))]`. The deployed devnet proof target is behind
+the explicit `devnet` feature under `#[cfg(feature = "devnet")]`, so exactly
+one escrow `declare_id!` is compiled for a given build profile. REQ-a5647bff
+and REQ-c4078618 approve the canonical default even though the devnet feature
+build is not byte-identical to the existing devnet deployment, so the chain
+comparisons are evidence-only and the required gate is the cfg-bound source
+identity readback.
 
 Current source-to-chain status:
 
 | Cluster | Gate | Program | Source build sha256 | Live programdata sha256 | Verdict |
 | --- | --- | --- | --- | --- | --- |
-| devnet | required | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | MATCH |
-| mainnet-beta | evidence only | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | `9344275ab35c22e1734a44184300d3eb3bffc0368c7b285c7454e508781527d2` | DIFFER |
+| devnet | evidence only | `B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg` | `aae78fc35770a8d25b9aabc95416d55315c0803f1b854cff2fb24ca3c6c0e092` | `fe866c0f57586aa2aa88089fcc4ce7359050218a2519a7f8556718efcf27db31` | DIFFER |
+| mainnet-beta | evidence only | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | `aae78fc35770a8d25b9aabc95416d55315c0803f1b854cff2fb24ca3c6c0e092` | `9344275ab35c22e1734a44184300d3eb3bffc0368c7b285c7454e508781527d2` | DIFFER |
 
-The devnet MATCH is the positive control: the checked-in escrow `lib.rs`
-default source declares the devnet escrow ID and rebuilds byte-exact to the
-deployed devnet program. The canonical mainnet escrow ID remains declared in
-tracked escrow source metadata and remains in `Anchor.toml` and client
-metadata. The mainnet DIFFER remains valuable mismatch evidence, but it is not
-a green CI assertion: mainnet-beta is `evidence_only` until a later owner-gated
-task either pins an expected on-chain hash with drift-detection semantics or
-separately authorizes a repaired mainnet source/provenance path.
+The devnet DIFFER is the accepted byte-proof divergence from REQ-a5647bff and
+REQ-c4078618 after restoring the canonical compiled default and keeping devnet
+behind an explicit feature. The canonical mainnet escrow ID remains compiled
+source by default and remains in `Anchor.toml` and client metadata. The mainnet
+DIFFER remains valuable mismatch evidence, but it is not a green CI assertion:
+mainnet-beta is `evidence_only` until a later owner-gated task either pins an
+expected on-chain hash with drift-detection semantics or separately authorizes a
+repaired mainnet source/provenance path.
 
 Lockfile compatibility pins keep proc-macro TOML parser crates on
 Cargo-1.85-compatible versions while still satisfying their declared semver

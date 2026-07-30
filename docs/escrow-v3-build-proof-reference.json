@@ -3,29 +3,36 @@
   "program": "escrow_v3",
   "source_path": "programs/escrow_v3",
   "artifact_path": "target/deploy/escrow_v3.so",
+  "source_identity_gate": "required",
   "toolchain": {
     "solana_cli_version": "2.1.21",
     "sbf_tools_version": "v1.52",
-    "build_command": "cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml"
+    "build_command": "cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml --features devnet"
   },
   "targets": [
     {
       "cluster": "devnet",
       "anchor_cluster": "devnet",
       "program_id": "B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg",
-      "build_source_profile": "default features: #[cfg(not(feature = \"mainnet\"))]",
+      "build_source_profile": "devnet feature: #[cfg(feature = \"devnet\")]",
+      "build_source_cfg": "feature = \"devnet\"",
       "build_source_declare_id": "B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg",
-      "gate": "required",
-      "expected_verdict": "MATCH"
+      "canonical_source_path": "programs/escrow_v3/src/lib.rs",
+      "canonical_source_profile": "default features: #[cfg(not(feature = \"devnet\"))]",
+      "canonical_source_cfg": "not(feature = \"devnet\")",
+      "canonical_source_declare_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
+      "gate": "evidence_only"
     },
     {
       "cluster": "mainnet-beta",
       "anchor_cluster": "mainnet",
       "program_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
-      "build_source_profile": "default features: #[cfg(not(feature = \"mainnet\"))]",
+      "build_source_profile": "devnet feature: #[cfg(feature = \"devnet\")]",
+      "build_source_cfg": "feature = \"devnet\"",
       "build_source_declare_id": "B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg",
-      "canonical_source_path": "programs/escrow_v3/src/mainnet_identity.rs",
-      "canonical_source_profile": "tracked mainnet identity marker, intentionally excluded from default devnet build",
+      "canonical_source_path": "programs/escrow_v3/src/lib.rs",
+      "canonical_source_profile": "default features: #[cfg(not(feature = \"devnet\"))]",
+      "canonical_source_cfg": "not(feature = \"devnet\")",
       "canonical_source_declare_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
       "gate": "evidence_only"
     }

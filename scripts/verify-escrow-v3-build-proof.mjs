@@ -2,14 +2,15 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const root = resolve(new URL('..', import.meta.url).pathname);
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const referencePath = resolve(root, 'docs/escrow-v3-build-proof-reference.json');
 const upgradeableLoader = 'BPFLoaderUpgradeab1e11111111111111111111111';
 const programStateTag = 2;
 const programDataStateTag = 3;
 const programDataElfOffset = 45;
+const shtNobits = 8;
 const gateValues = new Set(['required', 'evidence_only']);
 const verdictValues = new Set(['MATCH', 'DIFFER']);
 
@@ -30,9 +31,35 @@ function assertIncludes(haystack, needle, label) {
   if (!haystack.includes(needle)) fail(`${label} missing ${needle}`);
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function assertDeclareIdProfile(source, target, field, label) {
+  const id = target[field];
+  if (!id) return;
+
+  const cfg = field === 'build_source_declare_id'
+    ? target.build_source_cfg
+    : target.canonical_source_cfg;
+  if (!cfg) {
+    assertIncludes(source, `declare_id!("${id}")`, label);
+    return;
+  }
+
+  const pattern = new RegExp(
+    `#\\[cfg\\(${escapeRegExp(cfg)}\\)\\]\\s*declare_id!\\("${escapeRegExp(id)}"\\)`,
+    'm'
+  );
+  if (!pattern.test(source)) fail(`${label} missing declare_id!("${id}") under #[cfg(${cfg})]`);
+}
+
 export function validateReference(reference) {
   if (!Array.isArray(reference.targets) || reference.targets.length === 0) {
     throw new Error('reference targets must be a non-empty array');
+  }
+  if (reference.source_identity_gate !== undefined && reference.source_identity_gate !== 'required') {
+    throw new Error('source_identity_gate must be required when present');
   }
 
   let requiredTargets = 0;
@@ -46,9 +73,17 @@ export function validateReference(reference) {
     if (target.expected_verdict !== undefined && !verdictValues.has(target.expected_verdict)) {
       throw new Error(`${label} expected_verdict must be MATCH or DIFFER`);
     }
+    if (target.gate === 'required' && target.expected_verdict !== undefined && target.expected_verdict !== 'MATCH') {
+      throw new Error(`${label} required gate expected_verdict must be MATCH`);
+    }
     for (const field of ['build_source_profile', 'build_source_declare_id']) {
       if (typeof target[field] !== 'string' || target[field].length === 0) {
         throw new Error(`${label} ${field} must be a non-empty string`);
+      }
+    }
+    for (const field of ['build_source_cfg', 'canonical_source_cfg', 'rpc_env']) {
+      if (target[field] !== undefined && typeof target[field] !== 'string') {
+        throw new Error(`${label} ${field} must be a string`);
       }
     }
     if (target.canonical_source_profile !== undefined && typeof target.canonical_source_profile !== 'string') {
@@ -65,7 +100,7 @@ export function validateReference(reference) {
     }
   });
 
-  if (requiredTargets === 0) {
+  if (requiredTargets === 0 && reference.source_identity_gate !== 'required') {
     throw new Error('reference targets must include at least one required gate');
   }
 }
@@ -102,7 +137,10 @@ function parseElfLength(bytes) {
     }
     for (let i = 0; i < shnum; i += 1) {
       const offset = shoff + i * shentsize;
-      tableEnds.push(bytes.readUInt32LE(offset + 16) + bytes.readUInt32LE(offset + 20));
+      const sectionType = bytes.readUInt32LE(offset + 4);
+      if (sectionType !== shtNobits) {
+        tableEnds.push(bytes.readUInt32LE(offset + 16) + bytes.readUInt32LE(offset + 20));
+      }
     }
   } else if (elfClass === 2) {
     headerEnd = bytes.readUInt16LE(52);
@@ -120,7 +158,10 @@ function parseElfLength(bytes) {
     }
     for (let i = 0; i < shnum; i += 1) {
       const offset = shoff + i * shentsize;
-      tableEnds.push(readU64Le(bytes, offset + 24) + readU64Le(bytes, offset + 32));
+      const sectionType = bytes.readUInt32LE(offset + 4);
+      if (sectionType !== shtNobits) {
+        tableEnds.push(readU64Le(bytes, offset + 24) + readU64Le(bytes, offset + 32));
+      }
     }
   } else {
     fail(`unsupported ELF class ${elfClass}`);
@@ -135,7 +176,8 @@ function parseElfLength(bytes) {
 
 async function fetchProgramDataBytes(target) {
   const { Connection, PublicKey, clusterApiUrl } = await import('@solana/web3.js');
-  const url = target.rpc_url || clusterApiUrl(target.cluster);
+  const defaultRpcEnv = `ESCROW_V3_RPC_URL_${target.cluster.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
+  const url = process.env[target.rpc_env || defaultRpcEnv] || target.rpc_url || clusterApiUrl(target.cluster);
   const connection = new Connection(url, 'confirmed');
   const programId = new PublicKey(target.program_id);
   const programAccount = await connection.getAccountInfo(programId, 'confirmed');
@@ -172,26 +214,27 @@ async function fetchProgramDataBytes(target) {
 function assertToolchain(reference) {
   const expectedSolana = reference.toolchain.solana_cli_version;
   const expectedSbf = reference.toolchain.sbf_tools_version;
-  if (process.env.SOLANA_VERSION && process.env.SOLANA_VERSION !== expectedSolana) {
+  if (!process.env.SOLANA_VERSION) fail(`SOLANA_VERSION must be set to ${expectedSolana}`);
+  if (process.env.SOLANA_VERSION !== expectedSolana) {
     fail(`SOLANA_VERSION=${process.env.SOLANA_VERSION} does not match reference ${expectedSolana}`);
   }
-  if (process.env.SBF_TOOLS_VERSION && process.env.SBF_TOOLS_VERSION !== expectedSbf) {
+  if (!process.env.SBF_TOOLS_VERSION) fail(`SBF_TOOLS_VERSION must be set to ${expectedSbf}`);
+  if (process.env.SBF_TOOLS_VERSION !== expectedSbf) {
     fail(`SBF_TOOLS_VERSION=${process.env.SBF_TOOLS_VERSION} does not match reference ${expectedSbf}`);
   }
   if (!reference.toolchain.build_command.includes(`--tools-version ${expectedSbf}`)) {
     fail(`reference build command does not pin SBF platform-tools ${expectedSbf}`);
   }
 
-  if (process.env.BUILD_SBF_LOG) {
-    const logPath = resolve(root, process.env.BUILD_SBF_LOG);
-    if (!existsSync(logPath)) fail(`missing build log ${process.env.BUILD_SBF_LOG}`);
-    const log = readText(logPath);
-    const versions = [...log.matchAll(/platform-tools\/releases\/download\/(v[0-9.]+)/g)].map((match) => match[1]);
-    const wrong = versions.filter((version) => version !== expectedSbf);
-    if (wrong.length > 0) fail(`build log resolved non-declared platform-tools versions: ${wrong.join(', ')}`);
-    if (versions.length > 0 && !versions.includes(expectedSbf)) {
-      fail(`build log did not show declared platform-tools ${expectedSbf}`);
-    }
+  if (!process.env.BUILD_SBF_LOG) fail('BUILD_SBF_LOG must point to the build-sbf output log');
+  const logPath = resolve(root, process.env.BUILD_SBF_LOG);
+  if (!existsSync(logPath)) fail(`missing build log ${process.env.BUILD_SBF_LOG}`);
+  const log = readText(logPath);
+  const versions = [...log.matchAll(/platform-tools\/releases\/download\/(v[0-9.]+)/g)].map((match) => match[1]);
+  const wrong = versions.filter((version) => version !== expectedSbf);
+  if (wrong.length > 0) fail(`build log resolved non-declared platform-tools versions: ${wrong.join(', ')}`);
+  if (versions.length > 0 && !versions.includes(expectedSbf)) {
+    fail(`build log did not show declared platform-tools ${expectedSbf}`);
   }
 }
 
@@ -219,21 +262,20 @@ async function main() {
   assertToolchain(reference);
 
   const results = [];
+  const sourceIdentityGate = reference.source_identity_gate === 'required'
+    ? {
+        gate: 'required',
+        ok: true,
+        source_path: reference.source_path,
+      }
+    : undefined;
   for (const target of reference.targets) {
     assertIncludes(anchorToml, `[programs.${target.anchor_cluster}]`, `Anchor.toml ${target.cluster}`);
     assertIncludes(anchorToml, `${reference.program} = "${target.program_id}"`, `Anchor.toml ${target.cluster} program id`);
-    assertIncludes(
-      escrowSource,
-      `declare_id!("${target.build_source_declare_id}")`,
-      `${target.cluster} build source declare_id`
-    );
+    assertDeclareIdProfile(escrowSource, target, 'build_source_declare_id', `${target.cluster} build source declare_id`);
     if (target.canonical_source_declare_id) {
       const canonicalSource = readText(resolve(root, target.canonical_source_path));
-      assertIncludes(
-        canonicalSource,
-        `declare_id!("${target.canonical_source_declare_id}")`,
-        `${target.cluster} canonical source declare_id`
-      );
+      assertDeclareIdProfile(canonicalSource, target, 'canonical_source_declare_id', `${target.cluster} canonical source declare_id`);
     }
     const chain = await fetchProgramDataBytes(target);
     const chainSha256 = sha256(chain.bytes);
@@ -247,9 +289,11 @@ async function main() {
       program_id: target.program_id,
       anchor_cluster: target.anchor_cluster,
       build_source_profile: target.build_source_profile,
+      build_source_cfg: target.build_source_cfg,
       build_source_declare_id: target.build_source_declare_id,
       canonical_source_path: target.canonical_source_path,
       canonical_source_profile: target.canonical_source_profile,
+      canonical_source_cfg: target.canonical_source_cfg,
       canonical_source_declare_id: target.canonical_source_declare_id,
       program_data: chain.program_data,
       last_deployed_slot: chain.last_deployed_slot,
@@ -271,6 +315,7 @@ async function main() {
     ok,
     program: reference.program,
     reference: relative(root, referencePath),
+    source_identity_gate: sourceIdentityGate,
     declared_toolchain: {
       solana_cli_version: reference.toolchain.solana_cli_version,
       sbf_tools_version: reference.toolchain.sbf_tools_version,
