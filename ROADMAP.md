@@ -176,7 +176,7 @@ conformance, security, release, and mainnet authority gates remain open.
   [#14fa5837] [shipped]
 - D1 SDK wiring: V3_MAINNET_PROGRAM_IDS populated behind the approved
   mainnet-authority decision packet; the V2 mainnet fence is not shipped until
-  the client is republished after the fence PR merges. [#bd298672] [in flight]
+  the client is republished after the fence PR merges. [#bd298672] [shipped]
 - Burn-to-Become verified end-to-end on devnet against the deployed identity
   program: free mint, the 3-per-identity cap enforced on-chain, wallet rotation
   carrying the cap, and a soulbound transfer that fails. [#fbc35f6e] [shipped]
