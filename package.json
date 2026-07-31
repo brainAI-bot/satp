@@ -59,6 +59,7 @@
   },
   "files": [
     "README.md",
+    "docs/adoption-quickstarts.md",
     "docs/quickstart.md",
     "docs/agentfolio-consumption-readiness.md",
     "docs/package-boundary.md",

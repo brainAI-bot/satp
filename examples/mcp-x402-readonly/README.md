@@ -2,6 +2,10 @@
 
 This example is a repo-owned, offline-first sketch for exposing SATP read APIs through an MCP-style tool surface with a mock x402 verifier.
 
+For the shortest external-builder snippets, including separate MCP,
+A2A/agent-runtime, and x402 paid-endpoint quickstarts, see
+[`../../docs/adoption-quickstarts.md`](../../docs/adoption-quickstarts.md).
+
 It is intentionally **offline, fixture-first, and read-only by default**:
 
 - fixture data is used unless `mode: "rpc"` is requested;

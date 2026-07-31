@@ -12,13 +12,13 @@ candidate or a commit-addressed Git review pin.
 
 | Use case | Install |
 | --- | --- |
-| Stable app consumption | `npm install @brainai/satp-client@2.0.3` |
+| Stable app consumption | `npm install @brainai/satp-client@2.0.5` |
 | HQ-assigned historical rc reproduction | `npm install @brainai/satp-client@2.0.2` |
 | HQ-assigned moving rc-tag validation | `npm install @brainai/satp-client@rc` |
 | HQ-assigned source review | `npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
 The current npm `rc` tag resolves to historical package `2.0.2`, which is older
-than stable `latest` `2.0.3`. Use the exact `2.0.2` version when the review
+than stable `latest` `2.0.5`. Use the exact `2.0.2` version when the review
 artifact must be reproducible; use `@rc` only when the HQ task names the moving
 tag as the target.
 
@@ -88,6 +88,10 @@ named by that task.
 
 ## Related docs
 
+- [`docs/adoption-quickstarts.md`](./adoption-quickstarts.md) provides
+  copy-paste MCP, A2A/agent-runtime, and x402 paid-endpoint examples with the
+  free/open SATP package boundary and x402-only monetization boundary stated
+  explicitly.
 - [`docs/satp-client-consumer-install.md`](./satp-client-consumer-install.md)
   covers dependency policy and consumer install proofs.
 - [`docs/conformance.md`](./conformance.md) covers RC-S6 fixtures and semantic

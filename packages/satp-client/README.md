@@ -3,7 +3,7 @@
 **Solana Agent Trust Protocol** - JavaScript/TypeScript SDK for reading and
 building reviewed SATP V3 program interactions.
 
-Current stable npm package: **@brainai/satp-client@2.0.3** | rc dist-tag: **@brainai/satp-client@2.0.2** | Programs: **6**
+Current stable npm package: **@brainai/satp-client@2.0.5** | rc dist-tag: **@brainai/satp-client@2.0.2** | Programs: **6**
 
 ## Installation
 
@@ -11,20 +11,20 @@ Choose stable, rc, or Git based on what the consumer needs to prove:
 
 | Channel | Use when | Command |
 | --- | --- | --- |
-| Stable npm | Default production-style consumption of the stable public package. | `npm install @brainai/satp-client@2.0.3` |
+| Stable npm | Default production-style consumption of the stable public package. | `npm install @brainai/satp-client@2.0.5` |
 | Historical rc exact version | Explicit HQ-assigned reproduction or lockfile evidence for the historical pre-stable artifact. | `npm install @brainai/satp-client@2.0.2` |
 | Release candidate tag | Explicit HQ-assigned rc validation where a moving dist-tag is acceptable and the task names the tag as the target. | `npm install @brainai/satp-client@rc` |
 | Reviewed Git commit | PR coordination or source-review installs tied to an exact SATP commit. | `npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
-Registry readback on 2026-07-26 shows npm `latest` resolves to
-`@brainai/satp-client@2.0.3` and the `rc` dist-tag resolves to `2.0.2`.
-Stable consumers should use `latest`/`2.0.3` unless HQ assigns an explicit
+Registry readback on 2026-07-31 shows npm `latest` resolves to
+`@brainai/satp-client@2.0.5` and the `rc` dist-tag resolves to `2.0.2`.
+Stable consumers should use `latest`/`2.0.5` unless HQ assigns an explicit
 release-candidate validation task.
 
 For stable consumer installs, pin the current published npm package:
 
 ```bash
-npm install @brainai/satp-client@2.0.3
+npm install @brainai/satp-client@2.0.5
 ```
 
 For rc validation:
@@ -76,6 +76,13 @@ escrow readiness, mainnet readiness, npm latest adoption, or product approval.
 For the root consumer quickstart covering stable npm, rc validation, Git-review
 pins, read-only trust packets, conformance checks, and network boundaries, see
 [`docs/quickstart.md`](../../docs/quickstart.md).
+
+For copy-paste MCP, A2A/agent-runtime, and x402 paid-endpoint examples, see
+[`docs/adoption-quickstarts.md`](../../docs/adoption-quickstarts.md) or run:
+
+```bash
+node packages/satp-client/examples/adoption-quickstarts.js
+```
 
 ```javascript
 const { SATPV3SDK } = require('@brainai/satp-client');

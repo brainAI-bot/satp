@@ -15,21 +15,21 @@ Choose the dependency source by release channel:
 
 | Channel | Use when | Dependency |
 | --- | --- | --- |
-| Stable npm | Production or default consumer installs that should follow the public stable package. | `npm install @brainai/satp-client@2.0.3` or `npm install @brainai/satp-client` |
+| Stable npm | Production or default consumer installs that should follow the public stable package. | `npm install @brainai/satp-client@2.0.5` or `npm install @brainai/satp-client` |
 | Historical rc exact version | Downstream apps need reproducible evidence for an explicitly assigned historical pre-stable package. | `npm install @brainai/satp-client@2.0.2` |
 | Release candidate tag | Downstream apps are validating the moving rc tag itself under an explicit HQ task. | `npm install @brainai/satp-client@rc` |
 | Reviewed Git commit | PR coordination or unpublished review work where the exact repository commit is the artifact under review. | `git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
-Registry readback on 2026-07-26 shows npm `latest` resolves to
-`@brainai/satp-client@2.0.3` and the `rc` dist-tag resolves to `2.0.2`.
-Stable consumers should use `latest`/`2.0.3` unless HQ assigns an explicit
+Registry readback on 2026-07-31 shows npm `latest` resolves to
+`@brainai/satp-client@2.0.5` and the `rc` dist-tag resolves to `2.0.2`.
+Stable consumers should use `latest`/`2.0.5` unless HQ assigns an explicit
 release-candidate validation task.
 
 Stable consumers can pin the current published npm package:
 
     {
       "dependencies": {
-        "@brainai/satp-client": "2.0.3"
+        "@brainai/satp-client": "2.0.5"
       }
     }
 
@@ -70,7 +70,7 @@ packet. This flow performs no RPC write, signing, live x402 payment, Solana
 deploy, keypair access, or npm publish.
 
 ```bash
-npm install @brainai/satp-client@2.0.3
+npm install @brainai/satp-client@2.0.5
 ```
 
 ```js
@@ -95,6 +95,12 @@ console.log(packet.mode);
 For a longer consumer walkthrough covering stable npm, release candidates,
 Git-review pins, conformance checks, and network boundaries, see
 [`docs/quickstart.md`](./docs/quickstart.md).
+
+For copy-paste adoption examples tailored to MCP tool/server builders,
+A2A/agent-runtime builders, and x402 paid-endpoint builders, see
+[`docs/adoption-quickstarts.md`](./docs/adoption-quickstarts.md). These
+examples keep SATP package usage free/open and scope brainAI monetization to
+x402-gated reputation/evidence lookup endpoints only.
 
 The runtime/product next-slice plan for SDK ergonomics, local attestation
 request verification, MCP/x402 examples, and AgentFolio reference-consumer

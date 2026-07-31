@@ -21,6 +21,10 @@ npm --prefix examples/mcp-x402-readonly test
 npm --prefix examples/mcp-x402-readonly run check
 ```
 
+For a shorter external-builder quickstart that can be copied into an MCP server
+without the full example harness, see the MCP section in
+[`docs/adoption-quickstarts.md`](./adoption-quickstarts.md).
+
 ## External AgentFolio context
 
 Earlier MCP notes referenced the AgentFolio-hosted package and public SSE endpoint (`@agentfolio/mcp`, `https://agentfolio.bot/mcp/sse`, and `https://agentfolio.bot/api/satp`). Those are **external consumer context**, not the canonical SATP repo-owned runtime surface.
