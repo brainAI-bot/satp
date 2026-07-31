@@ -4,6 +4,9 @@ This example shows how a third-party app can verify SATP identity,
 attestation, and trust packet records from the repo-owned conformance fixtures
 without AgentFolio infrastructure.
 
+For a shorter copy-paste A2A/agent-runtime quickstart, see
+[`../../docs/adoption-quickstarts.md`](../../docs/adoption-quickstarts.md).
+
 It is intentionally offline and app-agnostic:
 
 - fixture records are loaded from `tests/conformance/fixtures`;
