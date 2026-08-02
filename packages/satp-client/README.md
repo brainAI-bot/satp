@@ -3,7 +3,7 @@
 **Solana Agent Trust Protocol** - JavaScript/TypeScript SDK for reading and
 building reviewed SATP V3 program interactions.
 
-Current stable npm package: **@brainai/satp-client@2.0.5** | rc dist-tag: **@brainai/satp-client@2.0.2** | Programs: **6**
+Current stable npm package: **@brainai/satp-client@2.0.5** | unpublished source candidate: **@brainai/satp-client@2.0.6** | rc dist-tag: **@brainai/satp-client@2.0.2** | Programs: **6**
 
 ## Installation
 
@@ -20,6 +20,11 @@ Registry readback on 2026-07-31 shows npm `latest` resolves to
 `@brainai/satp-client@2.0.5` and the `rc` dist-tag resolves to `2.0.2`.
 Stable consumers should use `latest`/`2.0.5` unless HQ assigns an explicit
 release-candidate validation task.
+
+Source release-prep on 2026-08-02 advances package metadata to `2.0.6` as the
+next unpublished stable semver candidate because npm `latest` is already
+`2.0.5` and npm package versions are immutable. This does not publish the
+package or move any npm dist-tag.
 
 For stable consumer installs, pin the current published npm package:
 
