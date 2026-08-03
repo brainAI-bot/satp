@@ -25,8 +25,9 @@ Registry readback on 2026-08-02 shows npm `latest` resolves to
 Stable consumers should use `latest`/`2.0.6` unless HQ assigns an explicit
 release-candidate validation task.
 
-Stable 2.0.6 provenance: HQ task
-`SATP-NPM-PUBLISH-APPROVAL-EFFECTIVE-20260802` records the 2.0.6
+Stable 2.0.6 provenance: Owner-approved approval record `REQ-cc84fa3a` and
+PR #115 are the publicly auditable approval provenance for the stable package
+line; HQ task `SATP-NPM-PUBLISH-APPROVAL-EFFECTIVE-20260802` records the 2.0.6
 publish/readback. This document records that live registry state; it does not
 authorize a new publish or dist-tag mutation.
 

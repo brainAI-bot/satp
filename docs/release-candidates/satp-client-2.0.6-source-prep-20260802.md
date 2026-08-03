@@ -1,11 +1,13 @@
 # @brainai/satp-client 2.0.6 Source Release Prep
 
 Status: source-side release-ready semver prep followed by the separately
-approved 2.0.6 npm publish/readback recorded by HQ task
-`SATP-NPM-PUBLISH-APPROVAL-EFFECTIVE-20260802`. This note does not approve or
-perform another npm publish, npm dist-tag mutation, Solana write, keypair
-action, credential/admin action, deploy, production restart, public
-announcement, paid spend, or client commitment.
+Owner-approved 2.0.6 npm publish/readback. Owner-approved approval record
+`REQ-cc84fa3a` and PR #115 are the publicly auditable approval provenance for
+the stable package line; HQ task `SATP-NPM-PUBLISH-APPROVAL-EFFECTIVE-20260802`
+records the 2.0.6 publish/readback. This note does not approve or perform
+another npm publish, npm dist-tag mutation, Solana write, keypair action,
+credential/admin action, deploy, production restart, public announcement, paid
+spend, or client commitment.
 
 ## Pre-Publish Registry Readback
 
