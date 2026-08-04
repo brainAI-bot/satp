@@ -6,10 +6,15 @@ GitHub issue: [#14 SATP post-S6 roadmap](https://github.com/brainAI-bot/satp/iss
 Issue #14 correction: npm registry readback on 2026-08-02 shows
 `@brainai/satp-client@2.0.6` is the current stable `latest` package, published
 at `2026-08-02T13:17:15.867Z`. Stable consume verification should target
-`@brainai/satp-client` or exact `@brainai/satp-client@2.0.6` unless HQ assigns
-historical rc evidence or reviewed Git commit work. This supersedes older issue
+`@brainai/satp-client` or exact `@brainai/satp-client@2.0.6` under the
+stable-channel behavior recorded in package-boundary docs, unless HQ assigns
+historical rc evidence or reviewed Git commit work. Owner-approved
+`REQ-6b35eb58` is the 2.0.6 roadmap-gate approval authority; HQ task
+`SATP-NPM-PUBLISH-APPROVAL-EFFECTIVE-20260802` records the 2.0.6
+publish/readback execution. Owner-approved `REQ-cc84fa3a` and PR #115 remain the
+historical stable-line / 2.0.2 public provenance. This supersedes older issue
 wording that named `2.0.1`/`2.0.2` as the current npm target while preserving
-the ban on new npm publishes from this roadmap.
+the ban on future npm publishes from this roadmap without separate approval.
 
 Status: PR-first implementation and design carrier. This document defines the
 next engineering slices needed to make SATP easier to consume from host
