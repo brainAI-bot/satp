@@ -3,15 +3,18 @@
 HQ task: `SATP-RUNTIME-PRODUCT-NEXT-SLICE-PR-20260726-2111Z`
 GitHub issue: [#14 SATP post-S6 roadmap](https://github.com/brainAI-bot/satp/issues/14)
 
-Issue #14 correction: the issue body remains historically stale where line 13
-says no npm publish beyond `2.0.1` and line 213 points
-`AF-SATP-NPM-CONSUME-001` at `2.0.1`. Owner approval `REQ-cc84fa3a`, recorded
-publicly by PR #115, supersedes that stale npm target for the already-approved
-stable `@brainai/satp-client@2.0.2` target while preserving the ban on new npm
-publishes from this roadmap. `AF-SATP-NPM-CONSUME-001` should verify AgentFolio
-against `@brainai/satp-client@2.0.2`; that consume task is unblocked from the
-impossible `2.0.1` target, but remains limited to read-only consume
-verification.
+Issue #14 correction: npm registry readback on 2026-08-02 shows
+`@brainai/satp-client@2.0.6` is the current stable `latest` package, published
+at `2026-08-02T13:17:15.867Z`. Stable consume verification should target
+`@brainai/satp-client` or exact `@brainai/satp-client@2.0.6` under the
+stable-channel behavior recorded in package-boundary docs, unless HQ assigns
+historical rc evidence or reviewed Git commit work. Owner-approved
+`REQ-6b35eb58` is the 2.0.6 roadmap-gate approval authority; HQ task
+`SATP-NPM-PUBLISH-APPROVAL-EFFECTIVE-20260802` records the 2.0.6
+publish/readback execution. Owner-approved `REQ-cc84fa3a` and PR #115 remain the
+historical stable-line / 2.0.2 public provenance. This supersedes older issue
+wording that named `2.0.1`/`2.0.2` as the current npm target while preserving
+the ban on future npm publishes from this roadmap without separate approval.
 
 Status: PR-first implementation and design carrier. This document defines the
 next engineering slices needed to make SATP easier to consume from host

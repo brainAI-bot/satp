@@ -36,11 +36,11 @@ Required readback for copy reviews:
 | Source | Current boundary |
 | --- | --- |
 | [`package.json`](../package.json) | Repo root is named `@brainai/satp-client`, remains `private: true`, and exposes the Git-installable review surface through `packages/satp-client/src/index.js`, `packages/satp-client/src/index.d.ts`, `./wallet-control-challenge`, `./x402-discovery`, `./src/*`, and `./package.json`. |
-| [`packages/satp-client/package.json`](../packages/satp-client/package.json) | Publishable client package is named `@brainai/satp-client`, currently `2.0.3` in source, with `main=src/index.js`, `types=src/index.d.ts`, public package files under `src/`, `examples/`, and `README.md`, and `publishConfig.access=public`. |
+| [`packages/satp-client/package.json`](../packages/satp-client/package.json) | Publishable client package is named `@brainai/satp-client`, currently `2.0.6` in source, with `main=src/index.js`, `types=src/index.d.ts`, public package files under `src/`, `examples/`, and `README.md`, and `publishConfig.access=public`. |
 | [`scripts/check-exports.js`](../scripts/check-exports.js) | Offline export smoke requires the AgentFolio-facing public surface, including `SATPSDK`, `SATPV3SDK`, `createSATPClient`, `getV3ProgramIds`, `hashAgentId`, `getGenesisPDA`, `prepareIdentityAttestationRequest`, trust-packet helpers, runtime-policy helpers, wallet-control helpers, and x402 discovery helpers. |
 | [`examples/agentfolio-consumer-readonly`](../examples/agentfolio-consumer-readonly) | AgentFolio stays a read-only consumer of SATP helpers. The example builds unsigned trust packets from app-owned profile data and does not sign, send transactions, call RPC, publish packages, deploy programs, or mutate AgentFolio production data. |
 
-Live npm metadata was verified with `npm view @brainai/satp-client name version dist-tags --json` on 2026-07-26: package `@brainai/satp-client`, `latest` version `2.0.3`, and `rc` dist-tag `2.0.2`.
+Live npm metadata was verified with `npm view @brainai/satp-client name version dist-tags --json` on 2026-08-02: package `@brainai/satp-client`, `latest` version `2.0.6`, and `rc` dist-tag `2.0.2`.
 
 ## Allowed AgentFolio install forms
 
@@ -49,7 +49,7 @@ Default stable npm dependency:
 ```json
 {
   "dependencies": {
-    "@brainai/satp-client": "2.0.3"
+    "@brainai/satp-client": "2.0.6"
   }
 }
 ```

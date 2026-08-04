@@ -15,21 +15,21 @@ Choose the dependency source by release channel:
 
 | Channel | Use when | Dependency |
 | --- | --- | --- |
-| Stable npm | Production or default consumer installs that should follow the public stable package. | `npm install @brainai/satp-client@2.0.5` or `npm install @brainai/satp-client` |
+| Stable npm | Production or default consumer installs that should follow the public stable package. | `npm install @brainai/satp-client@2.0.6` or `npm install @brainai/satp-client` |
 | Historical rc exact version | Downstream apps need reproducible evidence for an explicitly assigned historical pre-stable package. | `npm install @brainai/satp-client@2.0.2` |
 | Release candidate tag | Downstream apps are validating the moving rc tag itself under an explicit HQ task. | `npm install @brainai/satp-client@rc` |
 | Reviewed Git commit | PR coordination or unpublished review work where the exact repository commit is the artifact under review. | `git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
-Registry readback on 2026-07-31 shows npm `latest` resolves to
-`@brainai/satp-client@2.0.5` and the `rc` dist-tag resolves to `2.0.2`.
-Stable consumers should use `latest`/`2.0.5` unless HQ assigns an explicit
+Registry readback on 2026-08-02 shows npm `latest` resolves to
+`@brainai/satp-client@2.0.6` and the `rc` dist-tag resolves to `2.0.2`.
+Stable consumers should use `latest`/`2.0.6` unless HQ assigns an explicit
 release-candidate validation task.
 
 Stable consumers can pin the current published npm package:
 
     {
       "dependencies": {
-        "@brainai/satp-client": "2.0.5"
+        "@brainai/satp-client": "2.0.6"
       }
     }
 
@@ -70,7 +70,7 @@ packet. This flow performs no RPC write, signing, live x402 payment, Solana
 deploy, keypair access, or npm publish.
 
 ```bash
-npm install @brainai/satp-client@2.0.5
+npm install @brainai/satp-client@2.0.6
 ```
 
 ```js

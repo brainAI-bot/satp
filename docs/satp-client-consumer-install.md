@@ -15,20 +15,24 @@ publishes it and updates install-ready docs. See
 
 | Channel | Use when | Dependency |
 | --- | --- | --- |
-| Stable npm | Production or default AgentFolio and other consumer installs should stay on the stable public package. | `@brainai/satp-client@2.0.3` or `@brainai/satp-client` |
+| Stable npm | Production or default AgentFolio and other consumer installs should stay on the stable public package. | `@brainai/satp-client@2.0.6` or `@brainai/satp-client` |
 | Historical rc exact version | Explicit HQ-assigned reproduction or lockfile evidence for the historical pre-stable artifact. | `@brainai/satp-client@2.0.2` |
 | Release candidate tag | Explicit HQ-assigned rc validation where a moving dist-tag is acceptable and the task names the tag as the target. | `@brainai/satp-client@rc` |
 | Reviewed Git commit | HQ-assigned PR coordination or source-review installs tied to an exact reviewed SATP commit. | `git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
-Registry readback on 2026-07-26 shows npm `latest` resolves to
-`@brainai/satp-client@2.0.3` and the `rc` dist-tag resolves to `2.0.2`.
-Stable consumers should use `latest`/`2.0.3` unless HQ assigns an explicit
-release-candidate validation task.
+Registry readback on 2026-08-02 shows npm `latest` resolves to
+`@brainai/satp-client@2.0.6` and the `rc` dist-tag resolves to `2.0.2`.
+Stable consumers should use `latest`/`2.0.6` unless HQ assigns an explicit
+release-candidate validation task; that default follows the stable-channel
+behavior recorded by the package naming decision rather than a new AgentFolio
+product approval.
 
-Stable 2.0.3 provenance: HQ task `TASK-cc897dc9` records the Owner-approved
-npm closeout for `@brainai/satp-client@2.0.3`, and `TASK-f53c7ecb` records the
-source alignment merge for PR #107. This PR documents that live registry state;
-it does not authorize a new publish or dist-tag mutation.
+Stable 2.0.6 provenance: Owner-approved `REQ-6b35eb58` is the 2.0.6
+roadmap-gate approval authority; HQ task
+`SATP-NPM-PUBLISH-APPROVAL-EFFECTIVE-20260802` records the 2.0.6
+publish/readback execution. Owner-approved `REQ-cc84fa3a` and PR #115 remain the
+historical stable-line / 2.0.2 public provenance. This document records that
+live registry state; it does not authorize a new publish or dist-tag mutation.
 
 ## RC-S6 semantic uncertainty compatibility
 
@@ -52,7 +56,7 @@ Consumers must not promote RC-S6 uncertainty outcomes into verified badges,
 ranking, eligibility, trust-score changes, payment state, escrow readiness,
 protected-action access, npm latest adoption, mainnet readiness, product launch
 copy, or AgentFolio product approval. Stable consumer installs should remain on
-`@brainai/satp-client@2.0.3` unless a separate HQ task assigns rc validation or
+`@brainai/satp-client@2.0.6` unless a separate HQ task assigns rc validation or
 commit-pinned review.
 
 ## Stable npm dependency path
@@ -60,13 +64,13 @@ commit-pinned review.
 Use the current published npm package for stable consumer installs:
 
 ```bash
-npm install @brainai/satp-client@2.0.3
+npm install @brainai/satp-client@2.0.6
 ```
 
 ```json
 {
   "dependencies": {
-    "@brainai/satp-client": "2.0.3"
+    "@brainai/satp-client": "2.0.6"
   }
 }
 ```
@@ -104,7 +108,7 @@ npm install @brainai/satp-client@rc
 ```
 
 The current `rc` tag resolves to the historical `2.0.2` package, which is older
-than stable `latest` `2.0.3`; it is not the default forward-looking consumer
+than stable `latest` `2.0.6`; it is not the default forward-looking consumer
 channel.
 
 Branch-only development and PR review can still use a commit-addressed Git

@@ -1,11 +1,16 @@
 # @brainai/satp-client 2.0.6 Source Release Prep
 
-Status: source-side release-ready semver prep only. This note does not approve
-or perform an npm publish, npm dist-tag mutation, Solana write, keypair action,
+Status: source-side release-ready semver prep followed by the separately
+Owner-approved 2.0.6 npm publish/readback. Owner-approved `REQ-6b35eb58` is the
+2.0.6 roadmap-gate approval authority; HQ task
+`SATP-NPM-PUBLISH-APPROVAL-EFFECTIVE-20260802` records the 2.0.6
+publish/readback execution. Owner-approved `REQ-cc84fa3a` and PR #115 remain the
+historical stable-line / 2.0.2 public provenance. This note does not approve or
+perform another npm publish, npm dist-tag mutation, Solana write, keypair action,
 credential/admin action, deploy, production restart, public announcement, paid
 spend, or client commitment.
 
-## Registry Readback
+## Pre-Publish Registry Readback
 
 Checked at: `2026-08-02T12:10Z`
 
@@ -20,14 +25,27 @@ Readback:
 - `latest`: `2.0.5`
 - `versions`: `0.1.0-rc.0`, `2.0.0`, `2.0.1`, `2.0.2`, `2.0.3`, `2.0.4`, `2.0.5`
 
+## Post-Publish Registry Readback
+
+Checked at: `2026-08-02T13:17Z`
+
+Readback from the approved publish cycle:
+
+- `latest`: `2.0.6`
+- `rc`: `2.0.2`
+- `published`: `2026-08-02T13:17:15.867Z`
+- `modified`: `2026-08-02T13:17:16.039Z`
+
 ## Semver Selection
 
-The next release-ready source candidate is `2.0.6`.
+The selected release-ready source version was `2.0.6`, which is now the stable
+npm `latest` package after the approved publish/readback.
 
-This follows the published package history because the stable line has advanced
-by patch releases from `2.0.0` through `2.0.5`, and `2.0.5` is already the npm
-`latest` version. Since npm package versions are immutable, a valid future
-publish must use a new version greater than the current stable package.
+The pre-publish source-prep decision followed the package history because the
+stable line had advanced by patch releases from `2.0.0` through `2.0.5`, and
+`2.0.5` was already the npm `latest` version at `2026-08-02T12:10Z`. Since npm
+package versions are immutable, the approved publish used a new version greater
+than that pre-publish stable package.
 
 ## Source Prep
 
@@ -35,8 +53,8 @@ publish must use a new version greater than the current stable package.
 - Workspace packages that depend on `@brainai/satp-client` are pinned to
   `2.0.6` for source review.
 - Lockfiles are refreshed for the same package metadata.
-- Release metadata records npm `latest` as `2.0.5` and the unpublished next
-  candidate as `2.0.6`.
+- Release metadata records npm `latest` as `2.0.6` after the approved
+  publish/readback.
 
 ## Required Local Evidence
 

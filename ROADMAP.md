@@ -2,7 +2,7 @@
 
 Schema: HQ roadmap v1
 Status: ACTIVE - PLANNING
-Last updated: 2026-07-04
+Last updated: 2026-08-02
 
 SATP is the Solana Agent Trust Protocol: an app-agnostic protocol and SDK
 surface for portable AI-agent identity, attestations, reputation, validation,
@@ -40,14 +40,21 @@ conformance, security, release, and mainnet authority gates remain open.
 - The current repo package root is private and review-oriented. Stable consumers
   should continue using the published npm package unless a task explicitly
   requires a reviewed SATP Git commit or release-candidate package.
-- Issue #14 npm consume correction: the issue body remains historically stale
-  where it says no npm publish beyond `2.0.1` and tells
-  `AF-SATP-NPM-CONSUME-001` to verify AgentFolio against `2.0.1`. Owner approval
-  `REQ-cc84fa3a`, recorded publicly by PR #115, supersedes that stale cap for
-  the already-approved `@brainai/satp-client@2.0.2` target. AgentFolio consume
-  verification is unblocked for `@brainai/satp-client@2.0.2` only, without
-  authorizing new npm publish, Solana writes, keypair movement, or AgentFolio
-  product changes.
+- Issue #14 npm consume correction: npm registry readback on 2026-08-02 shows
+  `@brainai/satp-client@2.0.6` is the current stable `latest` package, published
+  at `2026-08-02T13:17:15.867Z` and modified at `2026-08-02T13:17:16.039Z`.
+  AgentFolio and stable consumers should verify against `@brainai/satp-client`
+  or exact `@brainai/satp-client@2.0.6` under the stable-channel behavior
+  recorded in package-boundary docs, unless HQ assigns historical rc evidence or
+  reviewed Git commit work. Owner-approved `REQ-6b35eb58` is the 2.0.6
+  roadmap-gate approval authority; HQ task
+  `SATP-NPM-PUBLISH-APPROVAL-EFFECTIVE-20260802` records the 2.0.6
+  publish/readback execution. Owner-approved `REQ-cc84fa3a` and PR #115 remain
+  the historical stable-line / 2.0.2 public provenance. This supersedes older
+  roadmap wording that named `2.0.1`, `2.0.2`, `2.0.3`, or `2.0.5` as current
+  stable/latest state, without authorizing Solana writes, keypair movement, npm
+  dist-tag changes, new npm publishing, AgentFolio product changes, or public
+  launch.
 - No mainnet deploy, program extraction, keypair movement, npm publish,
   AgentFolio product change, public launch, or token work is authorized by this
   roadmap.
@@ -132,8 +139,9 @@ conformance, security, release, and mainnet authority gates remain open.
   production key actions still require separate explicit approval. [#e0556f1f] [shipped]
 - Verify npm publish readiness with evidence in the release packet: CI proof,
   package metadata, release notes, ownership, and dist-tag strategy. [#d7b0e5f9] [shipped]
-- Npm publish itself: waits on a separate Owner npm publish approval before any
-  package publish action. [#9291bc59] [blocked] · owner-gated
+- Npm publish itself: executed for `@brainai/satp-client@2.0.6` under
+  Owner-approved `REQ-6b35eb58`; any future package publish action still waits
+  on separate Owner npm publish approval. [#9291bc59] [shipped]
 - Release packet must include CI proof, package contents, secret-scan proof,
   consumer install proof, compatibility notes, and open risk list. [#3611a94d] [shipped]
 

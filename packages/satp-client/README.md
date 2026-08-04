@@ -3,7 +3,7 @@
 **Solana Agent Trust Protocol** - JavaScript/TypeScript SDK for reading and
 building reviewed SATP V3 program interactions.
 
-Current stable npm package: **@brainai/satp-client@2.0.5** | unpublished source candidate: **@brainai/satp-client@2.0.6** | rc dist-tag: **@brainai/satp-client@2.0.2** | Programs: **6**
+Current stable npm package: **@brainai/satp-client@2.0.6** | rc dist-tag: **@brainai/satp-client@2.0.2** | Programs: **6**
 
 ## Installation
 
@@ -11,25 +11,24 @@ Choose stable, rc, or Git based on what the consumer needs to prove:
 
 | Channel | Use when | Command |
 | --- | --- | --- |
-| Stable npm | Default production-style consumption of the stable public package. | `npm install @brainai/satp-client@2.0.5` |
+| Stable npm | Default production-style consumption of the stable public package. | `npm install @brainai/satp-client@2.0.6` |
 | Historical rc exact version | Explicit HQ-assigned reproduction or lockfile evidence for the historical pre-stable artifact. | `npm install @brainai/satp-client@2.0.2` |
 | Release candidate tag | Explicit HQ-assigned rc validation where a moving dist-tag is acceptable and the task names the tag as the target. | `npm install @brainai/satp-client@rc` |
 | Reviewed Git commit | PR coordination or source-review installs tied to an exact SATP commit. | `npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
-Registry readback on 2026-07-31 shows npm `latest` resolves to
-`@brainai/satp-client@2.0.5` and the `rc` dist-tag resolves to `2.0.2`.
-Stable consumers should use `latest`/`2.0.5` unless HQ assigns an explicit
+Registry readback on 2026-08-02 shows npm `latest` resolves to
+`@brainai/satp-client@2.0.6` and the `rc` dist-tag resolves to `2.0.2`.
+Stable consumers should use `latest`/`2.0.6` unless HQ assigns an explicit
 release-candidate validation task.
 
-Source release-prep on 2026-08-02 advances package metadata to `2.0.6` as the
-next unpublished stable semver candidate because npm `latest` is already
-`2.0.5` and npm package versions are immutable. This does not publish the
-package or move any npm dist-tag.
+Registry publish/readback on 2026-08-02 confirms `2.0.6` is the stable npm
+package. This documentation update does not publish the package or move any npm
+dist-tag.
 
 For stable consumer installs, pin the current published npm package:
 
 ```bash
-npm install @brainai/satp-client@2.0.5
+npm install @brainai/satp-client@2.0.6
 ```
 
 For rc validation:
