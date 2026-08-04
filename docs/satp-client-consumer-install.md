@@ -23,13 +23,16 @@ publishes it and updates install-ready docs. See
 Registry readback on 2026-08-02 shows npm `latest` resolves to
 `@brainai/satp-client@2.0.6` and the `rc` dist-tag resolves to `2.0.2`.
 Stable consumers should use `latest`/`2.0.6` unless HQ assigns an explicit
-release-candidate validation task.
+release-candidate validation task; that default follows the stable-channel
+behavior recorded by the package naming decision rather than a new AgentFolio
+product approval.
 
-Stable 2.0.6 provenance: Owner-approved approval record `REQ-cc84fa3a` and
-PR #115 are the publicly auditable approval provenance for the stable package
-line; HQ task `SATP-NPM-PUBLISH-APPROVAL-EFFECTIVE-20260802` records the 2.0.6
-publish/readback. This document records that live registry state; it does not
-authorize a new publish or dist-tag mutation.
+Stable 2.0.6 provenance: Owner-approved `REQ-6b35eb58` is the 2.0.6
+roadmap-gate approval authority; HQ task
+`SATP-NPM-PUBLISH-APPROVAL-EFFECTIVE-20260802` records the 2.0.6
+publish/readback execution. Owner-approved `REQ-cc84fa3a` and PR #115 remain the
+historical stable-line / 2.0.2 public provenance. This document records that
+live registry state; it does not authorize a new publish or dist-tag mutation.
 
 ## RC-S6 semantic uncertainty compatibility
 
