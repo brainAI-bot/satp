@@ -23,6 +23,17 @@ Providers that need an application API path may also expose:
 If both paths are available, they must return the same contract fields for the
 same resource.
 
+For the reputation evidence lookup resource, callers must bind all returned
+target fields to the lookup they intended to describe:
+
+- `body.resource` must equal `satp://evidence/reputation`.
+- `body.lookup.endpoint` must equal the expected lookup endpoint.
+- every `accepts[].resource` value must equal the same expected lookup
+  endpoint.
+
+Any mismatch is a fail-closed response, even when the x402 payment terms are
+otherwise well formed.
+
 ## Query Parameters
 
 | Name | Required | Description |
@@ -119,6 +130,7 @@ authorization.
 ```http
 HTTP/1.1 404 Not Found
 Content-Type: application/json
+Cache-Control: no-store
 SATP-Payment-Info-Schema: satp.x402PaymentInfo.v1
 ```
 
@@ -140,6 +152,13 @@ SATP-Payment-Info-Schema: satp.x402PaymentInfo.v1
 ```
 
 Malformed query parameters should fail closed:
+
+```http
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+Cache-Control: no-store
+SATP-Payment-Info-Schema: satp.x402PaymentInfo.v1
+```
 
 ```json
 {
@@ -182,6 +201,7 @@ async function readSatpPaymentInfo({
   fetchImpl = fetch,
   infoEndpoint = 'https://satp-provider.example/.well-known/x402/satp/payment-info',
   resource = 'satp://evidence/reputation',
+  expectedLookupEndpoint = 'https://satp-provider.example/v1/satp/evidence/reputation',
   network = 'devnet',
 }) {
   const url = new URL(infoEndpoint);
@@ -198,11 +218,25 @@ async function readSatpPaymentInfo({
   if (body.schemaVersion !== 'satp.x402PaymentInfo.v1') {
     throw new Error('unsupported SATP x402 payment-info schema');
   }
+  const policyBoundary = body.policyBoundary;
   if (
-    body.policyBoundary.actionAuthorization !== false ||
-    body.policyBoundary.spendAuthorized !== false
+    !policyBoundary ||
+    policyBoundary.paymentAuthorization !== false ||
+    policyBoundary.actionAuthorization !== false ||
+    policyBoundary.spendAuthorized !== false ||
+    policyBoundary.guardrail !== 'X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION'
   ) {
-    throw new Error('x402 payment-info attempted to authorize action or spend');
+    throw new Error('x402 payment-info attempted to authorize payment, action, or spend');
+  }
+  if (
+    body.resource !== resource ||
+    !body.lookup ||
+    body.lookup.endpoint !== expectedLookupEndpoint ||
+    !Array.isArray(body.accepts) ||
+    body.accepts.length === 0 ||
+    body.accepts.some((terms) => !terms || terms.resource !== expectedLookupEndpoint)
+  ) {
+    throw new Error('x402 payment-info target binding mismatch');
   }
   return body;
 }
@@ -221,10 +255,12 @@ program writes, production deploys, npm publishing, or host policy bypass.
 
 Consumers must fail closed when:
 
-- the payment-info response changes `paymentAuthorization`,
-  `actionAuthorization`, or `spendAuthorized` to `true`;
+- the payment-info response omits `policyBoundary` or changes
+  `paymentAuthorization`, `actionAuthorization`, or `spendAuthorized` to
+  anything other than `false`;
 - the payment-info route returns evidence, private metadata, credentials,
   grant tokens, or executable instructions;
-- provider payment terms point to an unexpected lookup endpoint or resource;
+- `body.resource`, `body.lookup.endpoint`, or any `accepts[].resource` value
+  differs from the caller's expected lookup target;
 - the paid lookup response omits the
   `X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION` guardrail.
