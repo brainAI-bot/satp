@@ -144,6 +144,10 @@ separate. The proposed discovery resource is:
 
 `GET /.well-known/x402/satp/reputation-evidence`
 
+For the public, no-payment-required payment-info contract that replaces callers
+probing `/api/x402/info`, see
+[`docs/x402-payment-info-contract.md`](./x402-payment-info-contract.md).
+
 Example discovery metadata:
 
 ```json
