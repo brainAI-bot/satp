@@ -52,13 +52,14 @@ npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>
 
 The old `0.0.0-extraction` label was extraction-branch metadata and is not the
 current consumer package. Do not treat branch-only Git installs as npm latest.
+Continue to [Quick Start](#quick-start) for an installed-package flow that uses
+only files shipped in the package.
 
 Mainnet program IDs are present for the reviewed V3 registry, but availability
 is not action approval. Mainnet writes, deploys, keypair use, authority changes,
 value-bearing escrow actions, npm promotion, and production claims still require
-a separate HQ approval and the relevant owner-gated runbook. See
-`docs/mainnet-authority-decision-packet-6c8a5545.md` for the public authority
-decision packet.
+a separate HQ approval and the relevant owner-gated runbook. See the
+[public authority decision packet](https://github.com/brainAI-bot/satp/blob/main/docs/mainnet-authority-decision-packet-6c8a5545.md).
 
 Legacy `SATPSDK` is V2-only compatibility. It defaults to devnet and rejects
 `network: 'mainnet'` unless `allowLegacyV2Mainnet: true` is passed explicitly.
@@ -77,15 +78,14 @@ escrow readiness, mainnet readiness, npm latest adoption, or product approval.
 
 ## Quick Start
 
-For the root consumer quickstart covering stable npm, rc validation, Git-review
-pins, read-only trust packets, conformance checks, and network boundaries, see
-[`docs/quickstart.md`](../../docs/quickstart.md).
+This installed-package quickstart covers an offline read-only SDK flow.
 
-For copy-paste MCP, A2A/agent-runtime, and x402 paid-endpoint examples, see
-[`docs/adoption-quickstarts.md`](../../docs/adoption-quickstarts.md) or run:
+For copy-paste MCP, A2A/agent-runtime, and x402 paid-endpoint examples, see the
+packed [`examples/adoption-quickstarts.js`](./examples/adoption-quickstarts.js)
+or run this command from the consumer project root after installation:
 
 ```bash
-node packages/satp-client/examples/adoption-quickstarts.js
+node node_modules/@brainai/satp-client/examples/adoption-quickstarts.js
 ```
 
 ```javascript
@@ -186,10 +186,12 @@ read-only: x402 payment metadata can identify where evidence may be fetched, but
 it is discovery/evidence lookup only and never authorizes SATP action execution,
 spending, live payment, signing, transactions, or host policy bypass.
 
-Run the offline example:
+Run the packed
+[`examples/x402-discovery-evidence-lookup.js`](./examples/x402-discovery-evidence-lookup.js)
+from the consumer project root:
 
 ```bash
-node packages/satp-client/examples/x402-discovery-evidence-lookup.js
+node node_modules/@brainai/satp-client/examples/x402-discovery-evidence-lookup.js
 ```
 
 The example parses discovery metadata, builds an evidence lookup descriptor, and
@@ -199,12 +201,14 @@ builds a runtime policy action descriptor. It asserts
 `spendAuthorized: false`, and `livePaymentRequired: false`.
 
 The proposed issue #14 Track C endpoint spec for third-party SATP reputation
-and evidence consumers lives in
-[`docs/x402-reputation-evidence-lookup-api.md`](../../docs/x402-reputation-evidence-lookup-api.md).
-Its companion offline caller example is runnable with:
+and evidence consumers lives in the
+[source repository](https://github.com/brainAI-bot/satp/blob/main/docs/x402-reputation-evidence-lookup-api.md).
+Its packed
+[`examples/x402-reputation-evidence-lookup-client.js`](./examples/x402-reputation-evidence-lookup-client.js)
+is runnable from the consumer project root with:
 
 ```bash
-node packages/satp-client/examples/x402-reputation-evidence-lookup-client.js
+node node_modules/@brainai/satp-client/examples/x402-reputation-evidence-lookup-client.js
 ```
 
 ### Runtime Policy Adapter Helper

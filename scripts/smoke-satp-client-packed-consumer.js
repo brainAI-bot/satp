@@ -33,6 +33,67 @@ try {
     stdio: 'pipe',
   });
 
+  const installedPackageRoot = path.join(
+    tempRoot,
+    'node_modules',
+    '@brainai',
+    'satp-client',
+  );
+  const installedPackage = JSON.parse(fs.readFileSync(
+    path.join(installedPackageRoot, 'package.json'),
+    'utf8',
+  ));
+  const installedReadme = fs.readFileSync(
+    path.join(installedPackageRoot, 'README.md'),
+    'utf8',
+  );
+
+  const stableBanner = `Current stable npm package: **@brainai/satp-client@${installedPackage.version}**`;
+  const stableInstall = `npm install @brainai/satp-client@${installedPackage.version}`;
+  if (!installedReadme.includes(stableBanner)) {
+    throw new Error(`packed README stable banner does not match ${installedPackage.version}`);
+  }
+  if (!installedReadme.includes(stableInstall)) {
+    throw new Error(`packed README install command does not match ${installedPackage.version}`);
+  }
+  if (!installedReadme.includes('[Quick Start](#quick-start)')) {
+    throw new Error('packed README quickstart link does not resolve inside README.md');
+  }
+  if (installedReadme.includes('../../docs/')) {
+    throw new Error('packed README contains repository-relative docs paths');
+  }
+
+  const documentedExamples = [
+    'adoption-quickstarts.js',
+    'x402-discovery-evidence-lookup.js',
+    'x402-reputation-evidence-lookup-client.js',
+  ];
+  for (const example of documentedExamples) {
+    const relativeExamplePath = path.posix.join('examples', example);
+    const documentedConsumerPath = path.join(
+      'node_modules',
+      '@brainai',
+      'satp-client',
+      'examples',
+      example,
+    );
+    const installedExamplePath = path.join(tempRoot, documentedConsumerPath);
+    const documentedCommand = `node node_modules/@brainai/satp-client/${relativeExamplePath}`;
+    if (!installedReadme.includes(`](./${relativeExamplePath})`)) {
+      throw new Error(`packed README link missing for ${relativeExamplePath}`);
+    }
+    if (!installedReadme.includes(documentedCommand)) {
+      throw new Error(`packed README command missing for ${relativeExamplePath}`);
+    }
+    if (!fs.existsSync(installedExamplePath)) {
+      throw new Error(`packed README example path missing from artifact: ${relativeExamplePath}`);
+    }
+    execFileSync(process.execPath, [documentedConsumerPath], {
+      cwd: tempRoot,
+      stdio: 'pipe',
+    });
+  }
+
   const check = [
     "const satp = require('@brainai/satp-client');",
     "const resolved = require.resolve('@brainai/satp-client');",
@@ -64,6 +125,9 @@ try {
     encoding: 'utf8',
   });
   process.stdout.write(output);
+  console.log(
+    `satp-client packed README OK: ${installedPackage.version}; ${documentedExamples.length} documented examples executed`,
+  );
 } finally {
   fs.rmSync(tempRoot, { recursive: true, force: true });
 }
