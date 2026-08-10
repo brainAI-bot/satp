@@ -86,7 +86,7 @@ escrow readiness, mainnet readiness, npm latest adoption, or product approval.
 This installed-package quickstart covers an offline read-only SDK flow.
 
 For copy-paste MCP, A2A/agent-runtime, and x402 paid-endpoint examples, see the
-packed [`examples/adoption-quickstarts.js`](./examples/adoption-quickstarts.js)
+packed [`examples/adoption-quickstarts.js`](examples/adoption-quickstarts.js)
 or run this command from the consumer project root after installation:
 
 ```bash

@@ -99,7 +99,7 @@ try {
   }
 
   const documentedExampleLinks = new Set();
-  const exampleLink = /\]\(\.\/(examples\/[^)\s#?]+)\)/g;
+  const exampleLink = /\]\((?:\.\/)?(examples\/[^)\s#?]+)\)/g;
   for (const match of installedReadme.matchAll(exampleLink)) {
     documentedExampleLinks.add(match[1]);
   }
