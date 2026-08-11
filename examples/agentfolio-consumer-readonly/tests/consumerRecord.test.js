@@ -56,6 +56,7 @@ test('builds an AgentFolio runtime policy reference consumer plan', () => {
   assert.equal(reference.action.requiresCapability, 'agentfolio:trust-read');
   assert.equal(reference.result.decision, 'allow');
   assert.ok(reference.result.reasonCodes.includes('LOCAL_POLICY_ALLOW'));
+  assert.equal(reference.auditTrace.subject.actorId, 'agentfolio-reference-host');
   assert.equal(reference.auditTrace.guardrails.writesSolanaState, false);
   assert.equal(reference.guardrails.publishesPackages, false);
   assert.ok(reference.integrationPlan.some((step) => step.includes('createRuntimePolicyAdapter')));

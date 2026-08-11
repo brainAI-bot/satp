@@ -19,15 +19,91 @@ const result = evaluateRuntimePolicy(identityPayload, actionDescriptor, {
   actionPaymentPreapproved: false,
   evidenceLookupPaymentPreapproved: false,
   operatorApproved: false,
+  x402_settlement: null,
   policy: {
     minimumTrustScore: 70,
     denyTrustScoreBelow: 25,
     maxAutoSpendUsd: 0,
     requireVerifiedIdentity: true,
     staleEvidenceAfterMs: 604800000,
+    maxActorEvidenceAgeMs: 900000,
+    maxDelegationDepth: 1,
+    maxSettlementAgeMs: 900000,
   },
 });
 ~~~
+
+### Authenticated subject and actor context
+
+New integrations should identify the subject whose trust is being evaluated separately from the actor requesting the action. Supplying `actor_id` is not authentication. Once any explicit subject/actor field is present, the adapter fails closed unless `actor_evidence` is produced by a named verifier, current, unrevoked, bound to both identities and the exact action, and within the host delegation-depth policy.
+
+~~~js
+const action = buildRuntimePolicyActionDescriptor({
+  action_id: 'invoke-42',
+  type: 'mcp_protected_tool',
+  resource: 'mcp://protected/deploy-readiness',
+  operation: 'invoke',
+  capability: 'mcp:deploy-readiness',
+});
+
+const identityPayload = {
+  subject_id: 'agent-being-evaluated',
+  actor_id: 'authenticated-runtime-host',
+  active: true,
+  satpVerified: true,
+  trustScore: 88,
+  capabilities: ['mcp:deploy-readiness'],
+  evidenceUpdatedAt: '2026-08-11T11:50:00Z',
+  actor_evidence: {
+    verifier_id: 'host-session-verifier',
+    verified: true,
+    revoked: false,
+    actor_id: 'authenticated-runtime-host',
+    subject_id: 'agent-being-evaluated',
+    issued_at: '2026-08-11T11:55:00Z',
+    expires_at: '2026-08-11T12:05:00Z',
+    delegation_depth: 1,
+    action_binding: {
+      action_id: 'invoke-42',
+      type: 'mcp_protected_tool',
+      operation: 'invoke',
+      resource: 'mcp://protected/deploy-readiness',
+    },
+  },
+};
+
+const result = evaluateRuntimePolicy(identityPayload, action, {
+  now: '2026-08-11T12:00:00Z',
+});
+~~~
+
+The older single-principal `agentId` shape remains compatible, but it does not represent authenticated delegation. Hosts that know an actor must use the explicit fail-closed shape rather than copying caller-controlled fields into `actor_evidence`.
+
+### Optional x402 settlement context
+
+`x402_settlement` (or `x402Settlement`) is optional and local/off-chain. A settlement must be verifier-confirmed, fresh, and bound to its purpose (`action_payment` or `evidence_lookup`), actor, subject, action ID, resource, and sufficient amount. A mismatch is denied.
+
+~~~js
+const result = evaluateRuntimePolicy(identityPayload, paidAction, {
+  now: '2026-08-11T12:00:00Z',
+  x402_settlement: {
+    settlement_id: 'settlement-7',
+    verifier_id: 'x402-receipt-verifier',
+    verified: true,
+    status: 'settled',
+    purpose: 'action_payment',
+    actor_id: identityPayload.actor_id,
+    subject_id: identityPayload.subject_id,
+    action_id: paidAction.actionId,
+    resource: paidAction.resource,
+    amount_usd: paidAction.costUsd,
+    settled_at: '2026-08-11T11:58:00Z',
+  },
+  operatorApproved: false,
+});
+~~~
+
+A valid settlement requires a non-empty settlement ID and named verifier and can satisfy the payment-context check only. It always emits `X402_SETTLEMENT_IS_NOT_TASK_OUTCOME_PROOF` and `X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION`; it cannot make evidence fresh, prove task completion, grant a capability, or bypass protected-tool approval.
 
 For host logs or review queues, use the redacted audit-trace helper:
 
@@ -68,6 +144,8 @@ Input identity payload:
 }
 ~~~
 
+The abbreviated payload above is the compatibility form for a single principal; use the complete authenticated example above whenever an actor is present.
+
 Input action descriptor:
 
 ~~~json
@@ -106,6 +184,11 @@ Output:
 ## Reason codes
 
 - IDENTITY_INACTIVE: the identity is disabled locally.
+- SUBJECT_ID_MISSING / ACTOR_ID_MISSING: explicit actor mode is missing a required principal ID.
+- ACTOR_EVIDENCE_MISSING / ACTOR_EVIDENCE_UNVERIFIED / ACTOR_EVIDENCE_REVOKED / ACTOR_EVIDENCE_STALE: authenticated-actor evidence failed closed.
+- ACTOR_SUBJECT_MISMATCH / ACTION_CONTEXT_MISMATCH: verifier evidence is bound to different principals or an action.
+- ACTOR_EVIDENCE_ACTION_UNBOUND: verifier evidence does not identify the action it authenticated.
+- DELEGATION_CONTEXT_MISSING / DELEGATION_DEPTH_EXCEEDED: delegated execution lacks an acceptable depth.
 - IDENTITY_UNVERIFIED: verified identity is required, but missing.
 - MISSING_CAPABILITY: the action requires a capability not present in the identity payload.
 - TRUST_SCORE_BELOW_DENY_FLOOR: trust score is below the local deny floor.
@@ -119,6 +202,10 @@ Output:
 - ACTION_PAYMENT_PREAPPROVED: payment was approved for the paid endpoint.
 - PROTECTED_TOOL_REQUIRES_APPROVAL: a protected tool requires operator approval.
 - X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION: payment only grants lookup/access to paid data.
+- X402_SETTLEMENT_UNVERIFIED / X402_SETTLEMENT_CONTEXT_MISMATCH: optional settlement evidence is invalid or bound elsewhere.
+- X402_SETTLEMENT_VERIFIED: optional settlement evidence passed its payment-context binding checks.
+- X402_LOOKUP_SETTLEMENT_BOUND: settlement covers the optional evidence lookup, not the requested action.
+- X402_SETTLEMENT_IS_NOT_TASK_OUTCOME_PROOF: settlement proves payment, never execution success.
 - LOCAL_POLICY_ALLOW: local checks allow the action.
 
 ## Audit trace

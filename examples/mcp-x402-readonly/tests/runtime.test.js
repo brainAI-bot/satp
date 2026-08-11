@@ -150,6 +150,7 @@ test('MCP protected-tool example uses runtime policy approval before local allow
   });
   assert.equal(allowed.result.decision, 'allow');
   assert.ok(allowed.result.reasonCodes.includes('LOCAL_POLICY_ALLOW'));
+  assert.equal(allowed.auditTrace.subject.actorId, 'mcp-reference-host');
   assert.equal(allowed.auditTrace.guardrails.authorizesAgentActionFromPayment, false);
 });
 
@@ -164,6 +165,7 @@ test('x402 paid endpoint example separates payment approval from action authoriz
   const preapproved = buildX402PaidEndpointPolicyExample({ actionPaymentPreapproved: true });
   assert.equal(preapproved.result.decision, 'allow');
   assert.ok(preapproved.result.reasonCodes.includes('X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION'));
+  assert.equal(preapproved.auditTrace.subject.actorEvidencePresent, true);
   assert.equal(preapproved.paymentBoundary.paymentIsNotActionAuthorization, true);
   assert.equal(preapproved.guardrails.authorizesAgentActionFromPayment, false);
 });
