@@ -25,10 +25,19 @@ try {
       private: true,
       version: '0.0.0',
       dependencies: {},
+      overrides: {
+        jayson: {
+          uuid: '^11.1.1',
+        },
+      },
     }, null, 2) + '\n',
   );
 
   execFileSync('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', tarball], {
+    cwd: tempRoot,
+    stdio: 'pipe',
+  });
+  execFileSync('npm', ['audit', '--omit=dev', '--audit-level=moderate'], {
     cwd: tempRoot,
     stdio: 'pipe',
   });
