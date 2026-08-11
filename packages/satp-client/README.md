@@ -55,6 +55,11 @@ current consumer package. Do not treat branch-only Git installs as npm latest.
 Continue to [Quick Start](#quick-start) for an installed-package flow that uses
 only files shipped in the package.
 
+The consumer-root `node` commands below use the stable npm package layout. For
+the reviewed Git-commit channel, insert `packages/satp-client/` after
+`node_modules/@brainai/satp-client/` because that channel installs the repository
+root package rather than the standalone npm artifact.
+
 Mainnet program IDs are present for the reviewed V3 registry, but availability
 is not action approval. Mainnet writes, deploys, keypair use, authority changes,
 value-bearing escrow actions, npm promotion, and production claims still require
@@ -81,7 +86,7 @@ escrow readiness, mainnet readiness, npm latest adoption, or product approval.
 This installed-package quickstart covers an offline read-only SDK flow.
 
 For copy-paste MCP, A2A/agent-runtime, and x402 paid-endpoint examples, see the
-packed [`examples/adoption-quickstarts.js`](./examples/adoption-quickstarts.js)
+packed [`examples/adoption-quickstarts.js`](examples/adoption-quickstarts.js)
 or run this command from the consumer project root after installation:
 
 ```bash
@@ -508,19 +513,11 @@ and must not be treated as SATP protocol authority.
 
 ## Testing
 
-```bash
-# Unit tests (101)
-node test-v3.js
-
-# Devnet integration tests (16)
-node test-v3-devnet.js
-
-# CPI integration tests (35)
-cd .. && node tests/devnet-cpi-integration.js
-
-# Release-safety defaults and network-boundary checks
-node test-release-safety.js
-```
+The npm artifact does not ship the repository's maintainer test suites. Run
+those suites only from a source checkout using the repository-root scripts in
+the [source package manifest](https://github.com/brainAI-bot/satp/blob/main/package.json).
+Installed-package consumers can exercise every offline example linked in this
+README using the consumer-root commands in the relevant sections above.
 
 ## Network Configuration
 

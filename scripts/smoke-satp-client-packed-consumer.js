@@ -63,35 +63,95 @@ try {
     throw new Error('packed README contains repository-relative docs paths');
   }
 
-  const documentedExamples = [
-    'adoption-quickstarts.js',
-    'x402-discovery-evidence-lookup.js',
-    'x402-reputation-evidence-lookup-client.js',
-  ];
-  for (const example of documentedExamples) {
-    const relativeExamplePath = path.posix.join('examples', example);
-    const documentedConsumerPath = path.join(
-      'node_modules',
-      '@brainai',
-      'satp-client',
-      'examples',
-      example,
-    );
-    const installedExamplePath = path.join(tempRoot, documentedConsumerPath);
-    const documentedCommand = `node node_modules/@brainai/satp-client/${relativeExamplePath}`;
-    if (!installedReadme.includes(`](./${relativeExamplePath})`)) {
-      throw new Error(`packed README link missing for ${relativeExamplePath}`);
+  const bashBlocks = [];
+  let activeFence = null;
+  for (const line of installedReadme.split(/\r?\n/)) {
+    if (activeFence === null) {
+      const opener = line.match(/^```([^\s`]*)\s*$/);
+      if (opener) {
+        activeFence = { language: opener[1].toLowerCase(), lines: [] };
+      }
+      continue;
     }
-    if (!installedReadme.includes(documentedCommand)) {
-      throw new Error(`packed README command missing for ${relativeExamplePath}`);
+    if (/^```\s*$/.test(line)) {
+      if (['bash', 'sh', 'shell'].includes(activeFence.language)) {
+        bashBlocks.push(activeFence.lines);
+      }
+      activeFence = null;
+      continue;
     }
-    if (!fs.existsSync(installedExamplePath)) {
-      throw new Error(`packed README example path missing from artifact: ${relativeExamplePath}`);
+    activeFence.lines.push(line);
+  }
+
+  const documentedNodeTargets = new Set();
+  const nodeInvocation = /(?:^|(?:&&|\|\||;)\s*)node\s+(?:"([^"]+)"|'([^']+)'|([^\s;&|#]+))/g;
+  for (const lines of bashBlocks) {
+    for (const line of lines) {
+      if (line.trimStart().startsWith('#')) continue;
+      nodeInvocation.lastIndex = 0;
+      for (const match of line.matchAll(nodeInvocation)) {
+        documentedNodeTargets.add(match[1] || match[2] || match[3]);
+      }
     }
-    execFileSync(process.execPath, [documentedConsumerPath], {
+  }
+  if (documentedNodeTargets.size === 0) {
+    throw new Error('packed README contains no discoverable node commands in bash fences');
+  }
+
+  const documentedExampleLinks = new Set();
+  const exampleLink = /\]\((?:\.\/)?(examples\/[^)\s#?]+)\)/g;
+  for (const match of installedReadme.matchAll(exampleLink)) {
+    documentedExampleLinks.add(match[1]);
+  }
+  if (documentedExampleLinks.size === 0) {
+    throw new Error('packed README contains no discoverable example links');
+  }
+
+  const commandedPackagePaths = new Set();
+  for (const target of documentedNodeTargets) {
+    const installedTarget = path.resolve(tempRoot, target);
+    const packageRelative = path.relative(installedPackageRoot, installedTarget);
+    if (
+      packageRelative === ''
+      || packageRelative === '..'
+      || packageRelative.startsWith(`..${path.sep}`)
+      || path.isAbsolute(packageRelative)
+    ) {
+      throw new Error(`packed README node command escapes installed package: ${target}`);
+    }
+    if (!fs.statSync(installedTarget, { throwIfNoEntry: false })?.isFile()) {
+      throw new Error(`packed README node command target missing from artifact: ${target}`);
+    }
+    const packagePath = packageRelative.split(path.sep).join('/');
+    commandedPackagePaths.add(packagePath);
+    execFileSync(process.execPath, [installedTarget], {
       cwd: tempRoot,
       stdio: 'pipe',
     });
+  }
+
+  for (const examplePath of documentedExampleLinks) {
+    const installedExamplePath = path.resolve(installedPackageRoot, examplePath);
+    const packageRelative = path.relative(installedPackageRoot, installedExamplePath);
+    if (
+      packageRelative === '..'
+      || packageRelative.startsWith(`..${path.sep}`)
+      || path.isAbsolute(packageRelative)
+    ) {
+      throw new Error(`packed README example link escapes installed package: ${examplePath}`);
+    }
+    if (!fs.statSync(installedExamplePath, { throwIfNoEntry: false })?.isFile()) {
+      throw new Error(`packed README example link missing from artifact: ${examplePath}`);
+    }
+    if (!commandedPackagePaths.has(examplePath)) {
+      throw new Error(`packed README example link has no runnable node command: ${examplePath}`);
+    }
+  }
+
+  for (const packagePath of commandedPackagePaths) {
+    if (packagePath.startsWith('examples/') && !documentedExampleLinks.has(packagePath)) {
+      throw new Error(`packed README node example has no matching link: ${packagePath}`);
+    }
   }
 
   const check = [
@@ -126,7 +186,7 @@ try {
   });
   process.stdout.write(output);
   console.log(
-    `satp-client packed README OK: ${installedPackage.version}; ${documentedExamples.length} documented examples executed`,
+    `satp-client packed README OK: ${installedPackage.version}; ${documentedExampleLinks.size} documented examples discovered and executed`,
   );
 } finally {
   fs.rmSync(tempRoot, { recursive: true, force: true });
