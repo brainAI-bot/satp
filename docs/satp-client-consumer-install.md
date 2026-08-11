@@ -189,7 +189,7 @@ npm run smoke:consumer-install
 
 ## Temporary consumer override for monitored uuid audit
 
-Current `npm audit --package-lock-only` output reports a monitored moderate
+An install in a clean consumer without a root override reports a moderate
 advisory chain through `@solana/web3.js -> jayson -> uuid` for
 [`GHSA-w5hq-g745-h8pq`](https://github.com/advisories/GHSA-w5hq-g745-h8pq).
 The affected `uuid` range is `<11.1.1`; the upstream dependency path is owned
@@ -218,6 +218,10 @@ AgentFolio and other package consumers should not rely on a dependency package's
 own override to protect their final install tree. Consumer applications that
 need this mitigation should carry the same root override or lockfile resolution
 until the upstream dependency chain is fixed.
+
+Both SATP packed-consumer smokes model that application-owned override and run
+`npm audit --omit=dev --audit-level=moderate`, so CI fails if the clean
+production dependency tree regresses to the affected `uuid` range.
 
 ## Offline identity attestation request helper
 
