@@ -23,6 +23,7 @@ const requiredExports = [
   'validateSatpTrustPacket',
   'createRuntimePolicyAdapter',
   'evaluateRuntimePolicy',
+  'evaluateRuntimePolicyContext',
   'buildRuntimePolicyActionDescriptor',
   'buildWalletControlChallenge',
   'canonicalWalletControlChallenge',
@@ -113,6 +114,35 @@ const adapterDecision = policyAdapter.evaluate(
 );
 if (adapterDecision.decision !== 'allow' || !policyAdapter.explain(adapterDecision).length) {
   throw new Error('createRuntimePolicyAdapter did not expose a working local host adapter');
+}
+
+const authenticatedContextDecision = satp.evaluateRuntimePolicyContext({
+  subject_id: 'smoke-subject',
+  subject: {
+    active: true,
+    satpVerified: true,
+    trustScore: 90,
+    evidenceUpdatedAt: '2026-05-22T00:00:00Z',
+  },
+  actor_id: 'smoke-host-actor',
+  actor_evidence: {
+    verifier_id: 'smoke-host-verifier',
+    authenticated: true,
+    verified_at: '2026-05-22T00:00:00Z',
+    subject_id: 'smoke-subject',
+    actor_id: 'smoke-host-actor',
+    action_id: 'smoke-action',
+    delegation_depth: 0,
+    capabilities: ['mcp:read'],
+  },
+  action: {
+    action_id: 'smoke-action',
+    type: 'mcp_protected_tool',
+    requiresCapability: 'mcp:read',
+  },
+}, { now: '2026-05-22T00:01:00Z' });
+if (authenticatedContextDecision.decision !== 'allow') {
+  throw new Error('evaluateRuntimePolicyContext did not accept verifier-authenticated actor evidence');
 }
 
 const signerConfig = satp.buildSignerSeparationConfig({

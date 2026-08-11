@@ -11,6 +11,7 @@ const {
   buildRuntimePolicyAuditTrace,
   createRuntimePolicyAdapter,
   evaluateRuntimePolicy,
+  evaluateRuntimePolicyContext,
 } = require('./src');
 
 const baseIdentity = {
@@ -21,6 +22,191 @@ const baseIdentity = {
   capabilities: ['mcp:read', 'agentfolio:trust-read'],
   evidenceUpdatedAt: '2026-05-20T00:00:00Z',
 };
+
+const baseAuthenticatedContext = {
+  subject_id: 'agentfolio-subject-42',
+  subject: {
+    active: true,
+    satpVerified: true,
+    trustScore: 88,
+    evidenceUpdatedAt: '2026-05-21T00:00:00Z',
+  },
+  actor_id: 'mcp-runtime-7',
+  actor: {
+    actor_id: 'mcp-runtime-7',
+    capabilities: ['mcp:caller-asserted-capability-is-ignored'],
+  },
+  actor_evidence: {
+    verifier_id: 'satp-host-verifier',
+    authenticated: true,
+    verified_at: '2026-05-21T00:00:00Z',
+    expires_at: '2026-05-21T01:00:00Z',
+    revoked: false,
+    subject_id: 'agentfolio-subject-42',
+    actor_id: 'mcp-runtime-7',
+    action_id: 'action-read-1',
+    delegation_depth: 1,
+    capabilities: ['mcp:read', 'agentfolio:trust-read'],
+  },
+  action: {
+    action_id: 'action-read-1',
+    type: 'mcp_protected_tool',
+    resource: 'mcp://protected/read',
+    requiresCapability: 'mcp:read',
+    requiresFreshEvidence: true,
+  },
+};
+
+function authenticatedContext(overrides = {}) {
+  const context = structuredClone(baseAuthenticatedContext);
+  for (const key of ['subject', 'actor', 'actor_evidence', 'action', 'x402']) {
+    if (Object.prototype.hasOwnProperty.call(overrides, key)) {
+      context[key] = overrides[key] === null
+        ? null
+        : { ...(context[key] || {}), ...overrides[key] };
+    }
+  }
+  for (const key of ['subject_id', 'actor_id']) {
+    if (Object.prototype.hasOwnProperty.call(overrides, key)) context[key] = overrides[key];
+  }
+  return context;
+}
+
+const authenticatedNow = { now: '2026-05-21T00:05:00Z' };
+
+test('allows a distinct subject and actor only with verifier-produced actor evidence', () => {
+  const result = evaluateRuntimePolicyContext(baseAuthenticatedContext, authenticatedNow);
+
+  assert.notEqual(baseAuthenticatedContext.subject_id, baseAuthenticatedContext.actor_id);
+  assert.equal(result.decision, DECISIONS.ALLOW);
+  assert.ok(result.reasonCodes.includes(REASON_CODES.ACTOR_EVIDENCE_VERIFIED));
+  assert.ok(result.reasonCodes.includes(REASON_CODES.DELEGATION_DEPTH_OK));
+  assert.ok(result.reasonCodes.includes(REASON_CODES.LOCAL_POLICY_ALLOW));
+});
+
+test('does not treat caller-supplied actor context as authenticated evidence', () => {
+  const context = authenticatedContext({ actor_evidence: null });
+  const result = evaluateRuntimePolicyContext(context, authenticatedNow);
+
+  assert.equal(result.decision, DECISIONS.NEEDS_APPROVAL);
+  assert.deepEqual(result.reasonCodes, [REASON_CODES.ACTOR_EVIDENCE_MISSING]);
+});
+
+test('requires explicit subject, actor, and action identifiers', () => {
+  const cases = [
+    [authenticatedContext({ subject_id: '' }), REASON_CODES.SUBJECT_ID_MISSING],
+    [authenticatedContext({ actor_id: '', actor: { actor_id: '' } }), REASON_CODES.ACTOR_ID_MISSING],
+    [authenticatedContext({ action: { action_id: '' } }), REASON_CODES.ACTION_ID_MISSING],
+  ];
+
+  for (const [context, reasonCode] of cases) {
+    const result = evaluateRuntimePolicyContext(context, authenticatedNow);
+    assert.equal(result.decision, DECISIONS.DENY);
+    assert.deepEqual(result.reasonCodes, [reasonCode]);
+  }
+});
+
+test('denies unverified, revoked, and mismatched actor evidence with stable reason codes', () => {
+  const cases = [
+    [{ authenticated: false }, REASON_CODES.ACTOR_EVIDENCE_UNVERIFIED],
+    [{ revoked: true }, REASON_CODES.ACTOR_EVIDENCE_REVOKED],
+    [{ actor_id: 'different-actor' }, REASON_CODES.ACTOR_EVIDENCE_ACTOR_MISMATCH],
+    [{ subject_id: 'different-subject' }, REASON_CODES.ACTOR_EVIDENCE_SUBJECT_MISMATCH],
+    [{ action_id: 'different-action' }, REASON_CODES.ACTION_CONTEXT_MISMATCH],
+  ];
+
+  for (const [actorEvidence, reasonCode] of cases) {
+    const result = evaluateRuntimePolicyContext(
+      authenticatedContext({ actor_evidence: actorEvidence }),
+      authenticatedNow
+    );
+    assert.equal(result.decision, DECISIONS.DENY);
+    assert.ok(result.reasonCodes.includes(reasonCode));
+  }
+});
+
+test('requires approval for stale actor evidence and denies excessive delegation depth', () => {
+  const stale = evaluateRuntimePolicyContext(
+    authenticatedContext({ actor_evidence: { verified_at: '2026-05-20T00:00:00Z' } }),
+    authenticatedNow
+  );
+  assert.equal(stale.decision, DECISIONS.NEEDS_APPROVAL);
+  assert.ok(stale.reasonCodes.includes(REASON_CODES.ACTOR_EVIDENCE_STALE));
+
+  const deepDelegation = evaluateRuntimePolicyContext(
+    authenticatedContext({ actor_evidence: { delegation_depth: 2 } }),
+    authenticatedNow
+  );
+  assert.equal(deepDelegation.decision, DECISIONS.DENY);
+  assert.ok(deepDelegation.reasonCodes.includes(REASON_CODES.DELEGATION_DEPTH_EXCEEDED));
+});
+
+test('binds optional x402 lookup and settlement context to subject, actor, and action', () => {
+  const binding = {
+    subject_id: baseAuthenticatedContext.subject_id,
+    actor_id: baseAuthenticatedContext.actor_id,
+    action_id: baseAuthenticatedContext.action.action_id,
+    resource: baseAuthenticatedContext.action.resource,
+  };
+  const lookupMismatch = evaluateRuntimePolicyContext(
+    authenticatedContext({ x402: { lookup: { ...binding, actor_id: 'different-actor' } } }),
+    authenticatedNow
+  );
+  assert.equal(lookupMismatch.decision, DECISIONS.DENY);
+  assert.ok(lookupMismatch.reasonCodes.includes(REASON_CODES.X402_LOOKUP_CONTEXT_MISMATCH));
+
+  const settlementMismatch = evaluateRuntimePolicyContext(
+    authenticatedContext({ x402: { settlement: { ...binding, action_id: 'different-action', status: 'settled' } } }),
+    authenticatedNow
+  );
+  assert.equal(settlementMismatch.decision, DECISIONS.DENY);
+  assert.ok(settlementMismatch.reasonCodes.includes(REASON_CODES.X402_SETTLEMENT_CONTEXT_MISMATCH));
+});
+
+test('treats x402 settlement as payment evidence, never task outcome or action authorization', () => {
+  const action = {
+    ...baseAuthenticatedContext.action,
+    type: 'x402_endpoint',
+    operation: 'lookup',
+    costUsd: 0.01,
+    requiresCapability: 'mcp:read',
+  };
+  const binding = {
+    subject_id: baseAuthenticatedContext.subject_id,
+    actor_id: baseAuthenticatedContext.actor_id,
+    action_id: action.action_id,
+    resource: action.resource,
+  };
+
+  const unverified = evaluateRuntimePolicyContext(
+    authenticatedContext({ action, x402: { settlement: { ...binding, status: 'pending' } } }),
+    authenticatedNow
+  );
+  assert.equal(unverified.decision, DECISIONS.NEEDS_APPROVAL);
+  assert.ok(unverified.reasonCodes.includes(REASON_CODES.X402_SETTLEMENT_UNVERIFIED));
+
+  const settled = evaluateRuntimePolicyContext(
+    authenticatedContext({
+      action,
+      x402: { settlement: { ...binding, status: 'settled', verified_by: 'x402-host-verifier' } },
+    }),
+    authenticatedNow
+  );
+  assert.equal(settled.decision, DECISIONS.ALLOW);
+  assert.equal(settled.checks.taskOutcomeProvenBySettlement, false);
+  assert.ok(settled.reasonCodes.includes(REASON_CODES.X402_SETTLEMENT_NOT_TASK_OUTCOME_PROOF));
+  assert.ok(settled.reasonCodes.includes(REASON_CODES.X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION));
+});
+
+test('authenticated context API exposes all stable decision outcomes', () => {
+  const outcomes = [
+    evaluateRuntimePolicyContext(baseAuthenticatedContext, authenticatedNow).decision,
+    evaluateRuntimePolicyContext(authenticatedContext({ actor_evidence: { revoked: true } }), authenticatedNow).decision,
+    evaluateRuntimePolicyContext(authenticatedContext({ subject: { trustScore: 60 }, action: { allowDegraded: true, minimumTrustScore: 80 } }), authenticatedNow).decision,
+    evaluateRuntimePolicyContext(authenticatedContext({ actor_evidence: null }), authenticatedNow).decision,
+  ];
+  assert.deepEqual(new Set(outcomes), new Set(Object.values(DECISIONS)));
+});
 
 test('allows verified identity with sufficient trust, capability, and fresh evidence', () => {
   const result = evaluateRuntimePolicy(
@@ -42,12 +228,14 @@ test('allows verified identity with sufficient trust, capability, and fresh evid
 
 test('builds an MCP protected-tool descriptor usable by the runtime adapter', () => {
   const action = buildRuntimePolicyActionDescriptor({
+    action_id: 'mcp-readiness-1',
     type: 'mcp_protected_tool',
     resource: 'mcp://protected/readiness',
     capability: 'mcp:read',
   });
 
   assert.equal(action.schemaVersion, RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION);
+  assert.equal(action.action_id, 'mcp-readiness-1');
   assert.equal(action.operation, 'invoke');
   assert.equal(action.requiresCapability, 'mcp:read');
   assert.equal(action.requiresFreshEvidence, true);

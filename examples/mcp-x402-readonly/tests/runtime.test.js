@@ -140,6 +140,8 @@ test('MCP protected-tool example uses runtime policy approval before local allow
   assert.equal(needsApproval.mode, 'offline-local-runtime-policy');
   assert.equal(needsApproval.action.type, 'mcp_protected_tool');
   assert.equal(needsApproval.action.protectedTool, true);
+  assert.notEqual(needsApproval.runtimeContext.subject_id, needsApproval.runtimeContext.actor_id);
+  assert.equal(needsApproval.runtimeContext.actor_evidence.authenticated, true);
   assert.equal(needsApproval.result.decision, 'needs_approval');
   assert.ok(needsApproval.result.reasonCodes.includes('PROTECTED_TOOL_REQUIRES_APPROVAL'));
   assert.equal(needsApproval.guardrails.writesSolanaState, false);
@@ -164,7 +166,10 @@ test('x402 paid endpoint example separates payment approval from action authoriz
   const preapproved = buildX402PaidEndpointPolicyExample({ actionPaymentPreapproved: true });
   assert.equal(preapproved.result.decision, 'allow');
   assert.ok(preapproved.result.reasonCodes.includes('X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION'));
+  assert.ok(preapproved.result.reasonCodes.includes('X402_SETTLEMENT_NOT_TASK_OUTCOME_PROOF'));
+  assert.equal(preapproved.result.checks.taskOutcomeProvenBySettlement, false);
   assert.equal(preapproved.paymentBoundary.paymentIsNotActionAuthorization, true);
+  assert.equal(preapproved.paymentBoundary.paymentIsNotTaskOutcomeProof, true);
   assert.equal(preapproved.guardrails.authorizesAgentActionFromPayment, false);
 });
 

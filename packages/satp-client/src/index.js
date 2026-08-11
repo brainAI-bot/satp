@@ -798,6 +798,7 @@ const {
   buildRuntimePolicyAuditTrace,
   createRuntimePolicyAdapter,
   evaluateRuntimePolicy,
+  evaluateRuntimePolicyContext,
 } = require('./runtime-policy-adapter');
 const walletControlChallenge = require('./wallet-control-challenge');
 const x402Discovery = require('./x402-discovery');
@@ -919,6 +920,7 @@ module.exports = {
   buildRuntimePolicyAuditTrace,
   createRuntimePolicyAdapter,
   evaluateRuntimePolicy,
+  evaluateRuntimePolicyContext,
 
   // V3 Deserialization (local extracted scaffold)
   deserializeGenesis: v3Borsh.deserializeGenesisRecord,

@@ -45,13 +45,15 @@ try {
 
   const check = [
     "const satp = require('@brainai/satp-client');",
-    "const required = ['SATPSDK', 'SATPV3SDK', 'createSATPClient', 'getV3ProgramIds', 'hashAgentId', 'getGenesisPDA', 'prepareIdentityAttestationRequest', 'evaluateRuntimePolicy'];",
+    "const required = ['SATPSDK', 'SATPV3SDK', 'createSATPClient', 'getV3ProgramIds', 'hashAgentId', 'getGenesisPDA', 'prepareIdentityAttestationRequest', 'evaluateRuntimePolicy', 'evaluateRuntimePolicyContext'];",
     "const missing = required.filter((key) => !(key in satp));",
     "if (missing.length) throw new Error('missing exports: ' + missing.join(', '));",
     "const resolved = require.resolve('@brainai/satp-client');",
     "if (!resolved.includes('node_modules')) throw new Error('package did not resolve from clean consumer node_modules');",
     "const decision = satp.evaluateRuntimePolicy({ active: true, satpVerified: true, agentFolioTrustScore: 90, capabilities: ['mcp:read'], evidenceUpdatedAt: '2026-05-21T00:00:00Z' }, { type: 'mcp_protected_tool', requiresCapability: 'mcp:read', requiresFreshEvidence: true }, { now: '2026-05-22T00:00:00Z' });",
     "if (decision.decision !== 'allow') throw new Error('runtime policy export smoke failed: ' + decision.decision);",
+    "const contextDecision = satp.evaluateRuntimePolicyContext({ subject_id: 'consumer-subject', subject: { active: true, satpVerified: true, trustScore: 90, evidenceUpdatedAt: '2026-05-22T00:00:00Z' }, actor_id: 'consumer-actor', actor_evidence: { verifier_id: 'consumer-verifier', authenticated: true, verified_at: '2026-05-22T00:00:00Z', subject_id: 'consumer-subject', actor_id: 'consumer-actor', action_id: 'consumer-action', delegation_depth: 0, capabilities: ['mcp:read'] }, action: { action_id: 'consumer-action', type: 'mcp_protected_tool', requiresCapability: 'mcp:read' } }, { now: '2026-05-22T00:01:00Z' });",
+    "if (contextDecision.decision !== 'allow') throw new Error('authenticated runtime policy export smoke failed: ' + contextDecision.decision);",
     "console.log('clean consumer install OK: ' + resolved);",
   ].join('\n');
 

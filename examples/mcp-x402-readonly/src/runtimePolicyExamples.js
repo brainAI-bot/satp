@@ -18,6 +18,28 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function buildAuthenticatedRuntimeContext({ identity, actorId, action, now, x402 }) {
+  return {
+    subject_id: identity.agentId,
+    subject: clone(identity),
+    actor_id: actorId,
+    actor: { actor_id: actorId },
+    actor_evidence: {
+      verifier_id: 'satp-example-host-verifier',
+      authenticated: true,
+      verified_at: now,
+      revoked: false,
+      subject_id: identity.agentId,
+      actor_id: actorId,
+      action_id: action.action_id,
+      delegation_depth: 0,
+      capabilities: clone(identity.capabilities),
+    },
+    action,
+    ...(x402 ? { x402 } : {}),
+  };
+}
+
 function createExampleRuntimePolicyAdapter(options = {}) {
   return createRuntimePolicyAdapter({
     now: options.now || DEFAULT_NOW,
@@ -41,6 +63,7 @@ function buildMcpProtectedToolPolicyExample({
 } = {}) {
   const adapter = createExampleRuntimePolicyAdapter({ now });
   const action = adapter.action({
+    action_id: `mcp:${toolName}:invoke`,
     type: 'mcp_protected_tool',
     resource: `mcp://protected/${toolName}`,
     operation: 'invoke',
@@ -48,12 +71,19 @@ function buildMcpProtectedToolPolicyExample({
     operatorApprovalRequired: true,
     requiresFreshEvidence: true,
   });
-  const result = adapter.evaluate(clone(identity), action, { operatorApproved });
+  const runtimeContext = buildAuthenticatedRuntimeContext({
+    identity,
+    actorId: 'mcp-example-runtime',
+    action,
+    now,
+  });
+  const result = adapter.evaluateContext(runtimeContext, { operatorApproved });
 
   return {
     kind: 'satp.mcpProtectedToolRuntimePolicyExample.v1',
     mode: 'offline-local-runtime-policy',
     toolName,
+    runtimeContext,
     action,
     result,
     auditTrace: adapter.auditTrace(identity, action, { result }),
@@ -75,13 +105,33 @@ function buildX402PaidEndpointPolicyExample({
 } = {}) {
   const adapter = createExampleRuntimePolicyAdapter({ now });
   const action = adapter.action('x402_endpoint', {
+    action_id: 'x402:reputation:lookup',
     resource: endpoint,
     operation: 'lookup',
     costUsd: 0.01,
     requiresFreshEvidence: true,
   });
-  const result = adapter.evaluate(clone(identity), action, {
-    actionPaymentPreapproved,
+  const actorId = 'x402-example-runtime';
+  const runtimeContext = buildAuthenticatedRuntimeContext({
+    identity,
+    actorId,
+    action,
+    now,
+    x402: actionPaymentPreapproved
+      ? {
+          settlement: {
+            subject_id: identity.agentId,
+            actor_id: actorId,
+            action_id: action.action_id,
+            resource: endpoint,
+            settlement_id: 'fixture-settlement-001',
+            status: 'settled',
+            verified_by: 'x402-example-host-verifier',
+          },
+        }
+      : undefined,
+  });
+  const result = adapter.evaluateContext(runtimeContext, {
     policy: { maxAutoSpendUsd: 0 },
   });
 
@@ -89,6 +139,7 @@ function buildX402PaidEndpointPolicyExample({
     kind: 'satp.x402PaidEndpointRuntimePolicyExample.v1',
     mode: 'offline-local-runtime-policy',
     endpointKind: 'x402-paid-reputation-lookup',
+    runtimeContext,
     action,
     result,
     auditTrace: adapter.auditTrace(identity, action, { result }),
@@ -97,6 +148,7 @@ function buildX402PaidEndpointPolicyExample({
       livePaymentRequired: false,
       spendAuthorized: actionPaymentPreapproved === true,
       paymentIsNotActionAuthorization: true,
+      paymentIsNotTaskOutcomeProof: true,
     },
     guardrails: {
       writesSolanaState: false,

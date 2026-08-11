@@ -1,6 +1,6 @@
 # Runtime policy adapter v0
 
-This local/off-chain adapter turns an agent identity/trust payload and an action descriptor into one of four decisions:
+This local/off-chain adapter turns an authenticated runtime context into one of four decisions:
 
 - allow: local checks pass.
 - deny: local checks fail hard.
@@ -10,6 +10,53 @@ This local/off-chain adapter turns an agent identity/trust payload and an action
 It does not write to Solana, use keypairs, deploy contracts, publish packages, spend funds, or authorize production actions.
 
 ## API shape
+
+External actors must use `evaluateRuntimePolicyContext`. `subject_id` is the identity whose policy is evaluated; `actor_id` is the caller performing the action. They are separate security principals. Caller-supplied `actor` fields are informational and never prove authentication or capabilities. A host/verifier must produce `actor_evidence` bound to the subject, actor, and action.
+
+~~~js
+const { evaluateRuntimePolicyContext } = require('@brainai/satp-client');
+
+const result = evaluateRuntimePolicyContext({
+  subject_id: 'agentfolio-subject-42',
+  subject: {
+    active: true,
+    satpVerified: true,
+    trustScore: 88,
+    evidenceUpdatedAt: '2026-05-21T00:00:00Z'
+  },
+  actor_id: 'mcp-runtime-7',
+  actor: { actor_id: 'mcp-runtime-7' },
+  actor_evidence: {
+    verifier_id: 'satp-host-verifier',
+    authenticated: true,
+    verified_at: '2026-05-21T00:00:00Z',
+    expires_at: '2026-05-21T01:00:00Z',
+    revoked: false,
+    subject_id: 'agentfolio-subject-42',
+    actor_id: 'mcp-runtime-7',
+    action_id: 'action-read-1',
+    delegation_depth: 1,
+    capabilities: ['mcp:read']
+  },
+  action: {
+    action_id: 'action-read-1',
+    type: 'mcp_protected_tool',
+    resource: 'mcp://protected/read',
+    requiresCapability: 'mcp:read',
+    requiresFreshEvidence: true
+  }
+}, {
+  now: '2026-05-21T00:05:00Z',
+  policy: {
+    actorEvidenceStaleAfterMs: 900000,
+    maxDelegationDepth: 1
+  }
+});
+~~~
+
+Missing actor evidence returns `needs_approval`. Unverified, revoked, mismatched, or over-delegated evidence returns `deny`. Stale, expired, or future-dated evidence returns `needs_approval`.
+
+The older `evaluateRuntimePolicy(identityPayload, actionDescriptor, options)` API remains available for trusted in-process identity payloads and backward compatibility. Do not use it to authenticate an external caller from self-asserted actor context.
 
 ~~~js
 const { evaluateRuntimePolicy } = require('@brainai/satp-client');
@@ -105,6 +152,22 @@ Output:
 
 ## Reason codes
 
+Authenticated runtime context:
+
+- SUBJECT_ID_MISSING, ACTOR_ID_MISSING, ACTION_ID_MISSING: required binding identifiers are absent.
+- ACTOR_EVIDENCE_MISSING: caller actor context has no verifier-produced evidence; approval is required.
+- ACTOR_EVIDENCE_UNVERIFIED: the evidence lacks a verifier ID, authenticated flag, or valid verification timestamp.
+- ACTOR_EVIDENCE_REVOKED: the verifier evidence is revoked.
+- ACTOR_EVIDENCE_STALE: verifier evidence is stale, expired, or future-dated.
+- ACTOR_EVIDENCE_ACTOR_MISMATCH, ACTOR_EVIDENCE_SUBJECT_MISMATCH, ACTION_CONTEXT_MISMATCH: evidence bindings do not match the evaluated context.
+- ACTOR_EVIDENCE_VERIFIED: verifier-produced evidence passed authentication and freshness checks.
+- DELEGATION_DEPTH_OK, DELEGATION_DEPTH_EXCEEDED: delegation is within or beyond local policy.
+- X402_LOOKUP_CONTEXT_MISMATCH, X402_SETTLEMENT_CONTEXT_MISMATCH: payment metadata is not bound to the same subject, actor, and action.
+- X402_SETTLEMENT_UNVERIFIED: the settlement is not both settled and verifier-attributed.
+- X402_SETTLEMENT_NOT_TASK_OUTCOME_PROOF: settlement proves only the payment state, never successful task completion.
+
+Legacy/local identity policy:
+
 - IDENTITY_INACTIVE: the identity is disabled locally.
 - IDENTITY_UNVERIFIED: verified identity is required, but missing.
 - MISSING_CAPABILITY: the action requires a capability not present in the identity payload.
@@ -182,16 +245,35 @@ evaluateRuntimePolicy(identity, {
 x402 paid endpoint:
 
 ~~~js
-evaluateRuntimePolicy(identity, {
-  type: 'x402_endpoint',
-  resource: 'https://api.example.test/reputation',
-  operation: 'lookup',
-  costUsd: 0.05,
+evaluateRuntimePolicyContext({
+  subject_id: 'agentfolio-subject-42',
+  subject: identity,
+  actor_id: 'x402-runtime-7',
+  actor_evidence: verifierProducedActorEvidence,
+  action: {
+    action_id: 'reputation-lookup-1',
+    type: 'x402_endpoint',
+    resource: 'https://api.example.test/reputation',
+    operation: 'lookup',
+    costUsd: 0.05
+  },
+  x402: {
+    settlement: {
+      subject_id: 'agentfolio-subject-42',
+      actor_id: 'x402-runtime-7',
+      action_id: 'reputation-lookup-1',
+      resource: 'https://api.example.test/reputation',
+      settlement_id: 'settlement-123',
+      status: 'settled',
+      verified_by: 'x402-host-verifier'
+    }
+  }
 }, {
-  actionPaymentPreapproved: true,
-  policy: { maxAutoSpendUsd: 0.01 },
+  policy: { maxAutoSpendUsd: 0 }
 });
 ~~~
+
+A matching verified settlement can satisfy the local payment gate. It does not authenticate the actor, authorize the action, or prove the task outcome.
 
 AgentFolio trust-score gate:
 
@@ -238,8 +320,10 @@ The descriptor builder is offline and only prepares local policy input. Its guar
 
 ## Security note
 
-Policy decisions remain local to the host. SATP identity and host-provided trust signals are inputs to local policy, not blanket authorization. x402 payment grants lookup or endpoint access only; it does not authorize the agent action, bypass protected-tool approval, or replace host policy.
+Policy decisions remain local to the host. SATP identity and host-provided trust signals are inputs to local policy, not blanket authorization. Hosts are responsible for producing and authenticating `actor_evidence`; v0 validates its structure, freshness, revocation flag, bindings, capabilities, and delegation depth but does not define a cryptographic evidence format or contact a verifier. x402 payment grants lookup or endpoint access only; it does not authenticate the actor, authorize the agent action, bypass protected-tool approval, replace host policy, or prove successful task completion.
+
+The adapter performs no live evidence lookup or settlement. Optional x402 lookup and settlement objects are verifier-provided context and must be bound to the same `subject_id`, `actor_id`, `action_id`, and, when present, resource. Audit traces still use the legacy identity/action helper; callers should separately log redacted actor-evidence provenance if needed.
 
 ## SATP repo integration
 
-This PR integrates the adapter into @brainai/satp-client as packages/satp-client/src/runtime-policy-adapter.js and exports evaluateRuntimePolicy, buildRuntimePolicyActionDescriptor, buildRuntimePolicyAuditTrace, DECISIONS, REASON_CODES, DEFAULT_POLICY, RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION, and RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION from the package root. The package path is branch/PR-only for review; no npm publish or dist-tag change is part of this artifact.
+This PR integrates the adapter into @brainai/satp-client as packages/satp-client/src/runtime-policy-adapter.js and exports evaluateRuntimePolicyContext, evaluateRuntimePolicy, buildRuntimePolicyActionDescriptor, buildRuntimePolicyAuditTrace, DECISIONS, REASON_CODES, DEFAULT_POLICY, RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION, and RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION from the package root. The package path is branch/PR-only for review; no npm publish or dist-tag change is part of this artifact.

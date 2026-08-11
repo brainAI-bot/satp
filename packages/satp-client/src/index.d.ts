@@ -141,6 +141,7 @@ export type RuntimePolicyDecision =
   | 'needs_approval';
 
 export interface RuntimePolicyIdentityPayload {
+  agentId?: string;
   active?: boolean;
   satpVerified?: boolean;
   verified?: boolean;
@@ -150,8 +151,54 @@ export interface RuntimePolicyIdentityPayload {
   evidenceUpdatedAt?: string | number | Date | null;
 }
 
+export interface RuntimePolicyActorEvidence {
+  verifier_id: string;
+  authenticated: boolean;
+  verified_at: string | number | Date;
+  expires_at?: string | number | Date | null;
+  revoked?: boolean;
+  subject_id: string;
+  actor_id: string;
+  action_id?: string;
+  delegation_depth?: number;
+  capabilities?: string[];
+}
+
+export interface RuntimePolicyX402Binding {
+  subject_id: string;
+  actor_id: string;
+  action_id: string;
+  resource?: string;
+}
+
+export interface RuntimePolicyX402LookupContext extends RuntimePolicyX402Binding {
+  endpoint?: string;
+  max_cost_usd?: number;
+  payment_preapproved?: boolean;
+}
+
+export interface RuntimePolicyX402SettlementContext extends RuntimePolicyX402Binding {
+  settlement_id?: string;
+  status: string;
+  verified_by?: string;
+}
+
+export interface RuntimePolicyAuthenticatedContext {
+  subject_id: string;
+  subject: RuntimePolicyIdentityPayload & { subject_id?: string };
+  actor_id: string;
+  actor?: { actor_id?: string; [key: string]: unknown };
+  actor_evidence?: RuntimePolicyActorEvidence | null;
+  action: RuntimePolicyActionDescriptor & { action_id: string };
+  x402?: {
+    lookup?: RuntimePolicyX402LookupContext;
+    settlement?: RuntimePolicyX402SettlementContext;
+  };
+}
+
 export interface RuntimePolicyActionDescriptor {
   schemaVersion?: string;
+  action_id?: string | null;
   surface?: string;
   type?: string;
   resource?: string;
@@ -178,6 +225,7 @@ export interface RuntimePolicyActionDescriptorBuildInput extends RuntimePolicyAc
 
 export interface RuntimePolicyHostActionDescriptor extends RuntimePolicyActionDescriptor {
   schemaVersion: 'satp.runtimePolicyHostActionDescriptor.v1';
+  action_id: string | null;
   type: string;
   resource: string | null;
   operation: string | null;
@@ -199,8 +247,10 @@ export interface RuntimePolicyHostActionDescriptor extends RuntimePolicyActionDe
 }
 
 export interface RuntimePolicyConfig {
+  actorEvidenceStaleAfterMs?: number;
   minimumTrustScore?: number;
   denyTrustScoreBelow?: number;
+  maxDelegationDepth?: number;
   maxAutoSpendUsd?: number;
   requireVerifiedIdentity?: boolean;
   staleEvidenceAfterMs?: number;
@@ -281,6 +331,10 @@ export interface RuntimePolicyAdapter {
     actionDescriptor: RuntimePolicyActionDescriptor,
     options?: RuntimePolicyOptions
   ): RuntimePolicyResult;
+  evaluateContext(
+    runtimeContext: RuntimePolicyAuthenticatedContext,
+    options?: RuntimePolicyOptions
+  ): RuntimePolicyResult;
   auditTrace(
     identityPayload: RuntimePolicyIdentityPayload,
     actionDescriptor: RuntimePolicyActionDescriptor,
@@ -288,6 +342,11 @@ export interface RuntimePolicyAdapter {
   ): RuntimePolicyAuditTrace;
   explain(result: RuntimePolicyResult): string[];
 }
+
+export function evaluateRuntimePolicyContext(
+  runtimeContext: RuntimePolicyAuthenticatedContext,
+  options?: RuntimePolicyOptions
+): RuntimePolicyResult;
 
 export type SatpSignerRole = 'operational_signer' | 'owner_upgrade_authority';
 

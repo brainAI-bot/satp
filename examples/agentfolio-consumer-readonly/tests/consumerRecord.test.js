@@ -53,12 +53,16 @@ test('builds an AgentFolio runtime policy reference consumer plan', () => {
   assert.equal(reference.recordVerified, true);
   assert.deepEqual(reference.verificationErrors, []);
   assert.equal(reference.action.type, 'agentfolio_trust_gate');
+  assert.notEqual(reference.runtimeContext.subject_id, reference.runtimeContext.actor_id);
+  assert.equal(reference.runtimeContext.actor_evidence.authenticated, true);
+  assert.equal(reference.runtimeContext.actor_evidence.verifier_id, 'agentfolio-reference-host-verifier');
   assert.equal(reference.action.requiresCapability, 'agentfolio:trust-read');
   assert.equal(reference.result.decision, 'allow');
   assert.ok(reference.result.reasonCodes.includes('LOCAL_POLICY_ALLOW'));
   assert.equal(reference.auditTrace.guardrails.writesSolanaState, false);
   assert.equal(reference.guardrails.publishesPackages, false);
   assert.ok(reference.integrationPlan.some((step) => step.includes('createRuntimePolicyAdapter')));
+  assert.ok(reference.integrationPlan.some((step) => step.includes('actor_evidence')));
 });
 
 test('AgentFolio runtime policy reference degrades below the local trust threshold', () => {
