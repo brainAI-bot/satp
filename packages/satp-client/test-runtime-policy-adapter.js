@@ -653,6 +653,58 @@ test('requires x402 actor and subject bindings in explicit and compatibility ide
   }
 });
 
+test('denies nameless identities in explicit and compatibility identity modes', () => {
+  const action = authenticatedAction({
+    action_id: 'nameless-identity-action',
+    type: 'x402_endpoint',
+    resource: 'https://api.example.test/nameless-identity',
+    operation: 'lookup',
+    costUsd: 0.01,
+    requiresFreshEvidence: false,
+    protectedTool: false,
+  });
+  const settlement = {
+    settlement_id: 'settlement-nameless-identity',
+    verifier_id: 'x402-receipt-verifier',
+    verified: true,
+    status: 'settled',
+    purpose: 'action_payment',
+    action_id: action.actionId,
+    resource: action.resource,
+    amount_usd: action.costUsd,
+    settled_at: '2026-08-11T11:58:00Z',
+  };
+  const identities = [
+    {
+      name: 'explicit',
+      identity: {
+        ...baseIdentity,
+        agentId: undefined,
+        actor_evidence: {},
+      },
+      reasonCode: REASON_CODES.SUBJECT_ID_MISSING,
+    },
+    {
+      name: 'compatibility',
+      identity: {
+        ...baseIdentity,
+        agentId: undefined,
+      },
+      reasonCode: REASON_CODES.X402_SETTLEMENT_CONTEXT_MISMATCH,
+    },
+  ];
+
+  for (const mode of identities) {
+    const result = evaluateRuntimePolicy(mode.identity, action, {
+      now: AUTH_NOW,
+      x402Settlement: settlement,
+    });
+    assert.equal(result.decision, DECISIONS.DENY, `${mode.name}: nameless identity must deny`);
+    assert.ok(result.reasonCodes.includes(mode.reasonCode));
+    assert.ok(!result.reasonCodes.includes(REASON_CODES.LOCAL_POLICY_ALLOW));
+  }
+});
+
 test('binds optional x402 lookup settlement but remains degraded until refreshed evidence is verified', () => {
   const action = authenticatedAction({
     action_id: 'lookup-action',

@@ -482,8 +482,12 @@ function validateX402Settlement({
   const expectedActorId = identity.explicitActorContext ? identity.actorId : identity.subjectId;
 
   Object.assign(check, {
-    actorMatches: actorId === expectedActorId,
-    subjectMatches: subjectId === identity.subjectId,
+    actorMatches: isNonEmptyString(expectedActorId)
+      && isNonEmptyString(actorId)
+      && actorId === expectedActorId,
+    subjectMatches: isNonEmptyString(identity.subjectId)
+      && isNonEmptyString(subjectId)
+      && subjectId === identity.subjectId,
     actionMatches: actionIdMatches,
     resourceMatches: resource === expectedResource,
     amountCoversExpectedCost: amountValid,
