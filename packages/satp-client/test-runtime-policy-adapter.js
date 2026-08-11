@@ -586,6 +586,73 @@ test('binds x402 settlement to payment context without treating it as task outco
   assert.equal(allowed.decision, DECISIONS.ALLOW);
 });
 
+test('requires x402 actor and subject bindings in explicit and compatibility identity modes', () => {
+  const action = authenticatedAction({
+    action_id: 'binding-regression-action',
+    type: 'x402_endpoint',
+    resource: 'https://api.example.test/binding-regression',
+    operation: 'lookup',
+    costUsd: 0.01,
+    requiresFreshEvidence: false,
+    protectedTool: false,
+  });
+  const modes = [
+    {
+      name: 'explicit',
+      identity: authenticatedContext(action),
+      actorId: 'runtime-host',
+      subjectId: 'subject-agent',
+    },
+    {
+      name: 'compatibility',
+      identity: {
+        ...baseIdentity,
+        agentId: 'legacy-agent',
+        evidenceUpdatedAt: '2026-08-11T11:50:00Z',
+      },
+      actorId: 'legacy-agent',
+      subjectId: 'legacy-agent',
+    },
+  ];
+
+  for (const mode of modes) {
+    const settlement = {
+      settlement_id: `settlement-${mode.name}`,
+      verifier_id: 'x402-receipt-verifier',
+      verified: true,
+      status: 'settled',
+      purpose: 'action_payment',
+      actor_id: mode.actorId,
+      subject_id: mode.subjectId,
+      action_id: action.actionId,
+      resource: action.resource,
+      amount_usd: action.costUsd,
+      settled_at: '2026-08-11T11:58:00Z',
+    };
+    const invalidBindings = [
+      ['omitted actor', { ...settlement, actor_id: undefined }],
+      ['omitted subject', { ...settlement, subject_id: undefined }],
+      ['mismatched actor', { ...settlement, actor_id: 'different-actor' }],
+      ['mismatched subject', { ...settlement, subject_id: 'different-subject' }],
+    ];
+
+    const validResult = evaluateRuntimePolicy(mode.identity, action, { now: AUTH_NOW, x402Settlement: settlement });
+    assert.equal(validResult.decision, DECISIONS.ALLOW, `${mode.name}: matching bindings should allow`);
+
+    for (const [variant, invalidSettlement] of invalidBindings) {
+      const result = evaluateRuntimePolicy(mode.identity, action, {
+        now: AUTH_NOW,
+        x402Settlement: invalidSettlement,
+      });
+      assert.equal(result.decision, DECISIONS.DENY, `${mode.name}: ${variant}`);
+      assert.ok(
+        result.reasonCodes.includes(REASON_CODES.X402_SETTLEMENT_CONTEXT_MISMATCH),
+        `${mode.name}: ${variant} should report a settlement context mismatch`
+      );
+    }
+  }
+});
+
 test('binds optional x402 lookup settlement but remains degraded until refreshed evidence is verified', () => {
   const action = authenticatedAction({
     action_id: 'lookup-action',

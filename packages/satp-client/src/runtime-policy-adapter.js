@@ -479,10 +479,11 @@ function validateX402Settlement({
     && (maximumCostUsd === null || amountUsd <= maximumCostUsd);
   const timeValid = settledDate && !Number.isNaN(settledDate.getTime())
     && ageMs >= 0 && ageMs <= policy.maxSettlementAgeMs;
+  const expectedActorId = identity.explicitActorContext ? identity.actorId : identity.subjectId;
 
   Object.assign(check, {
-    actorMatches: !identity.explicitActorContext || actorId === identity.actorId,
-    subjectMatches: !identity.explicitActorContext || subjectId === identity.subjectId,
+    actorMatches: actorId === expectedActorId,
+    subjectMatches: subjectId === identity.subjectId,
     actionMatches: actionIdMatches,
     resourceMatches: resource === expectedResource,
     amountCoversExpectedCost: amountValid,
