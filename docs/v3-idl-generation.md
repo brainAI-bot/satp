@@ -5,9 +5,14 @@ Marker: [#c5634a2c]
 The committed V3 IDLs live under `idls/v3/` and are generated from the extracted
 Anchor source in `programs/*_v3`.
 
-Source commit:
+Original extraction source (lineage only; not proof of either deployed binary):
 
 `brainAI-bot/clawd-brainchain/satp-v3@94a1d309dcc692228c357f6e28ab679196235ad2`
+
+`escrow_v3` has additional repository and deployment provenance after that
+extraction. See [`escrow-v3-idl-provenance.md`](escrow-v3-idl-provenance.md) for
+the checked-in source boundary, cluster-specific deployed readback, and callable
+instruction subsets.
 
 Generation command:
 
