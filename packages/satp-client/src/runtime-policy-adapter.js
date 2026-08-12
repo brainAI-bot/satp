@@ -8,8 +8,20 @@ const DECISIONS = Object.freeze({
 });
 
 const REASON_CODES = Object.freeze({
+  ACTOR_EVIDENCE_ACTION_UNBOUND: 'ACTOR_EVIDENCE_ACTION_UNBOUND',
+  ACTOR_EVIDENCE_FRESH: 'ACTOR_EVIDENCE_FRESH',
+  ACTOR_EVIDENCE_MISSING: 'ACTOR_EVIDENCE_MISSING',
+  ACTOR_EVIDENCE_REVOKED: 'ACTOR_EVIDENCE_REVOKED',
+  ACTOR_EVIDENCE_STALE: 'ACTOR_EVIDENCE_STALE',
+  ACTOR_EVIDENCE_UNVERIFIED: 'ACTOR_EVIDENCE_UNVERIFIED',
+  ACTOR_EVIDENCE_VERIFIED: 'ACTOR_EVIDENCE_VERIFIED',
+  ACTOR_ID_MISSING: 'ACTOR_ID_MISSING',
+  ACTOR_SUBJECT_MISMATCH: 'ACTOR_SUBJECT_MISMATCH',
   ACTION_PAYMENT_NEEDS_APPROVAL: 'ACTION_PAYMENT_NEEDS_APPROVAL',
   ACTION_PAYMENT_PREAPPROVED: 'ACTION_PAYMENT_PREAPPROVED',
+  ACTION_CONTEXT_MISMATCH: 'ACTION_CONTEXT_MISMATCH',
+  DELEGATION_CONTEXT_MISSING: 'DELEGATION_CONTEXT_MISSING',
+  DELEGATION_DEPTH_EXCEEDED: 'DELEGATION_DEPTH_EXCEEDED',
   EVIDENCE_FRESH: 'EVIDENCE_FRESH',
   EVIDENCE_STALE_OR_MISSING: 'EVIDENCE_STALE_OR_MISSING',
   IDENTITY_INACTIVE: 'IDENTITY_INACTIVE',
@@ -18,12 +30,18 @@ const REASON_CODES = Object.freeze({
   LOCAL_POLICY_ALLOW: 'LOCAL_POLICY_ALLOW',
   MISSING_CAPABILITY: 'MISSING_CAPABILITY',
   PROTECTED_TOOL_REQUIRES_APPROVAL: 'PROTECTED_TOOL_REQUIRES_APPROVAL',
+  SUBJECT_ID_MISSING: 'SUBJECT_ID_MISSING',
   TRUST_SCORE_BELOW_DENY_FLOOR: 'TRUST_SCORE_BELOW_DENY_FLOOR',
   TRUST_SCORE_BELOW_MINIMUM: 'TRUST_SCORE_BELOW_MINIMUM',
   TRUST_SCORE_OK: 'TRUST_SCORE_OK',
   X402_LOOKUP_PAYMENT_PREAPPROVED: 'X402_LOOKUP_PAYMENT_PREAPPROVED',
   X402_LOOKUP_REQUIRES_APPROVAL: 'X402_LOOKUP_REQUIRES_APPROVAL',
+  X402_LOOKUP_SETTLEMENT_BOUND: 'X402_LOOKUP_SETTLEMENT_BOUND',
   X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION: 'X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION',
+  X402_SETTLEMENT_CONTEXT_MISMATCH: 'X402_SETTLEMENT_CONTEXT_MISMATCH',
+  X402_SETTLEMENT_IS_NOT_TASK_OUTCOME_PROOF: 'X402_SETTLEMENT_IS_NOT_TASK_OUTCOME_PROOF',
+  X402_SETTLEMENT_UNVERIFIED: 'X402_SETTLEMENT_UNVERIFIED',
+  X402_SETTLEMENT_VERIFIED: 'X402_SETTLEMENT_VERIFIED',
 });
 
 const DEFAULT_POLICY = Object.freeze({
@@ -32,6 +50,9 @@ const DEFAULT_POLICY = Object.freeze({
   maxAutoSpendUsd: 0,
   requireVerifiedIdentity: true,
   staleEvidenceAfterMs: 7 * 24 * 60 * 60 * 1000,
+  maxActorEvidenceAgeMs: 15 * 60 * 1000,
+  maxDelegationDepth: 1,
+  maxSettlementAgeMs: 15 * 60 * 1000,
 });
 
 const RUNTIME_POLICY_AUDIT_TRACE_SCHEMA_VERSION = 'satp.runtimePolicyAuditTrace.v1';
@@ -99,6 +120,11 @@ function evaluateRuntimePolicy(identityPayload, actionDescriptor, options = {}) 
   const reasonCodes = [];
   const checks = {};
 
+  if (identity.explicitActorContext) {
+    const actorDecision = evaluateActorEvidence(identity, action, policy, now, reasonCodes, checks);
+    if (actorDecision) return actorDecision;
+  }
+
   checks.identityActive = identity.active === true;
   if (!checks.identityActive) {
     reasonCodes.push(REASON_CODES.IDENTITY_INACTIVE);
@@ -136,7 +162,7 @@ function evaluateRuntimePolicy(identityPayload, actionDescriptor, options = {}) 
   checks.evidenceFresh = isEvidenceFresh(identity, policy, now);
   if (action.requiresFreshEvidence && !checks.evidenceFresh) {
     reasonCodes.push(REASON_CODES.EVIDENCE_STALE_OR_MISSING);
-    return staleEvidenceDecision(action, options, reasonCodes, checks);
+    return staleEvidenceDecision(identity, action, options, policy, now, reasonCodes, checks);
   }
   if (action.requiresFreshEvidence) reasonCodes.push(REASON_CODES.EVIDENCE_FRESH);
 
@@ -148,11 +174,36 @@ function evaluateRuntimePolicy(identityPayload, actionDescriptor, options = {}) 
   }
 
   checks.maxAutoSpendUsd = policy.maxAutoSpendUsd;
-  if (checks.actionCostUsd > checks.maxAutoSpendUsd && options.actionPaymentPreapproved !== true) {
+  const settlement = getX402Settlement(options);
+  let settlementAllowsPayment = false;
+  if (settlement && action.costUsd > 0) {
+    const settlementResult = validateX402Settlement({
+      settlement,
+      identity,
+      action,
+      purpose: 'action_payment',
+      expectedResource: action.resource,
+      expectedCostUsd: action.costUsd,
+      now,
+      policy,
+    });
+    checks.x402Settlement = settlementResult.check;
+    if (!settlementResult.ok) {
+      reasonCodes.push(settlementResult.reasonCode);
+      return decision(DECISIONS.DENY, reasonCodes, checks, settlementResult.message);
+    }
+    settlementAllowsPayment = true;
+    reasonCodes.push(REASON_CODES.X402_SETTLEMENT_VERIFIED);
+    reasonCodes.push(REASON_CODES.X402_SETTLEMENT_IS_NOT_TASK_OUTCOME_PROOF);
+    reasonCodes.push(REASON_CODES.X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION);
+  }
+  if (checks.actionCostUsd > checks.maxAutoSpendUsd
+      && options.actionPaymentPreapproved !== true
+      && !settlementAllowsPayment) {
     reasonCodes.push(REASON_CODES.ACTION_PAYMENT_NEEDS_APPROVAL);
     return decision(DECISIONS.NEEDS_APPROVAL, reasonCodes, checks, 'Paid action exceeds local auto-spend policy.');
   }
-  if (checks.actionCostUsd > 0) {
+  if (checks.actionCostUsd > 0 && !settlementAllowsPayment) {
     reasonCodes.push(REASON_CODES.ACTION_PAYMENT_PREAPPROVED);
     reasonCodes.push(REASON_CODES.X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION);
   }
@@ -180,6 +231,9 @@ function buildRuntimePolicyAuditTrace(identityPayload, actionDescriptor, options
     message: result.message,
     subject: {
       agentId: identity.agentId,
+      subjectId: identity.subjectId,
+      actorId: identity.actorId,
+      actorEvidencePresent: identity.actorEvidence !== null,
       active: identity.active,
       verified: identity.verified,
       trustScoreBand: trustScoreBand(identity.trustScore),
@@ -230,6 +284,7 @@ function buildRuntimePolicyActionDescriptor(input = {}, overrides = {}) {
   const type = action.type || action.surface || 'generic';
   const descriptor = {
     schemaVersion: RUNTIME_POLICY_HOST_ACTION_DESCRIPTOR_SCHEMA_VERSION,
+    actionId: firstDefined(action.action_id, action.actionId, null),
     type,
     resource: firstDefined(action.resource, defaultResourceForAction(type, action)),
     operation: firstDefined(action.operation, defaultOperationForAction(type)),
@@ -254,7 +309,210 @@ function buildRuntimePolicyActionDescriptor(input = {}, overrides = {}) {
   return descriptor;
 }
 
-function staleEvidenceDecision(action, options, reasonCodes, checks) {
+function evaluateActorEvidence(identity, action, policy, now, reasonCodes, checks) {
+  checks.subjectIdPresent = isNonEmptyString(identity.subjectId);
+  if (!checks.subjectIdPresent) {
+    reasonCodes.push(REASON_CODES.SUBJECT_ID_MISSING);
+    return decision(DECISIONS.DENY, reasonCodes, checks, 'Explicit runtime context requires subject_id.');
+  }
+
+  checks.actorIdPresent = isNonEmptyString(identity.actorId);
+  if (!checks.actorIdPresent) {
+    reasonCodes.push(REASON_CODES.ACTOR_ID_MISSING);
+    return decision(DECISIONS.DENY, reasonCodes, checks, 'Explicit runtime context requires actor_id.');
+  }
+
+  const evidence = normalizeActorEvidence(identity.actorEvidence);
+  checks.actorEvidencePresent = evidence !== null;
+  if (!evidence) {
+    reasonCodes.push(REASON_CODES.ACTOR_EVIDENCE_MISSING);
+    return decision(
+      DECISIONS.NEEDS_APPROVAL,
+      reasonCodes,
+      checks,
+      'Caller-supplied actor context is not authentication; verifier-produced actor_evidence is required.'
+    );
+  }
+
+  checks.actorEvidenceRevoked = evidence.revoked;
+  if (evidence.revoked) {
+    reasonCodes.push(REASON_CODES.ACTOR_EVIDENCE_REVOKED);
+    return decision(DECISIONS.DENY, reasonCodes, checks, 'Actor evidence has been revoked.');
+  }
+
+  checks.actorEvidenceVerified = evidence.verified && isNonEmptyString(evidence.verifierId);
+  if (!checks.actorEvidenceVerified) {
+    reasonCodes.push(REASON_CODES.ACTOR_EVIDENCE_UNVERIFIED);
+    return decision(DECISIONS.DENY, reasonCodes, checks, 'Actor evidence was not produced and verified by a named verifier.');
+  }
+  reasonCodes.push(REASON_CODES.ACTOR_EVIDENCE_VERIFIED);
+
+  if (evidence.actorId !== identity.actorId || evidence.subjectId !== identity.subjectId) {
+    reasonCodes.push(REASON_CODES.ACTOR_SUBJECT_MISMATCH);
+    return decision(DECISIONS.DENY, reasonCodes, checks, 'Actor evidence is not bound to the requested actor and subject.');
+  }
+
+  const evidenceFreshness = actorEvidenceFreshness(evidence, now, policy.maxActorEvidenceAgeMs);
+  checks.actorEvidenceFresh = evidenceFreshness.fresh;
+  if (!evidenceFreshness.fresh) {
+    reasonCodes.push(REASON_CODES.ACTOR_EVIDENCE_STALE);
+    return decision(DECISIONS.NEEDS_APPROVAL, reasonCodes, checks, evidenceFreshness.message);
+  }
+  reasonCodes.push(REASON_CODES.ACTOR_EVIDENCE_FRESH);
+
+  if (!evidence.actionBinding) {
+    reasonCodes.push(REASON_CODES.ACTOR_EVIDENCE_ACTION_UNBOUND);
+    return decision(DECISIONS.NEEDS_APPROVAL, reasonCodes, checks, 'Actor evidence must bind the action being evaluated.');
+  }
+  checks.actorEvidenceActionBound = actionBindingMatches(evidence.actionBinding, action);
+  if (!checks.actorEvidenceActionBound) {
+    reasonCodes.push(REASON_CODES.ACTION_CONTEXT_MISMATCH);
+    return decision(DECISIONS.DENY, reasonCodes, checks, 'Actor evidence action binding does not match the requested action.');
+  }
+
+  const delegationDepth = evidence.delegationDepth;
+  checks.delegationDepth = delegationDepth;
+  checks.maxDelegationDepth = policy.maxDelegationDepth;
+  if (identity.actorId !== identity.subjectId && delegationDepth === null) {
+    reasonCodes.push(REASON_CODES.DELEGATION_CONTEXT_MISSING);
+    return decision(DECISIONS.NEEDS_APPROVAL, reasonCodes, checks, 'Delegated actor evidence must include delegation_depth.');
+  }
+  if (delegationDepth !== null
+      && (!Number.isInteger(delegationDepth) || delegationDepth < 0 || delegationDepth > policy.maxDelegationDepth)) {
+    reasonCodes.push(REASON_CODES.DELEGATION_DEPTH_EXCEEDED);
+    return decision(DECISIONS.DENY, reasonCodes, checks, 'Actor evidence exceeds the local delegation-depth policy.');
+  }
+
+  return null;
+}
+
+function normalizeActorEvidence(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const delegation = value.delegation && typeof value.delegation === 'object' ? value.delegation : {};
+  return {
+    verifierId: firstDefined(value.verifier_id, value.verifierId, null),
+    verified: value.verified === true,
+    revoked: value.revoked === true,
+    actorId: firstDefined(value.actor_id, value.actorId, null),
+    subjectId: firstDefined(value.subject_id, value.subjectId, null),
+    issuedAt: firstDefined(value.issued_at, value.issuedAt, null),
+    expiresAt: firstDefined(value.expires_at, value.expiresAt, null),
+    actionBinding: firstDefined(value.action_binding, value.actionBinding, null),
+    delegationDepth: firstDefined(value.delegation_depth, value.delegationDepth, delegation.depth, null),
+  };
+}
+
+function actorEvidenceFreshness(evidence, now, maxAgeMs) {
+  if (!(now instanceof Date) || Number.isNaN(now.getTime())) {
+    return { fresh: false, message: 'Runtime policy evaluation time is invalid.' };
+  }
+  if (!evidence.issuedAt) return { fresh: false, message: 'Actor evidence is missing issued_at.' };
+  const issuedAt = new Date(evidence.issuedAt);
+  const expiresAt = evidence.expiresAt ? new Date(evidence.expiresAt) : null;
+  if (Number.isNaN(issuedAt.getTime())) return { fresh: false, message: 'Actor evidence issued_at is invalid.' };
+  if (expiresAt && Number.isNaN(expiresAt.getTime())) return { fresh: false, message: 'Actor evidence expires_at is invalid.' };
+  const ageMs = now.getTime() - issuedAt.getTime();
+  if (ageMs < 0 || ageMs > maxAgeMs || (expiresAt && expiresAt.getTime() <= now.getTime())) {
+    return { fresh: false, message: 'Actor evidence is stale, expired, or future-dated.' };
+  }
+  return { fresh: true, message: null };
+}
+
+function actionBindingMatches(binding, action) {
+  if (!binding || typeof binding !== 'object' || Array.isArray(binding)) return false;
+  const boundActionId = firstDefined(binding.action_id, binding.actionId, null);
+  return isNonEmptyString(action.actionId)
+    && boundActionId === action.actionId
+    && binding.type === action.type
+    && binding.operation === action.operation
+    && binding.resource === action.resource;
+}
+
+function getX402Settlement(options) {
+  return firstDefined(options.x402Settlement, options.x402_settlement, null);
+}
+
+function validateX402Settlement({
+  settlement,
+  identity,
+  action,
+  purpose,
+  expectedResource,
+  expectedCostUsd,
+  maximumCostUsd = null,
+  now,
+  policy,
+}) {
+  const check = {
+    present: true,
+    verified: settlement && settlement.verified === true,
+    verifierPresent: Boolean(settlement && isNonEmptyString(firstDefined(settlement.verifier_id, settlement.verifierId, null))),
+    settlementIdPresent: Boolean(settlement && isNonEmptyString(firstDefined(settlement.settlement_id, settlement.settlementId, null))),
+    purpose: settlement ? firstDefined(settlement.purpose, null) : null,
+    status: settlement ? firstDefined(settlement.status, null) : null,
+  };
+  if (!settlement || typeof settlement !== 'object' || Array.isArray(settlement)
+      || settlement.verified !== true
+      || !check.verifierPresent
+      || !check.settlementIdPresent
+      || settlement.status !== 'settled') {
+    return {
+      ok: false,
+      check,
+      reasonCode: REASON_CODES.X402_SETTLEMENT_UNVERIFIED,
+      message: 'x402 settlement context is not verifier-confirmed as settled.',
+    };
+  }
+
+  const actorId = firstDefined(settlement.actor_id, settlement.actorId, null);
+  const subjectId = firstDefined(settlement.subject_id, settlement.subjectId, null);
+  const actionId = firstDefined(settlement.action_id, settlement.actionId, null);
+  const resource = firstDefined(settlement.resource, null);
+  const amountUsd = firstDefined(settlement.amount_usd, settlement.amountUsd, null);
+  const settledAt = firstDefined(settlement.settled_at, settlement.settledAt, null);
+  const settledDate = settledAt ? new Date(settledAt) : null;
+  const ageMs = settledDate ? now.getTime() - settledDate.getTime() : Number.POSITIVE_INFINITY;
+  const actionIdMatches = action.actionId === null ? actionId === null : actionId === action.actionId;
+  const amountValid = typeof amountUsd === 'number'
+    && Number.isFinite(amountUsd)
+    && amountUsd >= expectedCostUsd
+    && (maximumCostUsd === null || amountUsd <= maximumCostUsd);
+  const timeValid = settledDate && !Number.isNaN(settledDate.getTime())
+    && ageMs >= 0 && ageMs <= policy.maxSettlementAgeMs;
+  const expectedActorId = identity.explicitActorContext ? identity.actorId : identity.subjectId;
+
+  Object.assign(check, {
+    actorMatches: isNonEmptyString(expectedActorId)
+      && isNonEmptyString(actorId)
+      && actorId === expectedActorId,
+    subjectMatches: isNonEmptyString(identity.subjectId)
+      && isNonEmptyString(subjectId)
+      && subjectId === identity.subjectId,
+    actionMatches: actionIdMatches,
+    resourceMatches: resource === expectedResource,
+    amountCoversExpectedCost: amountValid,
+    fresh: timeValid,
+  });
+
+  if (settlement.purpose !== purpose
+      || !check.actorMatches
+      || !check.subjectMatches
+      || !check.actionMatches
+      || !check.resourceMatches
+      || !amountValid
+      || !timeValid) {
+    return {
+      ok: false,
+      check,
+      reasonCode: REASON_CODES.X402_SETTLEMENT_CONTEXT_MISMATCH,
+      message: 'x402 settlement is not bound to the actor, subject, action, resource, purpose, amount, and time being evaluated.',
+    };
+  }
+
+  return { ok: true, check, reasonCode: null, message: null };
+}
+
+function staleEvidenceDecision(identity, action, options, policy, now, reasonCodes, checks) {
   const lookup = action.evidenceLookup || null;
   if (!lookup || lookup.type !== 'x402') {
     return decision(DECISIONS.DEGRADE, reasonCodes, checks, 'Evidence is stale or missing; no paid lookup path is configured.');
@@ -265,6 +523,36 @@ function staleEvidenceDecision(action, options, reasonCodes, checks) {
     endpoint: lookup.endpoint || null,
     maxCostUsd: lookup.maxCostUsd ?? null,
   };
+
+  const settlement = getX402Settlement(options);
+  if (settlement) {
+    const settlementResult = validateX402Settlement({
+      settlement,
+      identity,
+      action,
+      purpose: 'evidence_lookup',
+      expectedResource: lookup.endpoint || null,
+      expectedCostUsd: 0,
+      maximumCostUsd: lookup.maxCostUsd ?? null,
+      now,
+      policy,
+    });
+    checks.x402Settlement = settlementResult.check;
+    if (!settlementResult.ok) {
+      reasonCodes.push(settlementResult.reasonCode);
+      return decision(DECISIONS.DENY, reasonCodes, checks, settlementResult.message);
+    }
+    reasonCodes.push(REASON_CODES.X402_LOOKUP_SETTLEMENT_BOUND);
+    reasonCodes.push(REASON_CODES.X402_SETTLEMENT_VERIFIED);
+    reasonCodes.push(REASON_CODES.X402_SETTLEMENT_IS_NOT_TASK_OUTCOME_PROOF);
+    reasonCodes.push(REASON_CODES.X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION);
+    return decision(
+      DECISIONS.DEGRADE,
+      reasonCodes,
+      checks,
+      'x402 settlement covers the lookup only; refreshed evidence must still be verified before the action.'
+    );
+  }
 
   if (options.evidenceLookupPaymentPreapproved !== true) {
     reasonCodes.push(REASON_CODES.X402_LOOKUP_REQUIRES_APPROVAL);
@@ -287,8 +575,21 @@ function decision(value, reasonCodes, checks, message) {
 }
 
 function normalizeIdentity(identity = {}) {
+  const explicitActorContext = hasOwn(identity, 'subject_id')
+    || hasOwn(identity, 'subjectId')
+    || hasOwn(identity, 'actor_id')
+    || hasOwn(identity, 'actorId')
+    || hasOwn(identity, 'actor_evidence')
+    || hasOwn(identity, 'actorEvidence');
+  const subjectId = firstDefined(identity.subject_id, identity.subjectId, identity.agentId, identity.profileId, null);
+  const actorId = firstDefined(identity.actor_id, identity.actorId, null);
+
   return {
-    agentId: identity.agentId || identity.profileId || null,
+    agentId: subjectId,
+    subjectId,
+    actorId,
+    actorEvidence: firstDefined(identity.actor_evidence, identity.actorEvidence, null),
+    explicitActorContext,
     active: identity.active !== false,
     verified: identity.verified === true || identity.satpVerified === true,
     trustScore: clampScore(identity.trustScore ?? identity.agentFolioTrustScore ?? 0),
@@ -301,6 +602,7 @@ function normalizeAction(action = {}) {
   const parsedCost = parseActionCostUsd(action);
 
   return {
+    actionId: firstDefined(action.action_id, action.actionId, null),
     type: action.type || 'generic',
     resource: action.resource || null,
     resourceLabel: action.resourceLabel || null,
@@ -358,6 +660,16 @@ function sanitizeAuditChecks(checks = {}) {
 
 function firstDefined(...values) {
   return values.find((value) => value !== undefined);
+}
+
+function hasOwn(value, property) {
+  return value !== null
+    && typeof value === 'object'
+    && Object.prototype.hasOwnProperty.call(value, property);
+}
+
+function isNonEmptyString(value) {
+  return typeof value === 'string' && value.trim().length > 0;
 }
 
 function defaultResourceForAction(type, action) {
@@ -446,8 +758,20 @@ function explainRuntimePolicyResult(result = {}) {
 }
 
 const RUNTIME_POLICY_EXPLANATIONS = Object.freeze({
+  [REASON_CODES.ACTOR_EVIDENCE_ACTION_UNBOUND]: 'Verifier-produced actor evidence is not bound to an action.',
+  [REASON_CODES.ACTOR_EVIDENCE_FRESH]: 'Verifier-produced actor evidence is within the local freshness window.',
+  [REASON_CODES.ACTOR_EVIDENCE_MISSING]: 'Caller-supplied actor context is not authentication; actor evidence is required.',
+  [REASON_CODES.ACTOR_EVIDENCE_REVOKED]: 'Verifier-produced actor evidence has been revoked.',
+  [REASON_CODES.ACTOR_EVIDENCE_STALE]: 'Verifier-produced actor evidence is stale, expired, missing a timestamp, or future-dated.',
+  [REASON_CODES.ACTOR_EVIDENCE_UNVERIFIED]: 'Actor evidence is not verified by a named verifier.',
+  [REASON_CODES.ACTOR_EVIDENCE_VERIFIED]: 'A named verifier authenticated the actor evidence.',
+  [REASON_CODES.ACTOR_ID_MISSING]: 'Explicit runtime context requires actor_id.',
+  [REASON_CODES.ACTOR_SUBJECT_MISMATCH]: 'Actor evidence is bound to a different actor or subject.',
   [REASON_CODES.ACTION_PAYMENT_NEEDS_APPROVAL]: 'The action cost exceeds the host auto-spend policy and needs approval.',
   [REASON_CODES.ACTION_PAYMENT_PREAPPROVED]: 'The host preapproved payment for this action.',
+  [REASON_CODES.ACTION_CONTEXT_MISMATCH]: 'Actor evidence is bound to a different action.',
+  [REASON_CODES.DELEGATION_CONTEXT_MISSING]: 'Delegated actor evidence is missing its delegation depth.',
+  [REASON_CODES.DELEGATION_DEPTH_EXCEEDED]: 'The actor evidence exceeds the local delegation-depth limit.',
   [REASON_CODES.EVIDENCE_FRESH]: 'The identity evidence is fresh enough for this action.',
   [REASON_CODES.EVIDENCE_STALE_OR_MISSING]: 'The identity evidence is stale or missing.',
   [REASON_CODES.IDENTITY_INACTIVE]: 'The identity is inactive.',
@@ -456,12 +780,18 @@ const RUNTIME_POLICY_EXPLANATIONS = Object.freeze({
   [REASON_CODES.LOCAL_POLICY_ALLOW]: 'The local host policy allows the action.',
   [REASON_CODES.MISSING_CAPABILITY]: 'The identity is missing the capability required by this action.',
   [REASON_CODES.PROTECTED_TOOL_REQUIRES_APPROVAL]: 'The protected tool requires operator approval.',
+  [REASON_CODES.SUBJECT_ID_MISSING]: 'Explicit runtime context requires subject_id.',
   [REASON_CODES.TRUST_SCORE_BELOW_DENY_FLOOR]: 'The trust score is below the host deny floor.',
   [REASON_CODES.TRUST_SCORE_BELOW_MINIMUM]: 'The trust score is below the minimum for this action.',
   [REASON_CODES.TRUST_SCORE_OK]: 'The trust score satisfies the local policy.',
   [REASON_CODES.X402_LOOKUP_PAYMENT_PREAPPROVED]: 'The host preapproved payment for the x402 evidence lookup.',
   [REASON_CODES.X402_LOOKUP_REQUIRES_APPROVAL]: 'The x402 evidence lookup requires payment approval.',
+  [REASON_CODES.X402_LOOKUP_SETTLEMENT_BOUND]: 'A verified x402 settlement is bound to the optional evidence lookup.',
   [REASON_CODES.X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION]: 'x402 payment does not authorize the agent action.',
+  [REASON_CODES.X402_SETTLEMENT_CONTEXT_MISMATCH]: 'The x402 settlement does not match the evaluated actor, subject, action, resource, purpose, amount, or time.',
+  [REASON_CODES.X402_SETTLEMENT_IS_NOT_TASK_OUTCOME_PROOF]: 'x402 settlement proves payment only, not successful task execution.',
+  [REASON_CODES.X402_SETTLEMENT_UNVERIFIED]: 'The x402 settlement is not verifier-confirmed as settled.',
+  [REASON_CODES.X402_SETTLEMENT_VERIFIED]: 'The x402 settlement is verifier-confirmed and context-bound.',
 });
 
 function safeIsoDate(value) {

@@ -140,7 +140,64 @@ export type RuntimePolicyDecision =
   | 'degrade'
   | 'needs_approval';
 
+export interface RuntimePolicyActorEvidence {
+  verifier_id?: string;
+  verifierId?: string;
+  verified: boolean;
+  revoked?: boolean;
+  actor_id?: string;
+  actorId?: string;
+  subject_id?: string;
+  subjectId?: string;
+  issued_at?: string | number | Date;
+  issuedAt?: string | number | Date;
+  expires_at?: string | number | Date;
+  expiresAt?: string | number | Date;
+  delegation_depth?: number;
+  delegationDepth?: number;
+  delegation?: { depth?: number };
+  action_binding?: RuntimePolicyActionBinding;
+  actionBinding?: RuntimePolicyActionBinding;
+}
+
+export interface RuntimePolicyActionBinding {
+  action_id?: string;
+  actionId?: string;
+  type?: string;
+  resource?: string;
+  operation?: string;
+}
+
+export interface RuntimePolicyX402SettlementContext {
+  settlement_id?: string;
+  settlementId?: string;
+  verifier_id?: string;
+  verifierId?: string;
+  verified: boolean;
+  status: 'settled' | string;
+  purpose: 'action_payment' | 'evidence_lookup' | string;
+  actor_id?: string;
+  actorId?: string;
+  subject_id?: string;
+  subjectId?: string;
+  action_id?: string;
+  actionId?: string;
+  resource: string | null;
+  amount_usd?: number;
+  amountUsd?: number;
+  settled_at?: string | number | Date;
+  settledAt?: string | number | Date;
+}
+
 export interface RuntimePolicyIdentityPayload {
+  subject_id?: string;
+  subjectId?: string;
+  actor_id?: string;
+  actorId?: string;
+  actor_evidence?: RuntimePolicyActorEvidence;
+  actorEvidence?: RuntimePolicyActorEvidence;
+  agentId?: string;
+  profileId?: string;
   active?: boolean;
   satpVerified?: boolean;
   verified?: boolean;
@@ -152,6 +209,8 @@ export interface RuntimePolicyIdentityPayload {
 
 export interface RuntimePolicyActionDescriptor {
   schemaVersion?: string;
+  action_id?: string;
+  actionId?: string;
   surface?: string;
   type?: string;
   resource?: string;
@@ -178,6 +237,7 @@ export interface RuntimePolicyActionDescriptorBuildInput extends RuntimePolicyAc
 
 export interface RuntimePolicyHostActionDescriptor extends RuntimePolicyActionDescriptor {
   schemaVersion: 'satp.runtimePolicyHostActionDescriptor.v1';
+  actionId: string | null;
   type: string;
   resource: string | null;
   operation: string | null;
@@ -204,6 +264,9 @@ export interface RuntimePolicyConfig {
   maxAutoSpendUsd?: number;
   requireVerifiedIdentity?: boolean;
   staleEvidenceAfterMs?: number;
+  maxActorEvidenceAgeMs?: number;
+  maxDelegationDepth?: number;
+  maxSettlementAgeMs?: number;
 }
 
 export interface RuntimePolicyOptions {
@@ -211,6 +274,8 @@ export interface RuntimePolicyOptions {
   actionPaymentPreapproved?: boolean;
   evidenceLookupPaymentPreapproved?: boolean;
   operatorApproved?: boolean;
+  x402_settlement?: RuntimePolicyX402SettlementContext;
+  x402Settlement?: RuntimePolicyX402SettlementContext;
   policy?: RuntimePolicyConfig;
 }
 
@@ -237,6 +302,9 @@ export interface RuntimePolicyAuditTrace {
   message: string;
   subject: {
     agentId: string | null;
+    subjectId: string | null;
+    actorId: string | null;
+    actorEvidencePresent: boolean;
     active: boolean;
     verified: boolean;
     trustScoreBand: '90-100' | '80-89' | '70-79' | '50-69' | '25-49' | '0-24';

@@ -28,6 +28,7 @@ function buildAgentFolioRuntimePolicyReference({
     },
   });
   const action = adapter.action({
+    action_id: `agentfolio:${record.profile.profileId}:trust-gate`,
     profileId: record.profile.profileId,
     minimumTrustScore: 80,
   });
@@ -39,7 +40,27 @@ function buildAgentFolioRuntimePolicyReference({
     capabilities: ['agentfolio:trust-read'],
     evidenceUpdatedAt,
   };
-  const result = adapter.evaluate(identityPayload, action);
+  const actorContext = {
+    ...identityPayload,
+    subject_id: record.satp.agentId,
+    actor_id: 'agentfolio-reference-host',
+    actor_evidence: {
+      verifier_id: 'agentfolio-consumer-record-verifier',
+      verified: verification.ok,
+      revoked: false,
+      actor_id: 'agentfolio-reference-host',
+      subject_id: record.satp.agentId,
+      issued_at: now,
+      delegation_depth: 1,
+      action_binding: {
+        action_id: action.actionId,
+        type: action.type,
+        operation: action.operation,
+        resource: action.resource,
+      },
+    },
+  };
+  const result = adapter.evaluate(actorContext, action);
 
   return {
     kind: 'agentfolio.satpRuntimePolicyReference.v1',
@@ -47,12 +68,14 @@ function buildAgentFolioRuntimePolicyReference({
     recordVerified: verification.ok,
     verificationErrors: verification.errors,
     identityPayload,
+    actorContext,
     action,
     result,
-    auditTrace: adapter.auditTrace(identityPayload, action, { result }),
+    auditTrace: adapter.auditTrace(actorContext, action, { result }),
     integrationPlan: [
       'Build or load an AgentFolio profile record from application-owned data.',
       'Verify the SATP trust packet and unsigned request metadata before displaying or queueing it.',
+      'Keep subject_id separate from authenticated actor_id and bind verifier-produced actor_evidence to the action.',
       'Create an agentfolio_trust_gate action with createRuntimePolicyAdapter.',
       'Apply the local allow, deny, degrade, or needs_approval decision before returning profile trust data.',
       'Keep any production deploy, live x402 payment, Solana write, npm publish, or keypair path in a separate approved task.',
