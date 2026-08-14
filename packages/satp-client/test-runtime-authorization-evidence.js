@@ -140,6 +140,16 @@ test('fails closed when no offline verifier trust root is supplied', () => {
   assert.equal(result.reasonCode, RUNTIME_AUTHORIZATION_EVIDENCE_REASON_CODES.VERIFIER_UNAVAILABLE);
 });
 
+test('does not trust inherited verifier-record entries', () => {
+  const inheritedTrust = Object.create({ 'offline-verifier:primary': true });
+  const result = verifyRuntimeAuthorizationEvidence(
+    fixture('runtime-authorization-evidence-positive.json'),
+    verificationOptions({ availableVerifiers: inheritedTrust })
+  );
+  assert.equal(result.ok, false);
+  assert.equal(result.reasonCode, RUNTIME_AUTHORIZATION_EVIDENCE_REASON_CODES.VERIFIER_UNAVAILABLE);
+});
+
 test('maps evidence and issuer digest mismatches to invalid_evidence', () => {
   for (const options of [
     { expectedEvidenceDigest: 'sha256:' + '3'.repeat(64) },

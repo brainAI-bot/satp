@@ -168,7 +168,8 @@ function verifierIsAvailable(availableVerifiers, verifier) {
   if (Array.isArray(availableVerifiers)) return availableVerifiers.includes(verifier);
   if (availableVerifiers instanceof Set) return availableVerifiers.has(verifier);
   if (availableVerifiers && typeof availableVerifiers === 'object') {
-    return availableVerifiers[verifier] === true;
+    return Object.prototype.hasOwnProperty.call(availableVerifiers, verifier)
+      && availableVerifiers[verifier] === true;
   }
   return false;
 }
