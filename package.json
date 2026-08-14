@@ -26,6 +26,7 @@
     "check:examples": "npm --prefix examples/mcp-x402-readonly run check && npm --prefix examples/agentfolio-consumer-readonly run check && npm --prefix examples/third-party-runtime-conformance run check",
     "test:attestation-request": "node packages/satp-client/test-attestation-request.js",
     "test:runtime-policy": "node --test packages/satp-client/test-runtime-policy-adapter.js",
+    "test:runtime-authorization-evidence": "node --test packages/satp-client/test-runtime-authorization-evidence.js",
     "test:wallet-control": "node packages/satp-client/test-wallet-control-challenge.js",
     "test:x402-discovery": "node packages/satp-client/test-x402-discovery.js",
     "test:signer-policy": "node packages/satp-client/test-signer-policy.js",
@@ -37,7 +38,7 @@
     "test:borsh": "node packages/satp-client/test-borsh-reader.js",
     "test:examples": "npm --prefix examples/mcp-x402-readonly test && npm --prefix examples/agentfolio-consumer-readonly test && npm --prefix examples/third-party-runtime-conformance test",
     "ci:offline-with-examples": "npm run ci && npm run check:examples && npm run test:examples",
-    "ci": "npm run lint:roadmap && npm run validate:idls && npm run verify:v3-program-sources && npm run check:js && npm run check:exports && npm run check:release-metadata && npm run test:package-entrypoints && npm run smoke:consumer-install && npm run smoke:satp-client-packed-consumer && npm run test:attestation-request && npm run test:runtime-policy && npm run test:wallet-control && npm run test:x402-discovery && npm run test:signer-policy && npm run test:conformance:rc-s6 && npm run test:escrow-build-proof-reference && npm run test:v3 && npm run test:v3-usdc && npm run test:borsh"
+    "ci": "npm run lint:roadmap && npm run validate:idls && npm run verify:v3-program-sources && npm run check:js && npm run check:exports && npm run check:release-metadata && npm run test:package-entrypoints && npm run smoke:consumer-install && npm run smoke:satp-client-packed-consumer && npm run test:attestation-request && npm run test:runtime-policy && npm run test:runtime-authorization-evidence && npm run test:wallet-control && npm run test:x402-discovery && npm run test:signer-policy && npm run test:conformance:rc-s6 && npm run test:escrow-build-proof-reference && npm run test:v3 && npm run test:v3-usdc && npm run test:borsh"
   },
   "main": "packages/satp-client/src/index.js",
   "types": "packages/satp-client/src/index.d.ts",
@@ -49,6 +50,10 @@
     "./wallet-control-challenge": {
       "types": "./packages/satp-client/src/index.d.ts",
       "default": "./packages/satp-client/src/wallet-control-challenge.js"
+    },
+    "./runtime-authorization-evidence": {
+      "types": "./packages/satp-client/src/index.d.ts",
+      "default": "./packages/satp-client/src/runtime-authorization-evidence.js"
     },
     "./x402-discovery": {
       "types": "./packages/satp-client/src/index.d.ts",
@@ -64,6 +69,7 @@
     "docs/agentfolio-consumption-readiness.md",
     "docs/package-boundary.md",
     "docs/runtime-policy-adapter-v0.md",
+    "docs/runtime-authorization-evidence-v0.md",
     "docs/satp-client-consumer-install.md",
     "idls/",
     "packages/satp-client/examples/",

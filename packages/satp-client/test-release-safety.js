@@ -14,8 +14,11 @@ const {
   hashWalletControlChallenge,
   deriveWalletControlChallengePdas,
   verifyWalletControlChallengeSignature,
+  normalizeRuntimeAuthorizationEvidence,
+  verifyRuntimeAuthorizationEvidence,
 } = require('./src');
 const walletControlChallengeSubpath = require('@brainai/satp-client/wallet-control-challenge');
+const runtimeAuthorizationEvidenceSubpath = require('@brainai/satp-client/runtime-authorization-evidence');
 
 const DEVNET_RPC = 'https://api.devnet.solana.com';
 const MAINNET_RPC = 'https://api.mainnet-beta.solana.com';
@@ -122,6 +125,14 @@ for (const [name, value] of Object.entries({
 })) {
   assert.equal(typeof value, 'function', name + ' export must be a function');
   assert.equal(typeof walletControlChallengeSubpath[name], 'function', name + ' subpath export must be a function');
+}
+
+for (const [name, value] of Object.entries({
+  normalizeRuntimeAuthorizationEvidence,
+  verifyRuntimeAuthorizationEvidence,
+})) {
+  assert.equal(typeof value, 'function', name + ' export must be a function');
+  assert.equal(typeof runtimeAuthorizationEvidenceSubpath[name], 'function', name + ' subpath export must be a function');
 }
 
 console.log('release safety defaults OK');

@@ -89,6 +89,138 @@ export interface SatpTrustPacketValidation {
   errors: string[];
 }
 
+export const RUNTIME_AUTHORIZATION_EVIDENCE_SCHEMA_VERSION: 'satp.runtimeAuthorizationEvidence.v0';
+export const RUNTIME_AUTHORIZATION_EVIDENCE_PROFILE_ID: 'satp.runtimeAuthorizationEvidence';
+export const RUNTIME_AUTHORIZATION_EVIDENCE_PROFILE_VERSION: '0';
+export const RUNTIME_AUTHORIZATION_EVIDENCE_REASON_CODES: Readonly<{
+  UNSUPPORTED_PROFILE: 'unsupported_profile';
+  INVALID_EVIDENCE: 'invalid_evidence';
+  AUTHORIZATION_EXPIRED: 'authorization_expired';
+  SCOPE_MISMATCH: 'scope_mismatch';
+  VERIFIER_UNAVAILABLE: 'verifier_unavailable';
+}>;
+
+export interface RuntimeAuthorizationEvidenceDigest {
+  algorithm: 'sha256';
+  value: string;
+}
+
+export interface RuntimeAuthorizationEvidence {
+  schemaVersion: 'satp.runtimeAuthorizationEvidence.v0';
+  profile: {
+    id: 'satp.runtimeAuthorizationEvidence';
+    version: '0';
+  };
+  issuer: string;
+  verifier: string;
+  subject: string;
+  audience: string;
+  resource: string;
+  evidenceDigest: RuntimeAuthorizationEvidenceDigest;
+  observedAt: string;
+  expiresAt: string;
+  authorizationScope: string[];
+  policyDigest: RuntimeAuthorizationEvidenceDigest;
+}
+
+export interface RuntimeAuthorizationEvidenceInput {
+  schemaVersion?: string;
+  schema_version?: string;
+  profile?: { id?: string; version?: string | number };
+  profileId?: string;
+  profile_id?: string;
+  profileVersion?: string | number;
+  profile_version?: string | number;
+  issuer?: string | { id: string };
+  issuerId?: string;
+  issuer_id?: string;
+  verifier?: string | { id: string };
+  verifierId?: string;
+  verifier_id?: string;
+  subject?: string | { id: string };
+  subjectId?: string;
+  subject_id?: string;
+  audience?: string | { id: string };
+  audienceId?: string;
+  audience_id?: string;
+  resource?: string;
+  evidenceDigest?: RuntimeAuthorizationEvidenceDigest | string;
+  evidence_digest?: RuntimeAuthorizationEvidenceDigest | string;
+  observedAt?: string | number | Date;
+  observed_at?: string | number | Date;
+  expiresAt?: string | number | Date;
+  expires_at?: string | number | Date;
+  authorizationScope?: string | string[];
+  authorization_scope?: string | string[];
+  policyDigest?: RuntimeAuthorizationEvidenceDigest | string;
+  policy_digest?: RuntimeAuthorizationEvidenceDigest | string;
+  evidence?: {
+    digest?: RuntimeAuthorizationEvidenceDigest | string;
+    observedAt?: string | number | Date;
+    observed_at?: string | number | Date;
+  };
+  authorization?: {
+    scope?: string | string[];
+    expiresAt?: string | number | Date;
+    expires_at?: string | number | Date;
+  };
+  policy?: { digest?: RuntimeAuthorizationEvidenceDigest | string };
+}
+
+export interface RuntimeAuthorizationEvidenceVerificationOptions {
+  now?: string | number | Date;
+  expectedProfileId?: string;
+  expectedProfileVersion?: string | number;
+  expectedIssuer?: string | { id: string };
+  expectedVerifier?: string | { id: string };
+  expectedSubject?: string | { id: string };
+  expectedAudience?: string | { id: string };
+  expectedResource?: string;
+  expectedEvidenceDigest?: RuntimeAuthorizationEvidenceDigest | string;
+  expectedPolicyDigest?: RuntimeAuthorizationEvidenceDigest | string;
+  requiredScope?: string | string[];
+  requiredScopes?: string | string[];
+  availableVerifiers?: string | string[] | Set<string> | Record<string, boolean>;
+}
+
+export type RuntimeAuthorizationEvidenceReasonCode =
+  | 'unsupported_profile'
+  | 'invalid_evidence'
+  | 'authorization_expired'
+  | 'scope_mismatch'
+  | 'verifier_unavailable';
+
+export interface RuntimeAuthorizationEvidenceVerification {
+  ok: boolean;
+  reasonCode: RuntimeAuthorizationEvidenceReasonCode | null;
+  reasonCodes: RuntimeAuthorizationEvidenceReasonCode[];
+  message: string;
+  evidence: RuntimeAuthorizationEvidence | null;
+  checks: {
+    profileSupported: boolean;
+    structurallyValid: boolean;
+    authorizationCurrent?: boolean;
+    scopeMatches?: boolean;
+    verifierAvailable?: boolean;
+  };
+  guardrails: {
+    offlineOnly: true;
+    networkRequests: false;
+    writesSolanaState: false;
+    usesKeypairs: false;
+    authorizesPayment: false;
+  };
+}
+
+export function normalizeRuntimeAuthorizationEvidence(
+  input: RuntimeAuthorizationEvidenceInput
+): RuntimeAuthorizationEvidence;
+
+export function verifyRuntimeAuthorizationEvidence(
+  input: RuntimeAuthorizationEvidenceInput,
+  options?: RuntimeAuthorizationEvidenceVerificationOptions
+): RuntimeAuthorizationEvidenceVerification;
+
 export interface X402PaymentRequirement {
   scheme?: string;
   network?: string;
