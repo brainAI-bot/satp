@@ -51,3 +51,23 @@ third-party app fixture input
 
 Any write path, signing flow, live Solana lookup, or product adapter belongs in
 a separate reviewed integration.
+
+## Interoperability verifier fixtures
+
+The `tests/conformance/fixtures/interop-verifier-v0` slice turns the latest
+issue #14 identity-continuity and publication signals into deterministic,
+offline checks:
+
+- `verifyInteropSessionIdentity` keeps the provider-authoritative stable agent
+  ID, session/execution ID, transport connection, persisted link, and outcome
+  receipt separate. Concurrent sessions for one agent remain valid, while a
+  reused session or transport identity returns `session_conflict`; an ambiguous
+  legacy record without a provider identity returns `identity_unknown`.
+- `verifyPublishedIdentityArtifact` reports `subjectBindingValid`,
+  `publicationAuthorized`, and `freshnessValid` independently. A runtime-bound
+  artifact does not authorize an unrelated publisher, and control of an HTTPS
+  origin does not make stale content current.
+
+These are compatibility fixtures derived from public protocol and bug-report
+signals. They do not claim an integration, partnership, or finalized standard,
+and they do not perform discovery, network access, signing, or writes.

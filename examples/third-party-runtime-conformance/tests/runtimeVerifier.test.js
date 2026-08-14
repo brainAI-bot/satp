@@ -11,10 +11,25 @@ const test = require('node:test');
 const tls = require('node:tls');
 const {
   createThirdPartySatpRuntime,
+  INTEROP_REASON_CODES,
+  verifyInteropSessionIdentity,
+  verifyPublishedIdentityArtifact,
   verifySatpAttestation,
   verifySatpIdentity,
   verifySatpTrustPacket,
 } = require('../src/runtimeVerifier');
+
+const INTEROP_FIXTURE_DIR = path.join(
+  __dirname,
+  '..',
+  '..',
+  '..',
+  'tests',
+  'conformance',
+  'fixtures',
+  'interop-verifier-v0'
+);
+const INTEROP_NOW = '2026-08-14T14:00:00.000Z';
 
 let networkAttempted = false;
 function blockNetwork(apiName) {
@@ -36,6 +51,10 @@ dns.resolve = blockNetwork('dns.resolve');
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function loadInteropFixture(name) {
+  return JSON.parse(fs.readFileSync(path.join(INTEROP_FIXTURE_DIR, name), 'utf8')).record;
 }
 
 function loadRuntimeBundle(runtime) {
@@ -108,6 +127,97 @@ test('third-party runtime rejects stale trust packets', () => {
   const result = verifySatpTrustPacket(rebuilt);
   assert.equal(result.ok, false);
   assert.match(result.errors.join('\n'), /stale/);
+});
+
+test('interop verifier binds stable identity, session, transport, persisted link, and receipt independently', () => {
+  const result = verifyInteropSessionIdentity(
+    loadInteropFixture('session-identity-positive.json'),
+    {
+      expectedAgentId: 'satp:agent:alpha',
+      expectedSessionId: 'execution:alpha:001',
+    }
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.checks, {
+    structurallyValid: true,
+    identityContinuityValid: true,
+    sessionBindingValid: true,
+    receiptBindingValid: true,
+    noSessionConflict: true,
+  });
+});
+
+test('interop verifier surfaces a duplicate session as an explicit conflict', () => {
+  const result = verifyInteropSessionIdentity(loadInteropFixture('session-identity-collision.json'));
+
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), new RegExp(INTEROP_REASON_CODES.SESSION_CONFLICT));
+  assert.equal(result.checks.identityContinuityValid, true);
+  assert.equal(result.checks.sessionBindingValid, true);
+  assert.equal(result.checks.noSessionConflict, false);
+});
+
+test('interop verifier fails ambiguous legacy session records closed as identity_unknown', () => {
+  const record = loadInteropFixture('session-identity-positive.json');
+  delete record.provider.agentId;
+
+  const result = verifyInteropSessionIdentity(record);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), new RegExp(INTEROP_REASON_CODES.IDENTITY_UNKNOWN));
+});
+
+test('published identity verifier separates subject binding, publication authority, and freshness', () => {
+  const result = verifyPublishedIdentityArtifact(
+    loadInteropFixture('published-identity-positive.json'),
+    { now: INTEROP_NOW }
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.checks, {
+    structurallyValid: true,
+    subjectBindingValid: true,
+    publicationAuthorized: true,
+    freshnessValid: true,
+  });
+});
+
+test('HTTPS origin control does not substitute for controller-authorized publication', () => {
+  const result = verifyPublishedIdentityArtifact(
+    loadInteropFixture('published-identity-unauthorized.json'),
+    { now: INTEROP_NOW }
+  );
+
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), new RegExp(INTEROP_REASON_CODES.PUBLICATION_UNAUTHORIZED));
+  assert.equal(result.checks.subjectBindingValid, true);
+  assert.equal(result.checks.publicationAuthorized, false);
+  assert.equal(result.checks.freshnessValid, true);
+});
+
+test('a valid subject and publisher binding cannot make an expired artifact fresh', () => {
+  const result = verifyPublishedIdentityArtifact(
+    loadInteropFixture('published-identity-stale.json'),
+    { now: INTEROP_NOW }
+  );
+
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), new RegExp(INTEROP_REASON_CODES.FRESHNESS_INVALID));
+  assert.equal(result.checks.subjectBindingValid, true);
+  assert.equal(result.checks.publicationAuthorized, true);
+  assert.equal(result.checks.freshnessValid, false);
+});
+
+test('a fresh authorized publication cannot repair an invalid subject binding', () => {
+  const record = loadInteropFixture('published-identity-positive.json');
+  record.artifact.subjectBinding.subjectId = 'satp:agent:other';
+
+  const result = verifyPublishedIdentityArtifact(record, { now: INTEROP_NOW });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), new RegExp(INTEROP_REASON_CODES.SUBJECT_BINDING_INVALID));
+  assert.equal(result.checks.subjectBindingValid, false);
+  assert.equal(result.checks.publicationAuthorized, true);
+  assert.equal(result.checks.freshnessValid, true);
 });
 
 test('third-party example stays app-agnostic and free of AgentFolio runtime imports', () => {

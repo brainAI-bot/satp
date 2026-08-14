@@ -1,0 +1,41 @@
+{
+  "id": "session-identity-collision",
+  "description": "A second active transport claims the same session identity and must fail as an explicit conflict.",
+  "expected": {
+    "verdict": "fail",
+    "reasonCode": "session_conflict"
+  },
+  "record": {
+    "schemaVersion": "satp.interopSessionIdentity.v0",
+    "subject": {
+      "agentId": "satp:agent:alpha",
+      "controllerId": "did:web:controller.example"
+    },
+    "provider": {
+      "agentId": "satp:agent:alpha"
+    },
+    "session": {
+      "sessionId": "execution:alpha:001",
+      "alias": "researcher"
+    },
+    "persistedLink": {
+      "agentId": "satp:agent:alpha",
+      "sessionId": "execution:alpha:001"
+    },
+    "outcomeReceipt": {
+      "agentId": "satp:agent:alpha",
+      "sessionId": "execution:alpha:001"
+    },
+    "transport": {
+      "connectionId": "transport:connection:001",
+      "reconnectTokenDigest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    "activePeers": [
+      {
+        "agentId": "satp:agent:alpha",
+        "sessionId": "execution:alpha:001",
+        "transportConnectionId": "transport:connection:other"
+      }
+    ]
+  }
+}
