@@ -1,0 +1,48 @@
+{
+  "id": "published-identity-stale",
+  "description": "A correctly bound and authorized artifact fails only the independent freshness check after validUntil.",
+  "expected": {
+    "verdict": "fail",
+    "reasonCode": "freshness_invalid"
+  },
+  "record": {
+    "schemaVersion": "satp.publishedIdentityArtifact.v0",
+    "subject": {
+      "agentId": "satp:agent:alpha",
+      "controllerId": "did:web:controller.example"
+    },
+    "artifact": {
+      "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "profile": {
+        "id": "w3c-ai-agent-description",
+        "version": "0.1"
+      },
+      "generatorId": "runtime:builder:7",
+      "subjectBinding": {
+        "subjectId": "satp:agent:alpha",
+        "controllerId": "did:web:controller.example",
+        "artifactDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    "publication": {
+      "origin": "https://agents.example/.well-known/agent.json",
+      "publisherId": "publisher:edge-a",
+      "observedArtifactDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "authorization": {
+        "controllerId": "did:web:controller.example",
+        "publisherId": "publisher:edge-a",
+        "artifactDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "profileVersion": "0.1",
+        "expiresAt": "2026-08-14T15:00:00.000Z"
+      }
+    },
+    "timestamps": {
+      "generatedAt": "2026-08-14T12:00:00.000Z",
+      "publishedAt": "2026-08-14T12:05:00.000Z",
+      "observedAt": "2026-08-14T12:06:00.000Z",
+      "validUntil": "2026-08-14T13:00:00.000Z"
+    },
+    "revokedAt": null,
+    "supersededBy": null
+  }
+}

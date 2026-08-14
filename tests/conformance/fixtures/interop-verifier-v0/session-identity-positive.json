@@ -1,0 +1,40 @@
+{
+  "id": "session-identity-positive",
+  "description": "Provider-authoritative stable identity stays bound to one exact session, persisted link, transport, and outcome receipt.",
+  "expected": {
+    "verdict": "pass"
+  },
+  "record": {
+    "schemaVersion": "satp.interopSessionIdentity.v0",
+    "subject": {
+      "agentId": "satp:agent:alpha",
+      "controllerId": "did:web:controller.example"
+    },
+    "provider": {
+      "agentId": "satp:agent:alpha"
+    },
+    "session": {
+      "sessionId": "execution:alpha:001",
+      "alias": "researcher"
+    },
+    "persistedLink": {
+      "agentId": "satp:agent:alpha",
+      "sessionId": "execution:alpha:001"
+    },
+    "outcomeReceipt": {
+      "agentId": "satp:agent:alpha",
+      "sessionId": "execution:alpha:001"
+    },
+    "transport": {
+      "connectionId": "transport:connection:001",
+      "reconnectTokenDigest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    "activePeers": [
+      {
+        "agentId": "satp:agent:alpha",
+        "sessionId": "execution:alpha:002",
+        "transportConnectionId": "transport:connection:002"
+      }
+    ]
+  }
+}
