@@ -800,6 +800,7 @@ const {
   evaluateRuntimePolicy,
 } = require('./runtime-policy-adapter');
 const walletControlChallenge = require('./wallet-control-challenge');
+const runtimeAuthorizationEvidence = require('./runtime-authorization-evidence');
 const x402Discovery = require('./x402-discovery');
 const signerPolicy = require('./signer-policy');
 
@@ -896,6 +897,12 @@ module.exports = {
   hashWalletControlChallenge: walletControlChallenge.hashWalletControlChallenge,
   deriveWalletControlChallengePdas: walletControlChallenge.deriveWalletControlChallengePdas,
   verifyWalletControlChallengeSignature: walletControlChallenge.verifyWalletControlChallengeSignature,
+  RUNTIME_AUTHORIZATION_EVIDENCE_SCHEMA_VERSION: runtimeAuthorizationEvidence.RUNTIME_AUTHORIZATION_EVIDENCE_SCHEMA_VERSION,
+  RUNTIME_AUTHORIZATION_EVIDENCE_PROFILE_ID: runtimeAuthorizationEvidence.RUNTIME_AUTHORIZATION_EVIDENCE_PROFILE_ID,
+  RUNTIME_AUTHORIZATION_EVIDENCE_PROFILE_VERSION: runtimeAuthorizationEvidence.RUNTIME_AUTHORIZATION_EVIDENCE_PROFILE_VERSION,
+  RUNTIME_AUTHORIZATION_EVIDENCE_REASON_CODES: runtimeAuthorizationEvidence.RUNTIME_AUTHORIZATION_EVIDENCE_REASON_CODES,
+  normalizeRuntimeAuthorizationEvidence: runtimeAuthorizationEvidence.normalizeRuntimeAuthorizationEvidence,
+  verifyRuntimeAuthorizationEvidence: runtimeAuthorizationEvidence.verifyRuntimeAuthorizationEvidence,
   X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION: x402Discovery.X402_PAYMENT_IS_NOT_ACTION_AUTHORIZATION,
   X402_DISCOVERY_SCHEMA_VERSION: x402Discovery.X402_DISCOVERY_SCHEMA_VERSION,
   RUNTIME_POLICY_ACTION_DESCRIPTOR_SCHEMA_VERSION: x402Discovery.RUNTIME_POLICY_ACTION_DESCRIPTOR_SCHEMA_VERSION,

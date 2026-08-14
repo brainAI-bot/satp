@@ -13,6 +13,10 @@
       "types": "./src/index.d.ts",
       "default": "./src/wallet-control-challenge.js"
     },
+    "./runtime-authorization-evidence": {
+      "types": "./src/index.d.ts",
+      "default": "./src/runtime-authorization-evidence.js"
+    },
     "./x402-discovery": {
       "types": "./src/index.d.ts",
       "default": "./src/x402-discovery.js"
@@ -29,6 +33,7 @@
     "check:package-health": "node ../../scripts/check-satp-client-package-health.js",
     "test": "node test.js",
     "test:runtime-policy": "node --test test-runtime-policy-adapter.js",
+    "test:runtime-authorization-evidence": "node --test test-runtime-authorization-evidence.js",
     "runtime-policy:example": "node examples/runtime-policy-adapter.js",
     "test:wallet-control": "node test-wallet-control-challenge.js",
     "test:x402-discovery": "node test-x402-discovery.js",

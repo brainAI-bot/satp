@@ -21,6 +21,8 @@ const requiredExports = [
   'prepareIdentityAttestationRequest',
   'buildSatpTrustPacket',
   'validateSatpTrustPacket',
+  'normalizeRuntimeAuthorizationEvidence',
+  'verifyRuntimeAuthorizationEvidence',
   'createRuntimePolicyAdapter',
   'evaluateRuntimePolicy',
   'buildRuntimePolicyActionDescriptor',
@@ -146,6 +148,7 @@ if (actionDescriptor[1].includes('requiresApproval')) {
 
 const walletControlChallenge = require('@brainai/satp-client/wallet-control-challenge');
 const x402Discovery = require('@brainai/satp-client/x402-discovery');
+const runtimeAuthorizationEvidence = require('@brainai/satp-client/runtime-authorization-evidence');
 for (const key of [
   'buildWalletControlChallenge',
   'canonicalWalletControlChallenge',
@@ -158,6 +161,18 @@ for (const key of [
   }
   if (typeof walletControlChallenge[key] !== 'function') {
     throw new Error(`SATP wallet-control subpath export ${key} is not a function`);
+  }
+}
+
+for (const key of [
+  'normalizeRuntimeAuthorizationEvidence',
+  'verifyRuntimeAuthorizationEvidence',
+]) {
+  if (typeof satp[key] !== 'function') {
+    throw new Error(`SATP root export ${key} is not a function`);
+  }
+  if (typeof runtimeAuthorizationEvidence[key] !== 'function') {
+    throw new Error(`SATP runtime-authorization-evidence subpath export ${key} is not a function`);
   }
 }
 

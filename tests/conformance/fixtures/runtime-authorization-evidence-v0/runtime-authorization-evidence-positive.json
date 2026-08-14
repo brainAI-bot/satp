@@ -1,0 +1,30 @@
+{
+  "schema_version": "satp.runtimeAuthorizationEvidence.v0",
+  "profile": {
+    "id": "satp.runtimeAuthorizationEvidence",
+    "version": "0"
+  },
+  "issuer": "did:web:issuer.example",
+  "verifier_id": "offline-verifier:primary",
+  "subject_id": "satp:agent:brainchain-demo",
+  "audience": "runtime:mcp-host",
+  "resource": "mcp://tools/reputation.read",
+  "evidence": {
+    "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "observed_at": "2026-08-14T10:00:00.000Z"
+  },
+  "authorization": {
+    "scope": [
+      "reputation:read",
+      "evidence:read",
+      "reputation:read"
+    ],
+    "expires_at": "2026-08-14T11:00:00.000Z"
+  },
+  "policy": {
+    "digest": {
+      "algorithm": "sha256",
+      "value": "2222222222222222222222222222222222222222222222222222222222222222"
+    }
+  }
+}
