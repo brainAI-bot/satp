@@ -223,6 +223,18 @@ Both SATP packed-consumer smokes model that application-owned override and run
 `npm audit --omit=dev --audit-level=moderate`, so CI fails if the clean
 production dependency tree regresses to the affected `uuid` range.
 
+CI also installs the packed client without an override and confirms that the
+only production findings are the four known entries for this advisory path:
+
+```bash
+npm run check:satp-client-uuid-advisory
+```
+
+That monitor fails if the advisory disappears, its fix status changes, the
+resolved `uuid` version moves away from `8.3.2`, or any other production
+advisory appears. A disappearance is a review trigger to remove the temporary
+override and update issue #134, not a reason to keep the override indefinitely.
+
 ## Offline identity attestation request helper
 
 Consumers can prepare deterministic identity-attestation request metadata
