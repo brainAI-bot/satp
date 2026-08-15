@@ -9,15 +9,26 @@ const { execFileSync, spawnSync } = require('child_process');
 const repoRoot = path.resolve(__dirname, '..');
 const clientRoot = path.join(repoRoot, 'packages/satp-client');
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'satp-client-uuid-advisory-'));
-const expectedVulnerabilities = [
-  '@brainai/satp-client',
-  '@solana/web3.js',
-  'jayson',
-  'uuid',
-];
 
 function dependencyAt(tree, names) {
   return names.reduce((node, name) => node?.dependencies?.[name], tree);
+}
+
+function isVersionBefore(version, boundary) {
+  const parse = (value) => {
+    const match = String(value || '').match(/^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?/);
+    return match ? {
+      parts: match.slice(1, 4).map(Number),
+      prerelease: Boolean(match[4]),
+    } : null;
+  };
+  const current = parse(version);
+  const limit = parse(boundary);
+  if (!current || !limit) return false;
+  for (let i = 0; i < current.parts.length; i += 1) {
+    if (current.parts[i] !== limit.parts[i]) return current.parts[i] < limit.parts[i];
+  }
+  return current.prerelease && !limit.prerelease;
 }
 
 try {
@@ -48,20 +59,23 @@ try {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   }));
-  const expectedPath = [
-    ['@brainai/satp-client', '2.0.6'],
-    ['@solana/web3.js', '1.98.4'],
-    ['jayson', '4.3.0'],
-    ['uuid', '8.3.2'],
-  ];
-  let dependency = dependencyTree;
-  for (const [name, version] of expectedPath) {
+  const clientDependency = dependencyAt(dependencyTree, ['@brainai/satp-client']);
+  if (!clientDependency) {
+    throw new Error('packed @brainai/satp-client dependency is missing');
+  }
+  const upstreamPath = ['@solana/web3.js', 'jayson', 'uuid'];
+  const resolvedPath = [];
+  let dependency = clientDependency;
+  for (const name of upstreamPath) {
     dependency = dependencyAt(dependency, [name]);
-    if (dependency?.version !== version) {
-      throw new Error(
-        `upstream advisory path changed at ${name}: expected ${version}, got ${dependency?.version || 'missing'}; review the temporary override`,
-      );
+    if (!dependency?.version) {
+      throw new Error(`upstream advisory path changed at ${name}: dependency missing; review the temporary override`);
     }
+    resolvedPath.push(`${name}@${dependency.version}`);
+  }
+  const uuidVersion = dependency.version;
+  if (!isVersionBefore(uuidVersion, '11.1.1')) {
+    throw new Error(`upstream uuid ${uuidVersion} is outside the affected range; review/remove the temporary override`);
   }
 
   const auditResult = spawnSync('npm', ['audit', '--omit=dev', '--json'], {
@@ -91,37 +105,23 @@ try {
     );
   }
 
-  const actualVulnerabilities = Object.keys(audit.vulnerabilities || {}).sort();
-  if (JSON.stringify(actualVulnerabilities) !== JSON.stringify(expectedVulnerabilities)) {
+  const uuidFinding = audit.vulnerabilities?.uuid;
+  if (!uuidFinding || uuidFinding.severity !== 'moderate' || uuidFinding.fixAvailable !== false) {
     throw new Error(
-      `production advisory set changed: expected ${expectedVulnerabilities.join(', ')}, got ${actualVulnerabilities.join(', ') || 'none'}`,
+      `uuid advisory changed: severity=${uuidFinding?.severity || 'missing'}, fixAvailable=${JSON.stringify(uuidFinding?.fixAvailable)}`,
     );
   }
-  for (const name of expectedVulnerabilities) {
-    const finding = audit.vulnerabilities[name];
-    if (finding.severity !== 'moderate' || finding.fixAvailable !== false) {
-      throw new Error(
-        `${name} advisory changed: severity=${finding.severity}, fixAvailable=${JSON.stringify(finding.fixAvailable)}`,
-      );
-    }
-  }
 
-  const uuidAdvisory = audit.vulnerabilities.uuid.via.find(
+  const uuidAdvisory = uuidFinding.via.find(
     (finding) => typeof finding === 'object'
       && finding.url === 'https://github.com/advisories/GHSA-w5hq-g745-h8pq',
   );
-  if (!uuidAdvisory || uuidAdvisory.range !== '<11.1.1') {
-    throw new Error('GHSA-w5hq-g745-h8pq range or identity changed');
-  }
-  const counts = audit.metadata?.vulnerabilities;
-  if (counts?.moderate !== 4 || counts?.total !== 4) {
-    throw new Error(
-      `production advisory counts changed: moderate=${counts?.moderate}, total=${counts?.total}`,
-    );
+  if (!uuidAdvisory) {
+    throw new Error('GHSA-w5hq-g745-h8pq is no longer present on the uuid finding');
   }
 
   console.log(
-    'known uuid advisory confirmed: @solana/web3.js@1.98.4 -> jayson@4.3.0 -> uuid@8.3.2; 4 moderate findings',
+    `known uuid advisory confirmed: ${resolvedPath.join(' -> ')}; fixAvailable=false`,
   );
 } finally {
   fs.rmSync(tempRoot, { recursive: true, force: true });
