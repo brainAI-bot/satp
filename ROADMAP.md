@@ -69,9 +69,11 @@ conformance, security, release, and mainnet authority gates remain open.
 - Security and key-management policy defines authority inventory rules, storage
   classes, signer boundaries, and forbidden secret handling. [shipped]
 - Committed IDLs exist for identity registry, attestations, reputation,
-  validation, reviews, and escrow; escrow IDL was atomically deflated from
-  shipped while pinned to dead UpJ7 and re-shipped after regenerating from
-  deployed HXCU. [shipped]
+  validation, reviews, and escrow. `idls/v3/escrow_v3.json` is generated from
+  `programs/escrow_v3` source and contains 14 instructions; canonical mainnet
+  program `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` has a deployed IDL
+  account (`D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn`) with 9 instructions
+  and no token surface, so the source-derived and deployed IDLs differ. [shipped]
 - Repository documentation must stay app-agnostic and avoid treating AgentFolio
   product logic as SATP core. [#6777112a] [shipped]
 - Apache-2.0 LICENSE file present at repo root with package.json license set to
