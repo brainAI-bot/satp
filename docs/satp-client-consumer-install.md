@@ -223,6 +223,21 @@ Both SATP packed-consumer smokes model that application-owned override and run
 `npm audit --omit=dev --audit-level=moderate`, so CI fails if the clean
 production dependency tree regresses to the affected `uuid` range.
 
+The network-enabled CI path also installs the packed client without an override
+and confirms that the target advisory remains on the affected upstream path:
+
+```bash
+npm run check:satp-client-uuid-advisory
+```
+
+That monitor fails if `GHSA-w5hq-g745-h8pq` disappears, becomes fixable, or the
+`@solana/web3.js -> jayson -> uuid` path no longer resolves to an affected
+`uuid` version. It ignores unrelated advisories and does not pin the local
+SATP client version. Registry-dependent packed-consumer and advisory checks are
+excluded from `ci:offline` and `ci:offline-with-examples`. A disappearance is a
+review trigger to remove the temporary override and update issue #134, not a
+reason to keep the override indefinitely.
+
 ## Offline identity attestation request helper
 
 Consumers can prepare deterministic identity-attestation request metadata
