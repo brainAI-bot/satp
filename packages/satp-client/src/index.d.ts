@@ -46,6 +46,22 @@ export interface IdentityAttestationRequest {
   requestHash: string;
 }
 
+export interface IdentityAttestationRequestVerificationOptions {
+  expectedSubjectWallet?: PublicKey | string;
+  expectedAgentId?: string;
+  expectedClaimType?: string;
+  expectedMetadataHash?: string;
+  expectedAttester?: PublicKey | string;
+  expectedNetwork?: Network;
+  expectedExpiresAt?: number | null;
+}
+
+export interface IdentityAttestationRequestVerification {
+  ok: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
 export interface SatpTrustPacket {
   schemaVersion: 'satp.trustPacket.v1';
   packetType: 'satp-trust-packet';
@@ -808,6 +824,11 @@ export {
 export function prepareIdentityAttestationRequest(
   opts: IdentityAttestationRequestOptions
 ): IdentityAttestationRequest;
+
+export function verifyIdentityAttestationRequest(
+  request: IdentityAttestationRequest | Record<string, unknown> | null | undefined,
+  expectations?: IdentityAttestationRequestVerificationOptions
+): IdentityAttestationRequestVerification;
 
 export const TRUST_PACKET_SCHEMA_VERSION: 'satp.trustPacket.v1';
 

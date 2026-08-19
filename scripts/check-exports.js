@@ -19,6 +19,7 @@ const requiredExports = [
   'hashAgentId',
   'getGenesisPDA',
   'prepareIdentityAttestationRequest',
+  'verifyIdentityAttestationRequest',
   'buildSatpTrustPacket',
   'validateSatpTrustPacket',
   'normalizeRuntimeAuthorizationEvidence',
@@ -56,6 +57,14 @@ const request = satp.prepareIdentityAttestationRequest({
 });
 if (request.signingRequired !== false || request.instructions.length !== 0 || request.transaction !== null) {
   throw new Error('prepareIdentityAttestationRequest did not return unsigned offline metadata');
+}
+const requestVerification = satp.verifyIdentityAttestationRequest(request, {
+  expectedSubjectWallet: request.subjectWallet,
+  expectedClaimType: request.claimType,
+  expectedNetwork: request.network,
+});
+if (!requestVerification.ok || requestVerification.warnings.length !== 0) {
+  throw new Error('verifyIdentityAttestationRequest did not validate prepared offline metadata');
 }
 
 const packet = satp.buildSatpTrustPacket({

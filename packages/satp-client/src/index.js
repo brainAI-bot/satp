@@ -782,7 +782,10 @@ class SATPSDK {
 const v3sdk = require('./v3-sdk');
 const v3pda = require('./v3-pda');
 const v3Borsh = require('./borsh-reader');
-const { prepareIdentityAttestationRequest } = require('./attestation-request');
+const {
+  prepareIdentityAttestationRequest,
+  verifyIdentityAttestationRequest,
+} = require('./attestation-request');
 const {
   TRUST_PACKET_SCHEMA_VERSION,
   buildSatpTrustPacket,
@@ -885,6 +888,7 @@ module.exports = {
   getV3EscrowVaultATA: v3pda.getV3EscrowVaultATA,
   deriveReviewAttestationPda: getReviewAttestationPDA,
   prepareIdentityAttestationRequest,
+  verifyIdentityAttestationRequest,
   TRUST_PACKET_SCHEMA_VERSION,
   buildSatpTrustPacket,
   validateSatpTrustPacket,

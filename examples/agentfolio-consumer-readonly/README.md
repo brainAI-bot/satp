@@ -2,7 +2,7 @@
 
 This example shows how an AgentFolio-style consumer can prepare SATP identity and trust inputs from app-owned profile data without owning SATP protocol logic.
 
-It uses the SATP client package helpers `buildSatpTrustPacket` and `validateSatpTrustPacket` to derive deterministic read-only SATP trust packets with unsigned identity-attestation request metadata. The output is suitable for:
+It uses the SATP client package helpers `buildSatpTrustPacket`, `validateSatpTrustPacket`, and `verifyIdentityAttestationRequest` to derive and verify deterministic read-only SATP trust packets with unsigned identity-attestation request metadata. The verifier replaces consumer-owned request-hash, program-ID, and PDA checks with one package-root API. The output is suitable for:
 
 - an AgentFolio adapter that wants to display or queue SATP trust inputs while staying consumer-only;
 - an MCP tool that returns prepared SATP records from fixture or read-only data;
@@ -45,6 +45,7 @@ AgentFolio owns product profile data and display. SATP owns program IDs, PDA der
 AgentFolio fixture profile
   -> consumer adapter
   -> SATP buildSatpTrustPacket
+  -> SATP verifyIdentityAttestationRequest
   -> read-only trust packet for display, review, MCP, or x402-gated read access
 ```
 

@@ -5,7 +5,8 @@ const { PublicKey } = require('@solana/web3.js');
 const {
   buildSatpTrustPacket,
   validateSatpTrustPacket,
-} = require('../../../packages/satp-client/src');
+  verifyIdentityAttestationRequest,
+} = require('../../..');
 
 const DEFAULT_NETWORK = 'devnet';
 const DEFAULT_ATTESTER = '11111111111111111111111111111111';
@@ -164,6 +165,19 @@ function verifyAgentFolioSatpConsumerRecord(record) {
         }
       }
 
+      const requestVerification = verifyIdentityAttestationRequest(input.request, {
+        expectedSubjectWallet: record.satp.subjectWallet,
+        expectedAgentId: record.satp.agentId,
+        expectedClaimType: input.claimType,
+        expectedMetadataHash: input.metadataHash,
+        expectedAttester: input.request.attester,
+        expectedNetwork: record.network,
+        expectedExpiresAt: input.request.expiresAt,
+      });
+      if (!requestVerification.ok) {
+        errors.push('trustInputs[' + index + '].request invalid: ' + requestVerification.errors.join('; '));
+      }
+
       const expectedTrustPacket = buildSatpTrustPacket({
         subjectWallet: record.satp.subjectWallet,
         agentId: record.satp.agentId,
@@ -173,32 +187,10 @@ function verifyAgentFolioSatpConsumerRecord(record) {
         attester: input.request.attester,
         expiresAt: input.request.expiresAt,
       });
-      const expectedRequest = expectedTrustPacket.request;
-
-      const expectedFields = [
-        'requestHash',
-        'attestationPda',
-        'programs',
-        'subjectWallet',
-        'agentId',
-        'metadataHash',
-        'signingRequired',
-        'unsigned',
-      ];
-
-      for (const field of expectedFields) {
-        if (!sameJsonValue(input.request[field], expectedRequest[field])) {
-          errors.push('trustInputs[' + index + '].request.' + field + ' does not match derived request');
-        }
-      }
-
       if (input.trustPacket && !sameJsonValue(input.trustPacket, expectedTrustPacket)) {
         errors.push('trustInputs[' + index + '].trustPacket does not match derived trust packet');
       }
 
-      if (input.request.transaction !== null || !Array.isArray(input.request.instructions) || input.request.instructions.length !== 0) {
-        errors.push('trustInputs[' + index + '].request must not include a transaction or instructions');
-      }
     }
   }
 

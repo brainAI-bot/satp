@@ -182,6 +182,39 @@ if (!validation.ok) throw new Error(validation.errors.join('; '));
 re-derives the expected packet so tampered PDA, program, request, or hash fields
 surface as explicit errors.
 
+`verifyIdentityAttestationRequest(request, expectations)` validates a standalone
+unsigned request before a consumer stores or displays it. It recomputes the
+canonical request hash, program IDs, agent ID hash, Genesis PDA, and attestation
+PDA, and enforces the no-sign/no-transaction request shape. Optional expectations
+bind the request to host-owned inputs without requiring RPC or a signer:
+
+```javascript
+const {
+  prepareIdentityAttestationRequest,
+  verifyIdentityAttestationRequest,
+} = require('@brainai/satp-client');
+
+const request = prepareIdentityAttestationRequest({
+  subjectWallet: '11111111111111111111111111111111',
+  agentId: 'brainChain',
+  claimType: 'identity',
+  metadataHash: '93d122f8879fe87c186c10a00db8fbc80a73cecd2ede44b9ffa6410be3c2b805',
+  network: 'devnet',
+});
+
+const verification = verifyIdentityAttestationRequest(request, {
+  expectedSubjectWallet: '11111111111111111111111111111111',
+  expectedAgentId: 'brainChain',
+  expectedClaimType: 'identity',
+  expectedNetwork: 'devnet',
+});
+
+if (!verification.ok) throw new Error(verification.errors.join('; '));
+```
+
+The result shape is `{ ok, errors, warnings }`. Verification is local and
+read-only; it does not prove that an attester signed or submitted anything.
+
 ### x402 Discovery Evidence Lookup Helpers
 
 `parseX402DiscoveryMetadata(input)`, `buildX402EvidenceLookup(input, opts)`,
