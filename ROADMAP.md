@@ -103,6 +103,10 @@ conformance, security, release, and mainnet authority gates remain open.
   entrypoints and tests before they are described as install-ready. [#bd0618ef] [shipped]
 - Release-candidate package metadata must be reconciled with stable npm latest
   before any promotion decision. [#7ae6b71d] [shipped]
+- Issue #14 runtime SDK ergonomics slice: offline identity-attestation request
+  verification and repo-owned AgentFolio reference-consumer adoption landed in
+  PR #147 at merge commit `240dba99dc4e555e9dd221d93f76f2726bd8159e`.
+  [#14] [shipped]
 
 ## Phase 3 - Runtime examples and conformance
 
