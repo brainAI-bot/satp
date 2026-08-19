@@ -1,7 +1,16 @@
+#![allow(unexpected_cfgs)]
+
+#[cfg(all(feature = "devnet", feature = "mainnet"))]
+compile_error!("enable at most one source identity feature");
+
 use anchor_lang::prelude::*;
 use solana_sha256_hasher::hash;
 
+#[cfg(feature = "devnet")]
 declare_id!("3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk");
+
+#[cfg(not(feature = "devnet"))]
+declare_id!("r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4");
 
 /// Compute SHA-256 hash of agent_id for PDA seeds (matches identity_v3).
 pub fn agent_id_hash(agent_id: &str) -> [u8; 32] {

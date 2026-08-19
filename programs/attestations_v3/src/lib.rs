@@ -1,3 +1,8 @@
+#![allow(unexpected_cfgs)]
+
+#[cfg(all(feature = "devnet", feature = "mainnet"))]
+compile_error!("enable at most one source identity feature");
+
 use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
 use solana_sha256_hasher::hash;
@@ -7,7 +12,11 @@ declare_program!(identity_v3);
 use identity_v3::program::IdentityV3;
 use identity_v3::accounts::GenesisRecord;
 
+#[cfg(feature = "devnet")]
 declare_id!("55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw");
+
+#[cfg(not(feature = "devnet"))]
+declare_id!("6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD");
 
 const MAX_ATTESTATIONS_PER_CALL: usize = 20;
 

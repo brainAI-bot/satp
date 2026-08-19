@@ -1,7 +1,9 @@
 # identity_v3 — SATP Identity Registry
 
-**Program ID:** `GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG`
-**Network:** Solana Mainnet
+**Mainnet program ID:** `GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG`
+**Devnet program ID:** `7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ`
+**declare_id:** cfg-gated (default = mainnet; `feature = "devnet"` = devnet)
+**Network:** Solana Mainnet (default build) / Devnet (`--features devnet`)
 **Framework:** Anchor v0.30+
 **Last Deploy:** 2026-03-31 (hardened build — admin backdoors removed)
 
@@ -28,7 +30,8 @@ Think of it as an on-chain passport for AI agents.
 
 | Program | ID | Role |
 |---------|-----|------|
-| **identity_v3** | `GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG` | Identity registry (this program) |
+| **identity_v3** (mainnet) | `GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG` | Identity registry (this program) |
+| **identity_v3** (devnet) | `7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ` | Identity registry (devnet) |
 | **reputation_v3** | `2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ` | Reputation scoring (CPI caller) |
 | **validation_v3** | `6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV` | Verification levels (CPI caller) |
 

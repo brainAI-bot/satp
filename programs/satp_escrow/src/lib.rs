@@ -1,6 +1,9 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::{program::invoke, system_instruction};
 
+// LEGACY V2 only. Not SATP V3 escrow.
+// V3 escrow is programs/escrow_v3 (HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C mainnet / B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg devnet).
+// This declare_id is the historical V2 program UpJ7jmUzHkQ7EdBKiBv3zq8Dr1fVh6GVWKa7nYtwQ22. Do not retarget to V3.
 declare_id!("UpJ7jmUzHkQ7EdBKiBv3zq8Dr1fVh6GVWKa7nYtwQ22");
 
 #[program]
