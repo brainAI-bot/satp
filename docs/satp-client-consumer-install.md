@@ -187,7 +187,7 @@ The repo also carries a repeatable clean-consumer smoke:
 npm run smoke:consumer-install
 ```
 
-## Temporary consumer override for monitored uuid audit
+## Consumer override for the uuid audit remediation
 
 An install in a clean consumer without a root override reports a moderate
 advisory chain through `@solana/web3.js -> jayson -> uuid` for
@@ -196,8 +196,8 @@ The affected `uuid` range is `<11.1.1`; the upstream dependency path is owned
 by `@solana/web3.js` and `jayson`, so SATP should not publish a package, tag, or
 release only to force this transitive fix.
 
-SATP's release-candidate branch pins the same transitive path with an npm
-override at the repository root and in `packages/satp-client/package.json`:
+The SATP source tree pins the same transitive path with an npm override at the
+repository root and in `packages/satp-client/package.json`:
 
 ```json
 {
@@ -214,29 +214,32 @@ so the override intentionally steps outside that transitive dependency range.
 Keep it until `@solana/web3.js` or `jayson` ships an upstream range that
 resolves the audit chain without an application lockfile override.
 
-AgentFolio and other package consumers should not rely on a dependency package's
-own override to protect their final install tree. Consumer applications that
-need this mitigation should carry the same root override or lockfile resolution
-until the upstream dependency chain is fixed.
+AgentFolio and other package consumers must not rely on a dependency package's
+own override to protect their final install tree: npm only applies overrides
+from the root consumer package. Consumer applications should carry the same
+root override or an equivalent lockfile resolution until the upstream
+dependency chain is fixed. `npm run check:satp-client-uuid-advisory` packs the
+client, installs it in a clean temporary root with this consumer override, and
+requires both `uuid >=11.1.1` and a zero-vulnerability production audit.
 
 Both SATP packed-consumer smokes model that application-owned override and run
 `npm audit --omit=dev --audit-level=moderate`, so CI fails if the clean
 production dependency tree regresses to the affected `uuid` range.
 
-The network-enabled CI path also installs the packed client without an override
-and confirms that the target advisory remains on the affected upstream path:
+The network-enabled CI path additionally inspects the exact packed-client
+dependency path after applying the consumer override:
 
 ```bash
 npm run check:satp-client-uuid-advisory
 ```
 
-That monitor fails if `GHSA-w5hq-g745-h8pq` disappears, becomes fixable, or the
-`@solana/web3.js -> jayson -> uuid` path no longer resolves to an affected
-`uuid` version. It ignores unrelated advisories and does not pin the local
-SATP client version. Registry-dependent packed-consumer and advisory checks are
-excluded from `ci:offline` and `ci:offline-with-examples`. A disappearance is a
-review trigger to remove the temporary override and update issue #134, not a
-reason to keep the override indefinitely.
+That check fails if `@solana/web3.js -> jayson -> uuid` resolves below `11.1.1`,
+if `GHSA-w5hq-g745-h8pq` remains in the audited tree, or if any production
+vulnerability is reported. It does not pin the local SATP client version.
+Registry-dependent packed-consumer and advisory checks are excluded from
+`ci:offline` and `ci:offline-with-examples`. Upstream dependency updates should
+still trigger review of the temporary override and issue #134 so the override
+is removed when it is no longer necessary.
 
 ## Offline identity attestation request helper
 
