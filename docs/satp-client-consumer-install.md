@@ -187,17 +187,18 @@ The repo also carries a repeatable clean-consumer smoke:
 npm run smoke:consumer-install
 ```
 
-## Temporary consumer override for monitored uuid audit
+## Source remediation candidate for the uuid advisory
 
-An install in a clean consumer without a root override reports a moderate
-advisory chain through `@solana/web3.js -> jayson -> uuid` for
+The currently published stable package in a clean consumer without a root
+override reports a moderate advisory chain through
+`@solana/web3.js -> jayson -> uuid` for
 [`GHSA-w5hq-g745-h8pq`](https://github.com/advisories/GHSA-w5hq-g745-h8pq).
 The affected `uuid` range is `<11.1.1`; the upstream dependency path is owned
-by `@solana/web3.js` and `jayson`, so SATP should not publish a package, tag, or
-release only to force this transitive fix.
+by `@solana/web3.js` and `jayson`. Publishing remains a separate, explicitly
+authorized release action; this source remediation does not publish anything.
 
-SATP's release-candidate branch pins the same transitive path with an npm
-override at the repository root and in `packages/satp-client/package.json`:
+The SATP source tree pins the same transitive path with an npm override at the
+repository root and in `packages/satp-client/package.json`:
 
 ```json
 {
@@ -209,34 +210,35 @@ override at the repository root and in `packages/satp-client/package.json`:
 }
 ```
 
-This is a monitored semver override: `jayson@4.3.0` declares `uuid@^8.3.2`,
-so the override intentionally steps outside that transitive dependency range.
-Keep it until `@solana/web3.js` or `jayson` ships an upstream range that
-resolves the audit chain without an application lockfile override.
+An npm override in a dependency package is not inherited by its consumers.
+Until upstream widens the `jayson` uuid range, the release-candidate package
+therefore bundles `@solana/web3.js` and the lockfile-resolved production tree.
+That keeps Web3's `jayson -> uuid` resolution inside the reviewed SATP client
+artifact at `uuid >=11.1.1`; a clean consumer does not need its own override.
+This is a temporary packaging safety fence, not an upstream fix. It increases
+the tarball size and must be removed when Web3/jayson resolves a safe uuid
+version natively.
 
-AgentFolio and other package consumers should not rely on a dependency package's
-own override to protect their final install tree. Consumer applications that
-need this mitigation should carry the same root override or lockfile resolution
-until the upstream dependency chain is fixed.
-
-Both SATP packed-consumer smokes model that application-owned override and run
+The packed-client smoke installs the candidate tarball into a temporary clean
+consumer with no overrides and runs
 `npm audit --omit=dev --audit-level=moderate`, so CI fails if the clean
 production dependency tree regresses to the affected `uuid` range.
 
-The network-enabled CI path also installs the packed client without an override
-and confirms that the target advisory remains on the affected upstream path:
+The network-enabled CI path additionally inspects the exact packed-client
+dependency path without a consumer override:
 
 ```bash
 npm run check:satp-client-uuid-advisory
 ```
 
-That monitor fails if `GHSA-w5hq-g745-h8pq` disappears, becomes fixable, or the
-`@solana/web3.js -> jayson -> uuid` path no longer resolves to an affected
-`uuid` version. It ignores unrelated advisories and does not pin the local
-SATP client version. Registry-dependent packed-consumer and advisory checks are
-excluded from `ci:offline` and `ci:offline-with-examples`. A disappearance is a
-review trigger to remove the temporary override and update issue #134, not a
-reason to keep the override indefinitely.
+That check fails if the bundled `@solana/web3.js -> jayson -> uuid` path
+resolves below `11.1.1`,
+if `GHSA-w5hq-g745-h8pq` remains in the audited tree, or if any production
+vulnerability is reported. It does not pin the local SATP client version.
+Registry-dependent packed-consumer and advisory checks are excluded from
+`ci:offline` and `ci:offline-with-examples`. Upstream dependency updates should
+still trigger review of the temporary bundle, the repository override, and
+issue #134 so both temporary controls are removed when no longer necessary.
 
 ## Offline identity attestation request helper
 
