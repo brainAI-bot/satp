@@ -108,7 +108,9 @@ Read-only mainnet ProgramData evidence may identify a current public upgrade
 authority address, but it does not prove private-key custody, storage class, or
 approval to use that key. TASK-bf93ea44 read-only evidence reports
 `CSyppbZuGJ4syJcNgyFFhCc3qgbWNWJyL2Y195MNS6J7` as the public ProgramData
-upgrade authority for the configured six V3 mainnet program IDs. The same
+upgrade authority for the configured six V3 mainnet program IDs. That CSyppb address is stale as of the 2026-08-19 re-verify: live ProgramData
+upgrade authority on escrow `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` and identity `GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG`
+is `Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc`. Do not treat CSyppb as current live authority. The same
 read-only evidence reports
 `8N3WfudPvGtJT775SSt5qxE24vFEAaCHzepMyfnNSA2g` and
 `Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc` as system-owned non-executable

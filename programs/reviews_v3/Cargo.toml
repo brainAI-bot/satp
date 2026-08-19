@@ -8,6 +8,8 @@ edition = "2021"
 crate-type = ["cdylib", "lib"]
 
 [features]
+devnet = []
+mainnet = []
 no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
