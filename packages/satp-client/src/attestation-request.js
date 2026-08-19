@@ -144,6 +144,182 @@ function prepareIdentityAttestationRequest(opts = {}) {
   };
 }
 
+function appendMismatch(errors, field, actual, expected) {
+  try {
+    if (canonicalStringify(actual) !== canonicalStringify(expected)) {
+      errors.push(`${field} does not match the value derived from public inputs`);
+    }
+  } catch (err) {
+    errors.push(`${field} must be canonical JSON-compatible data`);
+  }
+}
+
+function appendExpectation(errors, field, actual, expected, normalize) {
+  if (expected === undefined) return;
+
+  try {
+    const normalizedExpected = normalize ? normalize(expected) : expected;
+    if (actual !== normalizedExpected) {
+      errors.push(`${field} does not match the expected value`);
+    }
+  } catch (err) {
+    errors.push(`expected ${field}: ${err.message}`);
+  }
+}
+
+/**
+ * Verify an offline identity-attestation request from public inputs only.
+ *
+ * The verifier recomputes the canonical request hash, program IDs, agent hash,
+ * and PDAs. It never connects to RPC, reads credentials, builds a transaction,
+ * signs, sends, or mutates chain state.
+ *
+ * @param {object} request
+ * @param {object} [expectations]
+ * @returns {{ok: boolean, errors: string[], warnings: string[]}}
+ */
+function verifyIdentityAttestationRequest(request, expectations = {}) {
+  const errors = [];
+  const warnings = [];
+
+  if (!request || typeof request !== 'object' || Array.isArray(request)) {
+    return { ok: false, errors: ['request must be an object'], warnings };
+  }
+  if (!expectations || typeof expectations !== 'object' || Array.isArray(expectations)) {
+    return { ok: false, errors: ['expectations must be an object'], warnings };
+  }
+
+  if (request.schemaVersion !== REQUEST_SCHEMA_VERSION) {
+    errors.push(`schemaVersion must be ${REQUEST_SCHEMA_VERSION}`);
+  }
+  if (request.requestType !== 'identity-attestation') {
+    errors.push('requestType must be identity-attestation');
+  }
+  if (request.mode !== 'unsigned-readonly-request') {
+    errors.push('mode must be unsigned-readonly-request');
+  }
+  if (request.signingRequired !== false) {
+    errors.push('signingRequired must be false');
+  }
+  if (request.unsigned !== true) {
+    errors.push('unsigned must be true');
+  }
+  if (!Array.isArray(request.instructions) || request.instructions.length !== 0) {
+    errors.push('instructions must be an empty array');
+  }
+  if (!Array.isArray(request.signers) || request.signers.length !== 0) {
+    errors.push('signers must be an empty array');
+  }
+  if (request.transaction !== null) {
+    errors.push('transaction must be null');
+  }
+
+  const hashPayload = { ...request };
+  delete hashPayload.requestHash;
+  let recomputedRequestHash;
+  try {
+    recomputedRequestHash = hashObject(hashPayload);
+  } catch (err) {
+    errors.push('request payload must be canonical JSON-compatible data');
+  }
+  if (typeof request.requestHash !== 'string' || !/^[a-f0-9]{64}$/.test(request.requestHash)) {
+    errors.push('requestHash must be a lowercase 32-byte hex string');
+  } else if (recomputedRequestHash && request.requestHash !== recomputedRequestHash) {
+    errors.push('requestHash does not match the canonical request payload');
+  }
+
+  let expectedRequest;
+  try {
+    expectedRequest = prepareIdentityAttestationRequest({
+      subjectWallet: request.subjectWallet,
+      agentId: request.agentId,
+      claimType: request.claimType,
+      metadataHash: request.metadataHash,
+      attester: request.attester,
+      network: request.network,
+      expiresAt: request.expiresAt,
+    });
+  } catch (err) {
+    errors.push(`public inputs are invalid: ${err.message}`);
+  }
+
+  if (expectedRequest) {
+    for (const field of [
+      'network',
+      'subjectWallet',
+      'agentId',
+      'attester',
+      'claimType',
+      'attestationType',
+      'metadataHash',
+      'proofData',
+      'expiresAt',
+      'agentIdHash',
+      'genesisPda',
+      'genesisBump',
+      'attestationPda',
+      'attestationBump',
+      'programs',
+      'requestHash',
+    ]) {
+      appendMismatch(errors, field, request[field], expectedRequest[field]);
+    }
+  }
+
+  appendExpectation(
+    errors,
+    'subjectWallet',
+    request.subjectWallet,
+    expectations.expectedSubjectWallet,
+    (value) => normalizePublicKey(value, 'expectedSubjectWallet'),
+  );
+  appendExpectation(
+    errors,
+    'agentId',
+    request.agentId,
+    expectations.expectedAgentId,
+    (value) => normalizeString(value, 'expectedAgentId'),
+  );
+  appendExpectation(
+    errors,
+    'claimType',
+    request.claimType,
+    expectations.expectedClaimType,
+    (value) => normalizeString(value, 'expectedClaimType', { maxBytes: 32 }),
+  );
+  appendExpectation(
+    errors,
+    'metadataHash',
+    request.metadataHash,
+    expectations.expectedMetadataHash,
+    normalizeMetadataHash,
+  );
+  appendExpectation(
+    errors,
+    'attester',
+    request.attester,
+    expectations.expectedAttester,
+    (value) => normalizePublicKey(value, 'expectedAttester'),
+  );
+  appendExpectation(
+    errors,
+    'network',
+    request.network,
+    expectations.expectedNetwork,
+    normalizeNetwork,
+  );
+  appendExpectation(
+    errors,
+    'expiresAt',
+    request.expiresAt,
+    expectations.expectedExpiresAt,
+    normalizeExpiresAt,
+  );
+
+  return { ok: errors.length === 0, errors, warnings };
+}
+
 module.exports = {
   prepareIdentityAttestationRequest,
+  verifyIdentityAttestationRequest,
 };

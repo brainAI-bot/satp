@@ -4,6 +4,7 @@
 const assert = require('node:assert/strict');
 const {
   prepareIdentityAttestationRequest,
+  verifyIdentityAttestationRequest,
   buildSatpTrustPacket,
   validateSatpTrustPacket,
   hashAgentId,
@@ -109,6 +110,65 @@ const mainnetRequest = prepareIdentityAttestationRequest({
 assert.equal(mainnetRequest.network, 'mainnet');
 assert.equal(mainnetRequest.programs.identity, 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG');
 assert.equal(mainnetRequest.programs.attestations, '6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD');
+
+const verifiedRequest = verifyIdentityAttestationRequest(request, {
+  expectedSubjectWallet: SUBJECT_WALLET,
+  expectedAgentId: 'brainChain',
+  expectedClaimType: 'github_verified',
+  expectedMetadataHash: METADATA_HASH,
+  expectedAttester: ATTESTER,
+  expectedNetwork: 'devnet',
+  expectedExpiresAt: null,
+});
+assert.deepEqual(verifiedRequest, { ok: true, errors: [], warnings: [] });
+
+const invalidRequestCases = [
+  {
+    name: 'changed metadataHash',
+    mutate: (value) => { value.metadataHash = '0'.repeat(64); },
+    error: /metadataHash|requestHash/,
+  },
+  {
+    name: 'changed requestHash',
+    mutate: (value) => { value.requestHash = '0'.repeat(64); },
+    error: /requestHash/,
+  },
+  {
+    name: 'wrong network',
+    mutate: (value) => { value.network = 'mainnet'; },
+    error: /network|requestHash|programs/,
+  },
+  {
+    name: 'non-empty signers',
+    mutate: (value) => { value.signers = [ATTESTER]; },
+    error: /signers/,
+  },
+  {
+    name: 'non-null transaction',
+    mutate: (value) => { value.transaction = {}; },
+    error: /transaction/,
+  },
+  {
+    name: 'unexpected instructions',
+    mutate: (value) => { value.instructions = [{ program: 'unexpected' }]; },
+    error: /instructions/,
+  },
+];
+
+for (const fixture of invalidRequestCases) {
+  const tamperedRequest = JSON.parse(JSON.stringify(request));
+  fixture.mutate(tamperedRequest);
+  const result = verifyIdentityAttestationRequest(tamperedRequest);
+  assert.equal(result.ok, false, fixture.name);
+  assert.match(result.errors.join('\n'), fixture.error, fixture.name);
+  assert.deepEqual(result.warnings, [], fixture.name);
+}
+
+assert.deepEqual(verifyIdentityAttestationRequest(null), {
+  ok: false,
+  errors: ['request must be an object'],
+  warnings: [],
+});
 
 assertThrows(/Invalid subjectWallet/, () => prepareIdentityAttestationRequest({
   subjectWallet: 'not-a-wallet',

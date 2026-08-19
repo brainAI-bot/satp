@@ -1,5 +1,7 @@
 import {
   IdentityAttestationRequestOptions,
+  IdentityAttestationRequestVerification,
+  IdentityAttestationRequestVerificationOptions,
   SatpTrustPacket,
   SatpTrustPacketValidation,
   WalletControlChallenge,
@@ -10,6 +12,7 @@ import {
   canonicalWalletControlChallenge,
   verifyWalletControlChallengeSignature,
   prepareIdentityAttestationRequest,
+  verifyIdentityAttestationRequest,
   validateSatpTrustPacket,
 } from './src';
 
@@ -38,6 +41,20 @@ const byBothAliases: IdentityAttestationRequestOptions = {
 prepareIdentityAttestationRequest(byClaimType);
 prepareIdentityAttestationRequest(byAttestationType);
 prepareIdentityAttestationRequest(byBothAliases);
+
+const requestVerificationOptions: IdentityAttestationRequestVerificationOptions = {
+  expectedSubjectWallet: subjectWallet,
+  expectedAgentId: 'brainChain',
+  expectedClaimType: 'github_verified',
+  expectedMetadataHash: metadataHash,
+  expectedNetwork: 'devnet',
+  expectedExpiresAt: null,
+};
+const requestVerification: IdentityAttestationRequestVerification = verifyIdentityAttestationRequest(
+  prepareIdentityAttestationRequest(byClaimType),
+  requestVerificationOptions,
+);
+void requestVerification.ok;
 
 const packet: SatpTrustPacket = buildSatpTrustPacket(byClaimType);
 const validation: SatpTrustPacketValidation = validateSatpTrustPacket(packet);

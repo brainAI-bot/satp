@@ -2,7 +2,7 @@
 
 const {
   createRuntimePolicyAdapter,
-} = require('../../../packages/satp-client/src');
+} = require('../../..');
 const {
   buildAgentFolioSatpConsumerRecord,
   verifyAgentFolioSatpConsumerRecord,

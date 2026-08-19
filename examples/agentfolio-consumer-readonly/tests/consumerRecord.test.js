@@ -90,7 +90,7 @@ test('detects tampered derived request attestation PDA', () => {
 
   const result = verifyAgentFolioSatpConsumerRecord(tampered);
   assert.equal(result.ok, false);
-  assert.match(result.errors.join('\n'), /request\.attestationPda does not match derived request/);
+  assert.match(result.errors.join('\n'), /request invalid: .*attestationPda/);
 });
 
 test('detects tampered derived trust packet PDA', () => {
@@ -110,7 +110,7 @@ test('detects tampered derived request program IDs', () => {
 
   const result = verifyAgentFolioSatpConsumerRecord(tampered);
   assert.equal(result.ok, false);
-  assert.match(result.errors.join('\n'), /request\.programs does not match derived request/);
+  assert.match(result.errors.join('\n'), /request invalid: .*programs/);
 });
 
 test('detects tampered derived request hash', () => {
@@ -120,7 +120,7 @@ test('detects tampered derived request hash', () => {
 
   const result = verifyAgentFolioSatpConsumerRecord(tampered);
   assert.equal(result.ok, false);
-  assert.match(result.errors.join('\n'), /request\.requestHash does not match derived request/);
+  assert.match(result.errors.join('\n'), /request invalid: .*requestHash/);
 });
 
 test('rejects invalid profile wallets before preparing requests', () => {
