@@ -13,11 +13,6 @@ function rel(target) {
   return path.relative(repoRoot, target) || '.';
 }
 
-function localSpec(target) {
-  const relativePath = rel(target);
-  return relativePath === '.' || relativePath.startsWith('.') ? relativePath : `./${relativePath}`;
-}
-
 function run(command, args, options = {}) {
   const cwd = options.cwd || repoRoot;
   const label = `${rel(cwd)}$ ${[command, ...args].join(' ')}`;
@@ -62,6 +57,7 @@ function readPackageMetadata() {
     'types',
     'exports',
     'files',
+    'bundleDependencies',
     'private',
     'publishConfig',
     '--json',
@@ -76,6 +72,13 @@ function readPackageMetadata() {
   assert(metadata.exports['./wallet-control-challenge'], 'wallet-control subpath export must be declared');
   assert(metadata.exports['./x402-discovery'], 'x402-discovery subpath export must be declared');
   assert(Array.isArray(metadata.files) && metadata.files.includes('src/'), 'files must include src/');
+  const bundled = Array.isArray(metadata.bundleDependencies)
+    ? metadata.bundleDependencies
+    : [metadata.bundleDependencies];
+  assert(
+    bundled.length === 1 && bundled[0] === '@solana/web3.js',
+    'bundleDependencies must contain only the temporary @solana/web3.js safety bundle',
+  );
   assert(metadata.publishConfig && metadata.publishConfig.access === 'public', 'publishConfig.access must remain public');
   assert(!('tag' in metadata.publishConfig), 'stable package metadata must not force the rc dist-tag');
 }
@@ -93,9 +96,13 @@ function auditProductionDependencies() {
 }
 
 function readPackDryRunSurface() {
-  const result = run('npm', ['pack', '--dry-run', '--json', localSpec(packageDir)]);
+  const result = run('npm', ['pack', '--silent', '--dry-run', '--json', '.'], { cwd: packageDir });
   const pack = parseJson(result.stdout, 'npm pack --dry-run');
   assert(Array.isArray(pack) && pack.length === 1, 'npm pack --dry-run must return one package');
+  assert(
+    Array.isArray(pack[0].bundled) && pack[0].bundled.includes('@solana/web3.js'),
+    'pack artifact must include the temporary @solana/web3.js safety bundle',
+  );
   const files = pack[0].files || [];
   const filePaths = files.map((file) => file.path).sort();
 
@@ -119,7 +126,7 @@ function readPackDryRunSurface() {
     assert(!filePaths.includes(blocked), `pack surface includes blocked file ${blocked}`);
   }
 
-  console.log(`pack surface OK: ${filePaths.length} files`);
+  console.log(`pack surface OK: ${filePaths.length} files; ${pack[0].bundled.length} bundled packages`);
   return filePaths;
 }
 
@@ -189,4 +196,4 @@ const packedFiles = readPackDryRunSurface();
 smokeRequireImportExports();
 scanPackedFilesForSecretShapes(packedFiles);
 
-console.log('\nSATP client package health OK: read-only metadata/audit/pack/smoke/secret-shape checks passed');
+console.log('\nSATP client package health OK: metadata/audit/pack/smoke/secret-shape checks passed');

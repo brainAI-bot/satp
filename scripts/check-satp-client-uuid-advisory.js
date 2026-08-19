@@ -11,10 +11,6 @@ const clientRoot = path.join(repoRoot, 'packages/satp-client');
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'satp-client-uuid-advisory-'));
 const fixedUuidVersion = '11.1.1';
 
-function dependencyAt(tree, names) {
-  return names.reduce((node, name) => node?.dependencies?.[name], tree);
-}
-
 function isVersionBefore(version, boundary) {
   const parse = (value) => {
     const match = String(value || '').match(/^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?/);
@@ -33,8 +29,8 @@ function isVersionBefore(version, boundary) {
 }
 
 try {
-  const packOutput = execFileSync('npm', ['pack', clientRoot, '--pack-destination', tempRoot], {
-    cwd: tempRoot,
+  const packOutput = execFileSync('npm', ['pack', '.', '--silent', '--pack-destination', tempRoot], {
+    cwd: clientRoot,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   }).trim();
@@ -47,11 +43,6 @@ try {
       private: true,
       version: '0.0.0',
       dependencies: {},
-      overrides: {
-        jayson: {
-          uuid: `^${fixedUuidVersion}`,
-        },
-      },
     }, null, 2) + '\n',
   );
 
@@ -60,28 +51,29 @@ try {
     stdio: 'pipe',
   });
 
-  const dependencyTree = JSON.parse(execFileSync('npm', ['ls', 'uuid', '--json'], {
-    cwd: tempRoot,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  }));
-  const clientDependency = dependencyAt(dependencyTree, ['@brainai/satp-client']);
-  if (!clientDependency) {
-    throw new Error('packed @brainai/satp-client dependency is missing');
+  const installedPackageRoot = path.join(tempRoot, 'node_modules', '@brainai', 'satp-client');
+  const web3ManifestPath = require.resolve('@solana/web3.js/package.json', {
+    paths: [installedPackageRoot],
+  });
+  if (!web3ManifestPath.startsWith(`${installedPackageRoot}${path.sep}`)) {
+    throw new Error('clean consumer resolved @solana/web3.js outside the SATP client safety bundle');
   }
-  const upstreamPath = ['@solana/web3.js', 'jayson', 'uuid'];
-  const resolvedPath = [];
-  let dependency = clientDependency;
-  for (const name of upstreamPath) {
-    dependency = dependencyAt(dependency, [name]);
-    if (!dependency?.version) {
-      throw new Error(`upstream advisory path changed at ${name}: dependency missing; review the temporary override`);
-    }
-    resolvedPath.push(`${name}@${dependency.version}`);
-  }
-  const uuidVersion = dependency.version;
+  const jaysonManifestPath = require.resolve('jayson/package.json', {
+    paths: [path.dirname(web3ManifestPath)],
+  });
+  const uuidManifestPath = require.resolve('uuid/package.json', {
+    paths: [path.dirname(jaysonManifestPath)],
+  });
+  const web3Version = JSON.parse(fs.readFileSync(web3ManifestPath, 'utf8')).version;
+  const jaysonVersion = JSON.parse(fs.readFileSync(jaysonManifestPath, 'utf8')).version;
+  const uuidVersion = JSON.parse(fs.readFileSync(uuidManifestPath, 'utf8')).version;
+  const resolvedPath = [
+    `@solana/web3.js@${web3Version}`,
+    `jayson@${jaysonVersion}`,
+    `uuid@${uuidVersion}`,
+  ];
   if (isVersionBefore(uuidVersion, fixedUuidVersion)) {
-    throw new Error(`consumer override failed: resolved affected uuid ${uuidVersion}`);
+    throw new Error(`packed client remediation failed: resolved affected uuid ${uuidVersion}`);
   }
 
   const auditResult = spawnSync('npm', ['audit', '--omit=dev', '--json'], {
@@ -110,7 +102,7 @@ try {
   );
   if (uuidAdvisory) {
     throw new Error(
-      `consumer override failed: GHSA-w5hq-g745-h8pq remains at uuid ${uuidVersion}`,
+      `packed client remediation failed: GHSA-w5hq-g745-h8pq remains at uuid ${uuidVersion}`,
     );
   }
   if (auditResult.status !== 0) {

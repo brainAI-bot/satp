@@ -9,10 +9,28 @@ const { execFileSync } = require('child_process');
 const repoRoot = path.resolve(__dirname, '..');
 const clientRoot = path.join(repoRoot, 'packages/satp-client');
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'satp-client-packed-consumer-'));
+const fixedUuidVersion = '11.1.1';
+
+function isVersionBefore(version, boundary) {
+  const parse = (value) => {
+    const match = String(value || '').match(/^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?/);
+    return match ? {
+      parts: match.slice(1, 4).map(Number),
+      prerelease: Boolean(match[4]),
+    } : null;
+  };
+  const current = parse(version);
+  const limit = parse(boundary);
+  if (!current || !limit) return true;
+  for (let i = 0; i < current.parts.length; i += 1) {
+    if (current.parts[i] !== limit.parts[i]) return current.parts[i] < limit.parts[i];
+  }
+  return current.prerelease && !limit.prerelease;
+}
 
 try {
-  const packOutput = execFileSync('npm', ['pack', clientRoot, '--pack-destination', tempRoot], {
-    cwd: tempRoot,
+  const packOutput = execFileSync('npm', ['pack', '.', '--silent', '--pack-destination', tempRoot], {
+    cwd: clientRoot,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   }).trim();
@@ -25,11 +43,6 @@ try {
       private: true,
       version: '0.0.0',
       dependencies: {},
-      overrides: {
-        jayson: {
-          uuid: '^11.1.1',
-        },
-      },
     }, null, 2) + '\n',
   );
 
@@ -56,6 +69,26 @@ try {
     path.join(installedPackageRoot, 'README.md'),
     'utf8',
   );
+
+  if (!installedPackage.bundleDependencies?.includes('@solana/web3.js')) {
+    throw new Error('packed client does not declare the temporary @solana/web3.js safety bundle');
+  }
+  const web3ManifestPath = require.resolve('@solana/web3.js/package.json', {
+    paths: [installedPackageRoot],
+  });
+  if (!web3ManifestPath.startsWith(`${installedPackageRoot}${path.sep}`)) {
+    throw new Error('packed client resolved @solana/web3.js outside its bundled dependency tree');
+  }
+  const jaysonManifestPath = require.resolve('jayson/package.json', {
+    paths: [path.dirname(web3ManifestPath)],
+  });
+  const uuidManifestPath = require.resolve('uuid/package.json', {
+    paths: [path.dirname(jaysonManifestPath)],
+  });
+  const uuidVersion = JSON.parse(fs.readFileSync(uuidManifestPath, 'utf8')).version;
+  if (isVersionBefore(uuidVersion, fixedUuidVersion)) {
+    throw new Error(`packed client resolved affected uuid ${uuidVersion}`);
+  }
 
   const stableBanner = `Current stable npm package: **@brainai/satp-client@${installedPackage.version}**`;
   const stableInstall = `npm install @brainai/satp-client@${installedPackage.version}`;
@@ -180,6 +213,10 @@ try {
     "for (const key of ['buildWalletControlChallenge', 'canonicalWalletControlChallenge', 'hashWalletControlChallenge', 'deriveWalletControlChallengePdas', 'verifyWalletControlChallengeSignature']) {",
     "  if (typeof walletControl[key] !== 'function') throw new Error('missing wallet-control subpath export: ' + key);",
     "}",
+    "const runtimeEvidence = require('@brainai/satp-client/runtime-authorization-evidence');",
+    "if (typeof runtimeEvidence !== 'object' || runtimeEvidence === null) throw new Error('runtime-authorization-evidence subpath failed');",
+    "const x402Discovery = require('@brainai/satp-client/x402-discovery');",
+    "if (typeof x402Discovery !== 'object' || x402Discovery === null) throw new Error('x402-discovery subpath failed');",
     "const genesis = satp.getAccountDiscriminator('GenesisRecord');",
     "if (!Buffer.isBuffer(genesis) || genesis.toString('hex') !== '16a0f570b27eb16a') throw new Error('GenesisRecord discriminator mismatch');",
     "if (!satp.DISCRIMINATORS.GenesisRecord.equals(genesis)) throw new Error('DISCRIMINATORS export mismatch');",
@@ -195,7 +232,7 @@ try {
   });
   process.stdout.write(output);
   console.log(
-    `satp-client packed README OK: ${installedPackage.version}; ${documentedExampleLinks.size} documented examples discovered and executed`,
+    `satp-client packed README OK: ${installedPackage.version}; bundled uuid ${uuidVersion}; ${documentedExampleLinks.size} documented examples discovered and executed`,
   );
 } finally {
   fs.rmSync(tempRoot, { recursive: true, force: true });
