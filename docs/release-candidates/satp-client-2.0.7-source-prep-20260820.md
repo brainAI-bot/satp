@@ -46,13 +46,17 @@ Run from the repository root before PR delivery:
 
 ```sh
 npm pkg get version --prefix packages/satp-client
-npm pack --dry-run --json ./packages/satp-client
+npm pack --json --pack-destination <temporary-directory> ./packages/satp-client
 npm audit --omit=dev
 npm run check:satp-client-health
 npm run check:release-metadata
 npm run smoke:satp-client-packed-consumer
 npm run ci
 ```
+
+The packed-consumer smoke loads every explicit public export, the public
+`package.json`, and every JavaScript module reachable through the `./src/*`
+wildcard from a clean consumer install.
 
 These commands are local or registry read-only checks. They must not publish to
 npm, move npm tags, write Solana state, deploy, restart production, read or

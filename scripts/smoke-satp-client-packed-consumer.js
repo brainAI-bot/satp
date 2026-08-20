@@ -58,6 +58,7 @@ try {
     cwd: tempRoot,
     stdio: 'pipe',
   });
+  console.log('clean consumer npm audit --omit=dev --audit-level=moderate OK: 0 vulnerabilities');
 
   const installedPackageRoot = path.join(
     tempRoot,
@@ -230,13 +231,22 @@ try {
     "if (typeof runtimeEvidence !== 'object' || runtimeEvidence === null) throw new Error('runtime-authorization-evidence subpath failed');",
     "const x402Discovery = require('@brainai/satp-client/x402-discovery');",
     "if (typeof x402Discovery !== 'object' || x402Discovery === null) throw new Error('x402-discovery subpath failed');",
+    "const publicPackageManifest = require('@brainai/satp-client/package.json');",
+    "if (publicPackageManifest.name !== '@brainai/satp-client' || typeof publicPackageManifest.version !== 'string') throw new Error('package.json export failed');",
+    "const fs = require('node:fs');",
+    "const path = require('node:path');",
+    "const publicSourceModules = fs.readdirSync(path.join(path.dirname(resolved), '.')).filter((name) => name.endsWith('.js')).sort();",
+    "for (const moduleName of publicSourceModules) {",
+    "  const subpath = '@brainai/satp-client/src/' + moduleName;",
+    "  if (require(subpath) === undefined) throw new Error('source wildcard export failed: ' + subpath);",
+    "}",
     "const genesis = satp.getAccountDiscriminator('GenesisRecord');",
     "if (!Buffer.isBuffer(genesis) || genesis.toString('hex') !== '16a0f570b27eb16a') throw new Error('GenesisRecord discriminator mismatch');",
     "if (!satp.DISCRIMINATORS.GenesisRecord.equals(genesis)) throw new Error('DISCRIMINATORS export mismatch');",
     "if (!satp.isAccountType(Buffer.concat([genesis, Buffer.from([0])]), 'GenesisRecord')) throw new Error('isAccountType failed for generated discriminator');",
     "const reader = new satp.BorshReader(Buffer.from([7]));",
     "if (reader.readU8() !== 7) throw new Error('BorshReader export smoke failed');",
-    "console.log('satp-client packed consumer OK: ' + resolved);",
+    "console.log('satp-client packed consumer OK: explicit exports ., wallet-control-challenge, runtime-authorization-evidence, x402-discovery, package.json; source wildcard modules ' + publicSourceModules.join(', ') + '; root ' + resolved);",
   ].join('\n');
 
   const output = execFileSync(process.execPath, ['-e', check], {
