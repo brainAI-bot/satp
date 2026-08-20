@@ -1,0 +1,262 @@
+{
+  "schema_version": 1,
+  "marker": "[#ef7e4581]",
+  "status": "provenance_gap",
+  "observed_at_utc": "2026-08-20T17:32:11Z",
+  "runtime": {
+    "cluster": "mainnet-beta",
+    "program_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
+    "program_data": "Fg1DJyKX9CngiMihZxJY2zjaQ8T1PK5QuiVhNvJmeTqk",
+    "upgrade_authority": "Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc",
+    "upgrade_transaction": "3dKQibtuBon7f8dL9DSjsjCwLr1N9pw6pbgR1Kg69wTAnfwkA8RbKn4e7sqH39yhwwWEHkpWhhDxSG62DeBEsy1E",
+    "upgrade_slot": 440327121,
+    "upgrade_utc": "2026-08-19T19:37:14Z",
+    "program_data_account_bytes": 346901,
+    "loader_header_bytes": 45,
+    "allocated_payload_bytes": 346856,
+    "allocated_payload_sha256": "53e922d8792d3ec2d447c497f37dfe8e4ffd1d9bde0f9d6edc0bb3578e67c17f",
+    "trailing_zero_bytes": 15,
+    "trimmed_payload_bytes": 346841,
+    "trimmed_payload_sha256": "88058f4322bb8cbb9227b6f35ae3c78baf2be9c01a3bd70523f803f9bfa7f078",
+    "readback_evidence": "https://github.com/brainAI-bot/agentfolio/actions/runs/32398128307"
+  },
+  "published_idl": {
+    "account": "D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn",
+    "inflated_json_bytes": 12172,
+    "inflated_json_sha256": "864e8af057c1b196156222ecda5853936bf4c6e0f3ae9f5c1e2ca2e53ed6c768",
+    "instruction_count": 9,
+    "instruction_names": [
+      "create_escrow",
+      "submit_work",
+      "release",
+      "partial_release",
+      "cancel",
+      "raise_dispute",
+      "resolve_dispute",
+      "extend_deadline",
+      "close_escrow"
+    ],
+    "status": "published_interface_stale_after_runtime_upgrade"
+  },
+  "closest_satp_candidate": {
+    "repository": "brainAI-bot/satp",
+    "commit": "0bf088e5618f173dff7e0fba622bc2911212c52e",
+    "merged_utc": "2026-08-19T12:07:32Z",
+    "source_path": "programs/escrow_v3/src/lib.rs",
+    "source_sha256": "f4696cc27c5e2ff6163a90f877fd4431efa8809d2f6ae4c792c3c7cd18193c4d",
+    "source_idl_path": "idls/v3/escrow_v3.json",
+    "source_idl_sha256": "3d7e7a14788449f65c1a187a96543f7677bf08937e61638734ed3886dcf60a5a",
+    "source_idl_instruction_count": 14,
+    "source_idl_instruction_names": [
+      "create_escrow",
+      "create_usdc_escrow",
+      "submit_work",
+      "release",
+      "release_usdc",
+      "partial_release",
+      "partial_release_usdc",
+      "cancel",
+      "cancel_usdc",
+      "raise_dispute",
+      "resolve_dispute",
+      "resolve_dispute_usdc",
+      "extend_deadline",
+      "close_escrow"
+    ],
+    "instructions_missing_from_published_idl": [
+      "create_usdc_escrow",
+      "release_usdc",
+      "partial_release_usdc",
+      "cancel_usdc",
+      "resolve_dispute_usdc"
+    ],
+    "verdict": "not_reproducible_provenance"
+  },
+  "build_attempts": [
+    {
+      "repository": "brainAI-bot/satp",
+      "commit": "0bf088e5618f173dff7e0fba622bc2911212c52e",
+      "host": "github macos-latest arm64",
+      "host_rustc": "1.86.0",
+      "host_cargo": "1.86.0",
+      "solana_cli": "2.1.21",
+      "cargo_build_sbf": "2.1.21",
+      "sbf_platform_tools": "v1.52",
+      "features": [],
+      "command": "cargo build-sbf --force-tools-install --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml",
+      "artifact_bytes": 346856,
+      "artifact_sha256": "bba42f0b11ee1be4d1449176facdc7a83b0e491bfc246427091e1a62a02dc42f",
+      "verdict": "DIFFER",
+      "evidence": "https://github.com/brainAI-bot/agentfolio/actions/runs/32387522499"
+    },
+    {
+      "repository": "brainAI-bot/satp",
+      "commit": "0bf088e5618f173dff7e0fba622bc2911212c52e",
+      "host": "github macos-latest arm64",
+      "host_rustc": "1.86.0",
+      "host_cargo": "1.86.0",
+      "solana_cli": "2.1.21",
+      "cargo_build_sbf": "2.1.21",
+      "sbf_platform_tools": "v1.52",
+      "features": [
+        "mainnet"
+      ],
+      "command": "cargo build-sbf --force-tools-install --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml --features mainnet",
+      "artifact_bytes": 346856,
+      "artifact_sha256": "4f21da13659cbe99a606b408a5f1d3523c0e41de20538028939bbb1b54c3cc0d",
+      "verdict": "DIFFER",
+      "evidence": "https://github.com/brainAI-bot/agentfolio/actions/runs/32398128307"
+    },
+    {
+      "repository": "brainAI-bot/satp",
+      "commit": "0bf088e5618f173dff7e0fba622bc2911212c52e",
+      "host": "github macos-latest arm64",
+      "host_rustc": "1.86.0",
+      "host_cargo": "1.86.0",
+      "solana_cli": "2.1.21",
+      "cargo_build_sbf": "2.1.21",
+      "sbf_platform_tools": "v1.52",
+      "features": [
+        "devnet"
+      ],
+      "command": "cargo build-sbf --force-tools-install --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml --features devnet",
+      "artifact_sha256": "091b252109147ca7be535114fac07a6b2c3fc779769abb9bdbca15e09cd9c12a",
+      "verdict": "DIFFER",
+      "evidence": "https://github.com/brainAI-bot/satp/actions/runs/32251029537"
+    },
+    {
+      "repository": "brainAI-bot/agentfolio",
+      "commit": "f25b9c23d886d6adb0ebb57defd52689b5dc9990",
+      "source_sha256": "a713fb25815f724bde8bc0ed9eec0c104826fc0fb26bd3f608a6ed46096efd4c",
+      "host_rustc": "1.86.0",
+      "solana_cli": "2.1.21",
+      "anchor_cli": "0.31.1",
+      "sbf_platform_tools": "v1.43",
+      "features": [],
+      "command": "cargo build-sbf --manifest-path programs/escrow_v3/Cargo.toml --sbf-out-dir target/deploy",
+      "artifact_bytes": 289216,
+      "artifact_sha256": "21dda9b5b0f95aba7f2560d58f2085de7ef8d0c9f1e3ac79f8ee506dcb9c6cf4",
+      "verdict": "DIFFER",
+      "evidence": "hq:AGENTFOLIO-EF7E4581-SOURCE-CERT-20260808"
+    },
+    {
+      "repository": "brainAI-bot/agentfolio",
+      "commit": "f25b9c23d886d6adb0ebb57defd52689b5dc9990",
+      "source_sha256": "a713fb25815f724bde8bc0ed9eec0c104826fc0fb26bd3f608a6ed46096efd4c",
+      "host_rustc": "1.86.0",
+      "solana_cli": "2.1.21",
+      "anchor_cli": "0.31.1",
+      "sbf_platform_tools": "v1.52",
+      "features": [],
+      "command": "cargo build-sbf --force-tools-install --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml --sbf-out-dir target/deploy",
+      "artifact_bytes": 292336,
+      "artifact_sha256": "60f7fee84d640a0ff339011962bab3d866c5c27d6a1dad574798999838183d67",
+      "verdict": "DIFFER",
+      "evidence": "hq:AGENTFOLIO-EF7E4581-SOURCE-CERT-20260808"
+    },
+    {
+      "repository": "brainAI-bot/clawd-brainchain",
+      "commit": "27f38ff8fa32c72008606c0a3d87f2e1b7256c8c",
+      "source_sha256": "855ae970eb45d3a503f8586ddbf0b474220cbce8eba0c504dcf74b442c1b71e7",
+      "host": "macos with platform-tools v1.52",
+      "sbf_platform_tools": "v1.52",
+      "features": [],
+      "command": "cargo-build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml --sbf-out-dir <isolated-output>",
+      "artifact_bytes": 245592,
+      "artifact_sha256": "4fc35ac268ee0a7b94eb3b0b70d6ed96f77833e619cbc18c480c442cf0165532",
+      "verdict": "DIFFER",
+      "evidence": "hq:AGENTFOLIO-ESCROW-DEPLOYED-SOURCE-ARCHAEOLOGY-20260808"
+    },
+    {
+      "repository": "brainAI-bot/clawd-brainchain",
+      "commit": "27f38ff8fa32c72008606c0a3d87f2e1b7256c8c",
+      "source_sha256": "855ae970eb45d3a503f8586ddbf0b474220cbce8eba0c504dcf74b442c1b71e7",
+      "host": "macos compiler with official linux x86_64 v1.52 SBF target libraries",
+      "sbf_platform_tools": "v1.52",
+      "features": [],
+      "command": "cargo-build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml --sbf-out-dir <isolated-output> with official Linux x86_64 target libraries",
+      "artifact_bytes": 245592,
+      "artifact_sha256": "b3f2b6dd4cc6d7e90f6d009c0d9f085d537af5841107bfdd70fb99cc156f7e54",
+      "verdict": "DIFFER",
+      "evidence": "hq:AGENTFOLIO-ESCROW-DEPLOYED-SOURCE-ARCHAEOLOGY-20260808"
+    }
+  ],
+  "repository_searches": [
+    {
+      "repository": "brainAI-bot/satp",
+      "ref_scope": "all refs reachable after git fetch --all --prune",
+      "search_tip": "origin/main@59eb7c8edca8afce7163006a30bbbc631a0716dd",
+      "source_path": "programs/escrow_v3/src/lib.rs",
+      "unique_source_blob_sha256": [
+        "f4696cc27c5e2ff6163a90f877fd4431efa8809d2f6ae4c792c3c7cd18193c4d",
+        "7183fb37394624c0dc039eeb6a766238536119c757988abab712663a4d1f7583",
+        "9598037528c287e84b02b90440533694e1db85591c73da1ed28bcbd2a24b9faa",
+        "e6ff6957ec4104f025d58336256e7dbef636155b5d708165890d77c832eef14c",
+        "f5bb9a747e1bac7270080bff38f6f4dde95148bfdd59405a6ff8eaa5e66e4179",
+        "0bd9017bd749322582b4fb387e1566fdade691dd17b8f0b100b6086eb1a02d4c",
+        "cf2f4fe575332ff0004fac866f8fb33ac165297015c311fbe0371d675d4e601e",
+        "fb98dcb3124f25cf56bf3dae6a934cb012f93a7cdf14117829a01c25c9523e47",
+        "217bedba901967184b7f2cd55ba3a2e3723cd952df1bfdd20dafec5a49a25a5d",
+        "4ff60eacc9fc0b5e2b527a4b1aa62992b6863883dc16a9cf305911682853dd23"
+      ],
+      "source_idl_history": [
+        {
+          "sha256": "9469063993bc2ed6623ccced77239c08866dbf06e6467cd692889cd56cc92679",
+          "instruction_count": 9,
+          "introduced_at": "7817c813e0af5b93a84b611a4d90f1320b930bd5"
+        },
+        {
+          "sha256": "3d7e7a14788449f65c1a187a96543f7677bf08937e61638734ed3886dcf60a5a",
+          "instruction_count": 14,
+          "introduced_at": "72b90dc6a708064b82c2fbf6f9d4c9ba35ad5f49"
+        },
+        {
+          "sha256": "2487422a710a76c9a80fde52b8bac5029b1ee4a87cf067499777a12db14330fb",
+          "instruction_count": 14,
+          "introduced_at": "3020502cfe3e85b3583937d5883b0273f5188873"
+        },
+        {
+          "sha256": "8f8a3634651b97c549921d7654ae3c9e68d9207ab4b5eb6ac90920ca3faa5a3a",
+          "instruction_count": 14,
+          "introduced_at": "6e98a1447a28e2653658b02839772a23f0822459"
+        }
+      ],
+      "result": "no tracked source/IDL pair binds the replacement deployed hashes to the nine-instruction published IDL"
+    },
+    {
+      "repository": "brainAI-bot/agentfolio",
+      "refs": [
+        "f25b9c23d886d6adb0ebb57defd52689b5dc9990",
+        "origin/main@37763e213545c46a3dda1658fac3b3f8abe6a0fc"
+      ],
+      "source_path": "onchain/escrow_v3/programs/escrow_v3/src/lib.rs",
+      "source_sha256": "a713fb25815f724bde8bc0ed9eec0c104826fc0fb26bd3f608a6ed46096efd4c",
+      "tracked_idl_sha256": "19ab1ae26b274499d1d014b69b318a49467189085c35cd51ef52b10dbece1262",
+      "tracked_idl_instruction_count": 9,
+      "result": "both pinned builds differ from the replacement deployed hashes and sizes"
+    },
+    {
+      "repository": "brainAI-bot/clawd-brainchain",
+      "refs": [
+        "27f38ff8fa32c72008606c0a3d87f2e1b7256c8c"
+      ],
+      "source_path": "satp-v3/programs/escrow_v3/src/lib.rs",
+      "current_access": "GitHub API returned 404 on 2026-08-20",
+      "result": "historical candidate predates the replacement upgrade and its recorded v1.52 artifact differs in hash and size"
+    }
+  ],
+  "conclusion": {
+    "authoritative_source_commit": null,
+    "complete_locked_build_inputs": null,
+    "source_equals_deployed_binary_equals_published_idl": false,
+    "gap_reason": "No known repository source and recorded locked build recipe reproduces either deployed payload hash; the closest SATP candidate generates 14 instructions while the unchanged published IDL exposes 9.",
+    "required_unblock": "Recover the exact source tree, Cargo.lock, host architecture, Solana/cargo-build-sbf version, platform-tools bundle, feature flags, build command, and original artifact or build log that produced allocated payload sha256 53e922d8792d3ec2d447c497f37dfe8e4ffd1d9bde0f9d6edc0bb3578e67c17f, then resolve the published IDL against that source without a chain write in this task."
+  },
+  "safety": {
+    "solana_write": false,
+    "deploy": false,
+    "keypair_read_or_change": false,
+    "production_mutation": false,
+    "roadmap_edit": false
+  }
+}
