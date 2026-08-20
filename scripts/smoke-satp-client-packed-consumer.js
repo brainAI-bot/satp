@@ -10,6 +10,10 @@ const repoRoot = path.resolve(__dirname, '..');
 const clientRoot = path.join(repoRoot, 'packages/satp-client');
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'satp-client-packed-consumer-'));
 const fixedUuidVersion = '11.1.1';
+const releaseMetadata = JSON.parse(fs.readFileSync(
+  path.join(repoRoot, 'tests/fixtures/satp-client-release-metadata.json'),
+  'utf8',
+));
 
 function isVersionBefore(version, boundary) {
   const parse = (value) => {
@@ -90,13 +94,22 @@ try {
     throw new Error(`packed client resolved affected uuid ${uuidVersion}`);
   }
 
-  const stableBanner = `Current stable npm package: **@brainai/satp-client@${installedPackage.version}**`;
-  const stableInstall = `npm install @brainai/satp-client@${installedPackage.version}`;
+  const stableBanner = `Current stable npm package: **@brainai/satp-client@${releaseMetadata.stableLatest}**`;
+  const stableInstall = `npm install @brainai/satp-client@${releaseMetadata.stableLatest}`;
   if (!installedReadme.includes(stableBanner)) {
-    throw new Error(`packed README stable banner does not match ${installedPackage.version}`);
+    throw new Error(`packed README stable banner does not match npm latest ${releaseMetadata.stableLatest}`);
   }
   if (!installedReadme.includes(stableInstall)) {
-    throw new Error(`packed README install command does not match ${installedPackage.version}`);
+    throw new Error(`packed README install command does not match npm latest ${releaseMetadata.stableLatest}`);
+  }
+  if (installedPackage.version !== releaseMetadata.stableLatest) {
+    if (releaseMetadata.nextReleaseCandidate !== installedPackage.version) {
+      throw new Error(`packed candidate ${installedPackage.version} does not match release metadata`);
+    }
+    const candidateBanner = `unpublished source candidate: **@brainai/satp-client@${installedPackage.version}**`;
+    if (!installedReadme.includes(candidateBanner)) {
+      throw new Error(`packed README candidate banner does not match ${installedPackage.version}`);
+    }
   }
   if (!installedReadme.includes('[Quick Start](#quick-start)')) {
     throw new Error('packed README quickstart link does not resolve inside README.md');
