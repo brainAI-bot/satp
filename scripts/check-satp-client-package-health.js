@@ -24,8 +24,8 @@ function run(command, args, options = {}) {
     maxBuffer: 1024 * 1024 * 8,
   });
 
-  if (result.stdout) process.stdout.write(result.stdout);
-  if (result.stderr) process.stderr.write(result.stderr);
+  if (result.stdout && !options.quiet) process.stdout.write(result.stdout);
+  if (result.stderr && !options.quiet) process.stderr.write(result.stderr);
   if (result.error) throw result.error;
   if (result.status !== 0 && !options.allowFailure) {
     throw new Error(`${label} exited ${result.status}`);
@@ -95,16 +95,31 @@ function auditProductionDependencies() {
   assert(result.status === 0, `npm audit --omit=dev exited ${result.status} despite zero vulnerabilities`);
 }
 
-function readPackDryRunSurface() {
-  const result = run('npm', ['pack', '--silent', '--dry-run', '--json', '.'], { cwd: packageDir });
-  const pack = parseJson(result.stdout, 'npm pack --dry-run');
-  assert(Array.isArray(pack) && pack.length === 1, 'npm pack --dry-run must return one package');
-  assert(
-    Array.isArray(pack[0].bundled) && pack[0].bundled.includes('@solana/web3.js'),
-    'pack artifact must include the temporary @solana/web3.js safety bundle',
-  );
-  const files = pack[0].files || [];
-  const filePaths = files.map((file) => file.path).sort();
+function readPackSurface() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'satp-client-health-pack-'));
+  let filePaths;
+  try {
+    const result = run('npm', ['pack', '--silent', '--json', '--pack-destination', tempDir, '.'], {
+      cwd: packageDir,
+      quiet: true,
+    });
+    const pack = parseJson(result.stdout, 'npm pack');
+    assert(Array.isArray(pack) && pack.length === 1, 'npm pack must return one package');
+
+    const tarballPath = path.join(tempDir, pack[0].filename);
+    assert(fs.existsSync(tarballPath), `npm pack did not create ${pack[0].filename}`);
+    const archive = run('tar', ['-tzf', tarballPath], { quiet: true });
+    const archivePaths = archive.stdout.split(/\r?\n/).filter(Boolean);
+    assert(
+      archivePaths.includes('package/node_modules/@solana/web3.js/package.json'),
+      'pack artifact must include the temporary @solana/web3.js safety bundle',
+    );
+
+    const files = pack[0].files || [];
+    filePaths = files.map((file) => file.path).sort();
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
 
   for (const required of [
     'package.json',
@@ -126,7 +141,7 @@ function readPackDryRunSurface() {
     assert(!filePaths.includes(blocked), `pack surface includes blocked file ${blocked}`);
   }
 
-  console.log(`pack surface OK: ${filePaths.length} files; ${pack[0].bundled.length} bundled packages`);
+  console.log(`pack surface OK: ${filePaths.length} package files; @solana/web3.js bundle verified from tarball`);
   return filePaths;
 }
 
@@ -192,7 +207,7 @@ function scanPackedFilesForSecretShapes(filePaths) {
 
 readPackageMetadata();
 auditProductionDependencies();
-const packedFiles = readPackDryRunSurface();
+const packedFiles = readPackSurface();
 smokeRequireImportExports();
 scanPackedFilesForSecretShapes(packedFiles);
 
