@@ -195,8 +195,12 @@ function verifyAgentFolioSatpConsumerRecord(record) {
     }
   }
 
-  if (record.integration?.writesRequired !== false || record.integration?.signingRequired !== false) {
-    errors.push('integration flags must stay read-only and unsigned');
+  if (
+    record.integration?.rpcRequired !== false ||
+    record.integration?.writesRequired !== false ||
+    record.integration?.signingRequired !== false
+  ) {
+    errors.push('integration flags must stay offline, read-only, and unsigned');
   }
 
   return { ok: errors.length === 0, errors };

@@ -77,7 +77,8 @@ test('builds a display-safe read-only AgentFolio view from current SATP APIs', (
 
 test('runs the read-only consumer command and emits parseable JSON', () => {
   const exampleRoot = path.join(__dirname, '..');
-  const result = spawnSync(process.execPath, ['src/readOnlyConsumerExample.js'], {
+  const disableFetchPath = path.join(__dirname, 'disableFetch.js');
+  const result = spawnSync(process.execPath, ['--require', disableFetchPath, 'src/readOnlyConsumerExample.js'], {
     cwd: exampleRoot,
     encoding: 'utf8',
   });
@@ -93,6 +94,15 @@ test('runs the read-only consumer command and emits parseable JSON', () => {
 test('verifies prepared consumer records without network or signing', () => {
   const record = buildAgentFolioSatpConsumerRecord({ profile });
   assert.deepEqual(verifyAgentFolioSatpConsumerRecord(record), { ok: true, errors: [] });
+});
+
+test('rejects consumer records that require RPC', () => {
+  const record = buildAgentFolioSatpConsumerRecord({ profile });
+  record.integration.rpcRequired = true;
+
+  const result = verifyAgentFolioSatpConsumerRecord(record);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /integration flags must stay offline/);
 });
 
 test('builds an AgentFolio runtime policy reference consumer plan', () => {
