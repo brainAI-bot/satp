@@ -12,11 +12,12 @@ const DEFAULT_NOW = '2026-05-21T00:00:00Z';
 
 function buildAgentFolioRuntimePolicyReference({
   profile,
+  network = 'devnet',
   trustScore = 86,
   evidenceUpdatedAt = DEFAULT_NOW,
   now = DEFAULT_NOW,
 } = {}) {
-  const record = buildAgentFolioSatpConsumerRecord({ profile });
+  const record = buildAgentFolioSatpConsumerRecord({ profile, network });
   const verification = verifyAgentFolioSatpConsumerRecord(record);
   const adapter = createRuntimePolicyAdapter({
     defaultActionType: 'agentfolio_trust_gate',

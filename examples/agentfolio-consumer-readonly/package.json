@@ -5,7 +5,8 @@
   "description": "Offline AgentFolio-style SATP consumer example using unsigned identity attestation requests.",
   "type": "commonjs",
   "scripts": {
-    "check": "node --check src/consumerRecord.js src/runtimePolicyReference.js tests/*.test.js",
+    "check": "find src tests -name '*.js' -type f -print0 | xargs -0 -n1 node --check",
+    "example": "node src/readOnlyConsumerExample.js",
     "test": "node --test tests/*.test.js"
   }
 }

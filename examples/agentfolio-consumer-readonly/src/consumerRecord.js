@@ -128,6 +128,7 @@ function buildAgentFolioSatpConsumerRecord({
       agentfolioRole: 'consumer-adapter',
       mcpRole: 'can expose this record through a read-only tool',
       x402Role: 'can gate access before returning this read-only record',
+      rpcRequired: false,
       signingRequired: false,
       writesRequired: false,
       livePaymentRequired: false,

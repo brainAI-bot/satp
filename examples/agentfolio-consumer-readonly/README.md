@@ -12,6 +12,16 @@ The example does not sign, send transactions, read keypairs, call RPC, publish p
 
 ## Usage
 
+From the repository root, run the read-only consumer against the included AgentFolio-style fixture:
+
+```bash
+npm --prefix examples/agentfolio-consumer-readonly run example
+```
+
+The command prints a deterministic JSON view containing profile display data, SATP-derived request hashes and PDAs, and a local runtime-policy decision. Every emitted request is unsigned, has no transaction or instructions, and the output guardrails report that the example performs no RPC call, chain write, keypair read, package publish, program deploy, or AgentFolio data mutation.
+
+Verify the example with:
+
 ```bash
 npm --prefix examples/agentfolio-consumer-readonly test
 npm --prefix examples/agentfolio-consumer-readonly run check
@@ -28,13 +38,18 @@ const {
 const {
   buildAgentFolioRuntimePolicyReference,
 } = require('./src/runtimePolicyReference');
+const {
+  buildAgentFolioReadOnlyView,
+} = require('./src/readOnlyConsumerExample');
 
 const record = buildAgentFolioSatpConsumerRecord({ profile, network: 'devnet' });
 const verification = verifyAgentFolioSatpConsumerRecord(record);
 const policyReference = buildAgentFolioRuntimePolicyReference({ profile });
+const readOnlyView = buildAgentFolioReadOnlyView({ profile });
 
 console.log(verification.ok, record.satp.trustInputs.map((input) => input.trustPacket.pda.attestation));
 console.log(policyReference.result.decision, policyReference.action.type);
+console.log(readOnlyView.runtimePolicy, readOnlyView.guardrails);
 ```
 
 ## Consumer boundary
