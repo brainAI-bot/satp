@@ -53,7 +53,7 @@ function buildAgentFolioReadOnlyView({ profile, network = 'devnet' } = {}) {
       decision: policy.result.decision,
       reasonCodes: policy.result.reasonCodes,
     },
-    guardrails: {
+    declaredBoundary: {
       callsRpc: record.integration.rpcRequired,
       writesSolanaState: false,
       readsKeypairs: false,

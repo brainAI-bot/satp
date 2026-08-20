@@ -18,7 +18,9 @@ From the repository root, run the read-only consumer against the included AgentF
 npm --prefix examples/agentfolio-consumer-readonly run example
 ```
 
-The command prints a deterministic JSON view containing profile display data, SATP-derived request hashes and PDAs, and a local runtime-policy decision. Every emitted request is unsigned, has no transaction or instructions, and the output guardrails report that the example performs no RPC call, chain write, keypair read, package publish, program deploy, or AgentFolio data mutation.
+The command prints a deterministic JSON view containing profile display data, SATP-derived request hashes and PDAs, and a local runtime-policy decision. Every emitted request is unsigned and has no transaction or instructions. The output's `declaredBoundary` documents the intended limits of this example; it is not a machine-verified safety attestation. The command test separately preloads a tamper-resistant `fetch` stub and proves the runnable example completes without using that network API.
+
+An optional command argument is treated as a trusted local fixture path. It is not a URL and the example does not fetch a remote profile.
 
 Verify the example with:
 
@@ -49,7 +51,7 @@ const readOnlyView = buildAgentFolioReadOnlyView({ profile });
 
 console.log(verification.ok, record.satp.trustInputs.map((input) => input.trustPacket.pda.attestation));
 console.log(policyReference.result.decision, policyReference.action.type);
-console.log(readOnlyView.runtimePolicy, readOnlyView.guardrails);
+console.log(readOnlyView.runtimePolicy, readOnlyView.declaredBoundary);
 ```
 
 ## Consumer boundary

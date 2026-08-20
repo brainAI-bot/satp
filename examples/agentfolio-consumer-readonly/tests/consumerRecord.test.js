@@ -55,15 +55,8 @@ test('builds a display-safe read-only AgentFolio view from current SATP APIs', (
   assert.equal(view.satp.trustInputs.length, 2);
   assert.equal(view.runtimePolicy.recordVerified, true);
   assert.equal(view.runtimePolicy.decision, 'allow');
-  assert.deepEqual(view.guardrails, {
-    callsRpc: false,
-    writesSolanaState: false,
-    readsKeypairs: false,
-    signsTransactions: false,
-    publishesPackages: false,
-    deploysPrograms: false,
-    mutatesAgentFolioData: false,
-  });
+  assert.ok(view.declaredBoundary);
+  assert.equal(Object.hasOwn(view, 'guardrails'), false);
 
   for (const input of view.satp.trustInputs) {
     assert.match(input.genesisPda, /^[1-9A-HJ-NP-Za-km-z]+$/);
@@ -87,8 +80,7 @@ test('runs the read-only consumer command and emits parseable JSON', () => {
   const output = JSON.parse(result.stdout);
   assert.equal(output.schemaVersion, 'agentfolio.satpReadonlyConsumerExample.v1');
   assert.equal(output.runtimePolicy.recordVerified, true);
-  assert.equal(output.guardrails.callsRpc, false);
-  assert.equal(output.guardrails.writesSolanaState, false);
+  assert.ok(output.declaredBoundary);
 });
 
 test('verifies prepared consumer records without network or signing', () => {
