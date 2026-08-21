@@ -1,6 +1,8 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 const profile = require('../fixtures/agentfolio-profile.json');
 const {
@@ -10,6 +12,9 @@ const {
 const {
   buildAgentFolioRuntimePolicyReference,
 } = require('../src/runtimePolicyReference');
+const {
+  buildAgentFolioReadOnlyView,
+} = require('../src/readOnlyConsumerExample');
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -20,6 +25,7 @@ test('builds offline SATP trust inputs for an AgentFolio-style consumer', () => 
 
   assert.equal(record.mode, 'offline-readonly-consumer-preflight');
   assert.equal(record.integration.agentfolioRole, 'consumer-adapter');
+  assert.equal(record.integration.rpcRequired, false);
   assert.equal(record.integration.writesRequired, false);
   assert.equal(record.integration.signingRequired, false);
   assert.equal(record.satp.trustInputs.length, 2);
@@ -41,9 +47,54 @@ test('builds offline SATP trust inputs for an AgentFolio-style consumer', () => 
   }
 });
 
+test('builds a display-safe read-only AgentFolio view from current SATP APIs', () => {
+  const view = buildAgentFolioReadOnlyView({ profile });
+
+  assert.equal(view.mode, 'offline-readonly');
+  assert.equal(view.satp.network, 'devnet');
+  assert.equal(view.satp.trustInputs.length, 2);
+  assert.equal(view.runtimePolicy.recordVerified, true);
+  assert.equal(view.runtimePolicy.decision, 'allow');
+  assert.ok(view.declaredBoundary);
+  assert.equal(Object.hasOwn(view, 'guardrails'), false);
+
+  for (const input of view.satp.trustInputs) {
+    assert.match(input.genesisPda, /^[1-9A-HJ-NP-Za-km-z]+$/);
+    assert.match(input.attestationPda, /^[1-9A-HJ-NP-Za-km-z]+$/);
+    assert.equal(input.unsigned, true);
+    assert.equal(input.signingRequired, false);
+    assert.equal(input.transaction, null);
+    assert.deepEqual(input.instructions, []);
+  }
+});
+
+test('runs the read-only consumer command and emits parseable JSON', () => {
+  const exampleRoot = path.join(__dirname, '..');
+  const disableFetchPath = path.join(__dirname, 'disableFetch.js');
+  const result = spawnSync(process.execPath, ['--require', disableFetchPath, 'src/readOnlyConsumerExample.js'], {
+    cwd: exampleRoot,
+    encoding: 'utf8',
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  const output = JSON.parse(result.stdout);
+  assert.equal(output.schemaVersion, 'agentfolio.satpReadonlyConsumerExample.v1');
+  assert.equal(output.runtimePolicy.recordVerified, true);
+  assert.ok(output.declaredBoundary);
+});
+
 test('verifies prepared consumer records without network or signing', () => {
   const record = buildAgentFolioSatpConsumerRecord({ profile });
   assert.deepEqual(verifyAgentFolioSatpConsumerRecord(record), { ok: true, errors: [] });
+});
+
+test('rejects consumer records that require RPC', () => {
+  const record = buildAgentFolioSatpConsumerRecord({ profile });
+  record.integration.rpcRequired = true;
+
+  const result = verifyAgentFolioSatpConsumerRecord(record);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /integration flags must stay offline/);
 });
 
 test('builds an AgentFolio runtime policy reference consumer plan', () => {

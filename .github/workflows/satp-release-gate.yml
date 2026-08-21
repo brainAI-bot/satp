@@ -7,6 +7,7 @@ on:
       - "README.md"
       - "docs/package-boundary.md"
       - "docs/satp-client-consumer-install.md"
+      - "examples/**"
       - "package.json"
       - "package-lock.json"
       - "packages/satp*/**"
@@ -25,6 +26,7 @@ on:
       - "README.md"
       - "docs/package-boundary.md"
       - "docs/satp-client-consumer-install.md"
+      - "examples/**"
       - "package.json"
       - "package-lock.json"
       - "packages/satp*/**"
@@ -60,6 +62,9 @@ jobs:
 
       - name: Run SATP CI
         run: npm run ci
+
+      - name: Check and test runnable examples
+        run: npm run check:examples && npm run test:examples
 
       - name: Run package health and secret-shape checks
         run: npm run check:satp-client-health

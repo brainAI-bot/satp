@@ -128,6 +128,7 @@ function buildAgentFolioSatpConsumerRecord({
       agentfolioRole: 'consumer-adapter',
       mcpRole: 'can expose this record through a read-only tool',
       x402Role: 'can gate access before returning this read-only record',
+      rpcRequired: false,
       signingRequired: false,
       writesRequired: false,
       livePaymentRequired: false,
@@ -194,8 +195,12 @@ function verifyAgentFolioSatpConsumerRecord(record) {
     }
   }
 
-  if (record.integration?.writesRequired !== false || record.integration?.signingRequired !== false) {
-    errors.push('integration flags must stay read-only and unsigned');
+  if (
+    record.integration?.rpcRequired !== false ||
+    record.integration?.writesRequired !== false ||
+    record.integration?.signingRequired !== false
+  ) {
+    errors.push('integration flags must stay offline, read-only, and unsigned');
   }
 
   return { ok: errors.length === 0, errors };
