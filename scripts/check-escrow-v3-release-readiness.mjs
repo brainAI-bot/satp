@@ -79,9 +79,16 @@ function lineNumber(text, index) {
 }
 
 function isFailClosedContext(text, match) {
-  const paragraphStart = Math.max(0, text.lastIndexOf('\n\n', match.index));
-  const contextStart = Math.max(paragraphStart, match.index - 240);
-  const contextEnd = Math.min(text.length, match.index + match[0].length + 100);
+  const sentenceBoundaryPattern = /[.!?](?:["')\]]*)?(?:\s+|$)|\n\s*\n|\n(?=\s*(?:[-*+]\s|\d+[.)]\s))/g;
+  let contextStart = 0;
+  for (const boundary of text.slice(0, match.index).matchAll(sentenceBoundaryPattern)) {
+    contextStart = boundary.index + boundary[0].length;
+  }
+  const matchEnd = match.index + match[0].length;
+  const nextBoundary = sentenceBoundaryPattern.exec(text.slice(matchEnd));
+  const contextEnd = nextBoundary
+    ? matchEnd + nextBoundary.index + nextBoundary[0].length
+    : text.length;
   const context = text.slice(contextStart, contextEnd);
   return /\b(?:does not|do not|must not|cannot|never|unverified|unresolved|differ(?:s|ed|ent)?|provenance_gap|only when|until)\b/i.test(context);
 }

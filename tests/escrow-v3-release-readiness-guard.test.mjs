@@ -85,6 +85,32 @@ test('a valid disclaimer cannot hide a later false readiness claim', () => {
   assert.equal(violations[0].line, 5);
 });
 
+test('an unresolved sentence cannot hide a later false source equality claim', () => {
+  const text = [
+    '# Escrow V3 release boundary',
+    '',
+    'Provenance remains unresolved for the April build.',
+    'The tracked source matches the deployed mainnet binary.',
+  ].join('\n');
+  const violations = findReleaseReadinessViolations('docs/contradiction.md', text, gapManifest);
+  assert.equal(violations.length, 1);
+  assert.equal(violations[0].line, 4);
+  assert.equal(violations[0].label, 'source/deployed equality claim');
+});
+
+test('an unresolved list item cannot hide a later false source equality claim', () => {
+  const text = [
+    '# Escrow V3 release boundary',
+    '',
+    '- escrow_v3 provenance is unresolved',
+    '- Tracked source matches the deployed bytes.',
+  ].join('\n');
+  const violations = findReleaseReadinessViolations('docs/contradiction.md', text, gapManifest);
+  assert.equal(violations.length, 1);
+  assert.equal(violations[0].line, 4);
+  assert.equal(violations[0].label, 'source/deployed equality claim');
+});
+
 test('an unresolved label cannot excuse a contradictory provenance claim', () => {
   const text = 'Escrow V3 provenance is unresolved, but escrow_v3 provenance is verified.';
   const violations = findReleaseReadinessViolations('docs/contradiction.md', text, gapManifest);
