@@ -34,6 +34,7 @@
     "test:conformance:rc-s6": "node tests/conformance/rc-s6-fixtures.test.js",
     "test:escrow-build-proof-reference": "node --test tests/escrow-v3-build-proof-reference.test.mjs",
     "test:escrow-mainnet-provenance": "node --test tests/escrow-v3-mainnet-provenance.test.mjs",
+    "verify:escrow-mainnet-provenance:live": "node scripts/verify-escrow-v3-mainnet-provenance.mjs --live",
     "test:v3": "node packages/satp-client/test-v3.js",
     "test:burn-become-devnet-e2e": "node scripts/burn-to-become-devnet-e2e.js --offline",
     "test:v3-usdc": "node packages/satp-client/test-v3-escrow-usdc.js",

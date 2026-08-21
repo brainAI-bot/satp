@@ -24,6 +24,18 @@ test('rejects a false source/deployed/IDL certification', () => {
   })), /certification must fail closed/);
 });
 
+test('rejects a recertification that claims runtime drift', () => {
+  assert.throws(() => validateProvenanceManifest(mutate((copy) => {
+    copy.recertification.runtime_drift = true;
+  })), /runtime drift must fail closed/);
+});
+
+test('rejects a missing recertification RPC slot', () => {
+  assert.throws(() => validateProvenanceManifest(mutate((copy) => {
+    delete copy.recertification.rpc_slot;
+  })), /rpc_slot must be a positive integer/);
+});
+
 test('rejects an invented authoritative source commit', () => {
   assert.throws(() => validateProvenanceManifest(mutate((copy) => {
     copy.conclusion.authoritative_source_commit = copy.closest_satp_candidate.commit;

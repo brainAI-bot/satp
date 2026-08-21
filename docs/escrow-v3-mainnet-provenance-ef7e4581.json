@@ -3,6 +3,12 @@
   "marker": "[#ef7e4581]",
   "status": "provenance_gap",
   "observed_at_utc": "2026-08-20T17:32:11Z",
+  "recertified_at_utc": "2026-08-21T06:13:44Z",
+  "recertification": {
+    "rpc_slot": 440626467,
+    "runtime_drift": false,
+    "published_idl_drift": false
+  },
   "runtime": {
     "cluster": "mainnet-beta",
     "program_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
@@ -22,6 +28,7 @@
   },
   "published_idl": {
     "account": "D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn",
+    "account_bytes": 6808,
     "inflated_json_bytes": 12172,
     "inflated_json_sha256": "864e8af057c1b196156222ecda5853936bf4c6e0f3ae9f5c1e2ca2e53ed6c768",
     "instruction_count": 9,
