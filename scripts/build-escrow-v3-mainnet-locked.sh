@@ -36,6 +36,10 @@ fi
 solana --version | grep -q 'solana-cli 2.1.21 ' || fail "Solana CLI must be 2.1.21"
 cargo-build-sbf --version | grep -q 'solana-cargo-build-sbf 2.1.21' || fail "cargo-build-sbf must be 2.1.21"
 
+# Solana 2.1.21 enumerates this directory before its installer creates it and
+# panics on a fresh host when it is absent.
+mkdir -p "$HOME/.cache/solana"
+
 temp_parent="${TMPDIR:-/tmp}"
 temp_parent="${temp_parent%/}"
 build_root="$(mktemp -d "$temp_parent/satp-escrow-v3-locked.XXXXXX")"
