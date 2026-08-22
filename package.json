@@ -34,6 +34,7 @@
     "test:conformance:rc-s6": "node tests/conformance/rc-s6-fixtures.test.js",
     "test:escrow-build-proof-reference": "node --test tests/escrow-v3-build-proof-reference.test.mjs",
     "test:escrow-mainnet-provenance": "node --test tests/escrow-v3-mainnet-provenance.test.mjs",
+    "test:escrow-mainnet-locked": "node --test tests/escrow-v3-mainnet-locked.test.mjs",
     "check:escrow-release-readiness": "node scripts/check-escrow-v3-release-readiness.mjs && node --test tests/escrow-v3-release-readiness-guard.test.mjs",
     "verify:escrow-mainnet-provenance:live": "node scripts/verify-escrow-v3-mainnet-provenance.mjs --live",
     "test:v3": "node packages/satp-client/test-v3.js",
@@ -41,7 +42,7 @@
     "test:v3-usdc": "node packages/satp-client/test-v3-escrow-usdc.js",
     "test:borsh": "node packages/satp-client/test-borsh-reader.js",
     "test:examples": "npm --prefix examples/mcp-x402-readonly test && npm --prefix examples/agentfolio-consumer-readonly test && npm --prefix examples/third-party-runtime-conformance test",
-    "ci:offline": "npm run lint:roadmap && npm run validate:idls && npm run verify:v3-program-sources && npm run check:js && npm run check:exports && npm run check:release-metadata && npm run test:package-entrypoints && npm run test:attestation-request && npm run test:runtime-policy && npm run test:runtime-authorization-evidence && npm run test:wallet-control && npm run test:x402-discovery && npm run test:signer-policy && npm run test:conformance:rc-s6 && npm run test:escrow-build-proof-reference && npm run test:escrow-mainnet-provenance && npm run check:escrow-release-readiness && npm run test:v3 && npm run test:v3-usdc && npm run test:borsh",
+    "ci:offline": "npm run lint:roadmap && npm run validate:idls && npm run verify:v3-program-sources && npm run check:js && npm run check:exports && npm run check:release-metadata && npm run test:package-entrypoints && npm run test:attestation-request && npm run test:runtime-policy && npm run test:runtime-authorization-evidence && npm run test:wallet-control && npm run test:x402-discovery && npm run test:signer-policy && npm run test:conformance:rc-s6 && npm run test:escrow-build-proof-reference && npm run test:escrow-mainnet-provenance && npm run test:escrow-mainnet-locked && npm run check:escrow-release-readiness && npm run test:v3 && npm run test:v3-usdc && npm run test:borsh",
     "ci:offline-with-examples": "npm run ci:offline && npm run check:examples && npm run test:examples",
     "ci": "npm run ci:offline && npm run smoke:consumer-install && npm run smoke:satp-client-packed-consumer && npm run check:satp-client-uuid-advisory"
   },

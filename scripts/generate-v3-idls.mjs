@@ -7,7 +7,7 @@ import { join, relative, resolve } from 'node:path';
 const root = resolve(new URL('..', import.meta.url).pathname);
 const outDir = resolve(root, 'idls/v3');
 const clientDiscriminatorPath = resolve(root, 'packages/satp-client/src/v3-idl-discriminators.js');
-const sourceRef = 'brainAI-bot/clawd-brainchain/satp-v3@94a1d309dcc692228c357f6e28ab679196235ad2';
+const sourceRef = 'brainAI-bot/satp@0bf088e5618f173dff7e0fba622bc2911212c52e';
 const generationCommand = 'node scripts/generate-v3-idls.mjs';
 const checkOnly = process.argv.includes('--check');
 
@@ -19,6 +19,10 @@ const programs = [
   'validation_v3',
   'escrow_v3',
 ];
+
+const canonicalProgramAddresses = new Map([
+  ['escrow_v3', 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C'],
+]);
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -75,13 +79,14 @@ function extractIdl(output, program) {
 }
 
 function generate(program) {
+  const features = program === 'escrow_v3' ? 'idl-build,mainnet' : 'idl-build';
   const output = execFileSync('cargo', [
     '+1.89.0',
     'test',
     '-p',
     program,
     '--features',
-    'idl-build',
+    features,
     '__anchor_private_print_idl',
     '--',
     '--show-output',
@@ -95,6 +100,8 @@ function generate(program) {
   if (idl.metadata?.name !== program) {
     throw new Error(`${program}: metadata.name mismatch: ${idl.metadata?.name}`);
   }
+  const canonicalAddress = canonicalProgramAddresses.get(program);
+  if (canonicalAddress) idl.address = canonicalAddress;
   return idl;
 }
 
