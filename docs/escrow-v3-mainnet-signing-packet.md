@@ -30,7 +30,7 @@ Set these locally in the Owner signing environment. Do not paste their values
 into HQ, GitHub, logs, or chat.
 
 ```sh
-export MAINNET_RPC='mainnet-beta'
+export MAINNET_RPC='https://api.mainnet-beta.solana.com'
 export OWNER_SIGNER='<owner upgrade-authority signer URI or local path>'
 export FEE_PAYER='<owner-approved fee-payer signer URI or local path>'
 export ROLLBACK_BUFFER_SIGNER='<new local rollback-buffer signer path>'
@@ -56,6 +56,9 @@ test "$(shasum -a 256 rollback-escrow-v3-53e922d8.so | awk '{print $1}')" = '880
 anchor idl fetch --provider.cluster mainnet HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C --out rollback-escrow-v3-9-instruction-idl.json
 test "$(jq '.instructions | length' rollback-escrow-v3-9-instruction-idl.json)" = '9'
 test "$(solana address --keypair "$OWNER_SIGNER")" = 'Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc'
+test "$(anchor --version)" = 'anchor-cli 1.0.0'
+anchor idl authority --provider.cluster mainnet HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C \
+  | grep -q 'Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc'
 ```
 
 Stop if any assertion differs.
@@ -127,8 +130,7 @@ Run the canonical account and interface probes:
 ```sh
 solana program dump HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C post-upgrade-escrow-v3.so --url "$MAINNET_RPC"
 test "$(shasum -a 256 post-upgrade-escrow-v3.so | awk '{print $1}')" = '4f21da13659cbe99a606b408a5f1d3523c0e41de20538028939bbb1b54c3cc0d'
-rpc_url="$(solana config get | awk -F': ' '/RPC URL/{print $2}')"
-curl --fail --silent --show-error "$rpc_url" \
+curl --fail --silent --show-error "$MAINNET_RPC" \
   -H 'content-type: application/json' \
   --data '{"jsonrpc":"2.0","id":1,"method":"getAccountInfo","params":["Fg1DJyKX9CngiMihZxJY2zjaQ8T1PK5QuiVhNvJmeTqk",{"encoding":"base64","commitment":"finalized"}]}' \
   | jq -r '.result.value.data[0]' | base64 --decode | tail -c +46 > post-upgrade-allocated-payload.bin
