@@ -74,14 +74,23 @@ LOCKED_IDL_ZLIB_BYTES="$(node --input-type=module -e "import {readFileSync} from
 test "$LOCKED_IDL_ZLIB_BYTES" = '3249'
 test "$LOCKED_IDL_ZLIB_BYTES" -le "$((IDL_ACCOUNT_BYTES - 44))"
 solana program dump HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C rollback-escrow-v3-53e922d8.so --url "$MAINNET_RPC"
-test "$(shasum -a 256 rollback-escrow-v3-53e922d8.so | awk '{print $1}')" = '88058f4322bb8cbb9227b6f35ae3c78baf2be9c01a3bd70523f803f9bfa7f078'
+test "$(shasum -a 256 rollback-escrow-v3-53e922d8.so | awk '{print $1}')" = '53e922d8792d3ec2d447c497f37dfe8e4ffd1d9bde0f9d6edc0bb3578e67c17f'
 anchor idl fetch --provider.cluster mainnet HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C --out rollback-escrow-v3-9-instruction-idl.json
 test "$(jq '.instructions | length' rollback-escrow-v3-9-instruction-idl.json)" = '9'
 test "$(solana address --keypair "$OWNER_SIGNER")" = 'Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc'
 test "$(anchor --version)" = 'anchor-cli 1.0.0'
-anchor idl authority --provider.cluster mainnet HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C \
-  | grep -q 'Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc'
+node scripts/read-anchor-idl-authority.mjs \
+  preflight-escrow-v3-idl-account.json \
+  Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc
 ```
+
+`solana program dump` writes the finalized ProgramData payload, so the rollback
+file must match the current allocated payload SHA-256 rather than the separately
+recorded dumped ELF SHA-256.
+
+Anchor CLI 1.0.0 no longer exposes the legacy `anchor idl authority` command.
+The checked-in readback helper decodes the same 32-byte authority field directly
+from the finalized IDL account response already captured by this preflight.
 
 Stop if any assertion differs. A `ProgramData capacity branch: extension
 required` result is not permission to continue to the buffer writes; it selects
