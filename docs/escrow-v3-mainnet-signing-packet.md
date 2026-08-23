@@ -79,13 +79,18 @@ anchor idl fetch --provider.cluster mainnet HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFb
 test "$(jq '.instructions | length' rollback-escrow-v3-9-instruction-idl.json)" = '9'
 test "$(solana address --keypair "$OWNER_SIGNER")" = 'Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc'
 test "$(anchor --version)" = 'anchor-cli 1.0.0'
-anchor idl authority --provider.cluster mainnet HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C \
-  | grep -q 'Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc'
+node scripts/read-anchor-idl-authority.mjs \
+  preflight-escrow-v3-idl-account.json \
+  Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc
 ```
 
 `solana program dump` writes the finalized ProgramData payload, so the rollback
 file must match the current allocated payload SHA-256 rather than the separately
 recorded dumped ELF SHA-256.
+
+Anchor CLI 1.0.0 no longer exposes the legacy `anchor idl authority` command.
+The checked-in readback helper decodes the same 32-byte authority field directly
+from the finalized IDL account response already captured by this preflight.
 
 Stop if any assertion differs. A `ProgramData capacity branch: extension
 required` result is not permission to continue to the buffer writes; it selects

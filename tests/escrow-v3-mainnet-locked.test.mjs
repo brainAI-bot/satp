@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { readAnchorIdlAuthority } from '../scripts/read-anchor-idl-authority.mjs';
 import { verifyLockedBuild } from '../scripts/verify-escrow-v3-mainnet-locked.mjs';
 
 test('locked escrow_v3 mainnet inputs and 14-instruction IDL are internally consistent', () => {
@@ -22,4 +23,16 @@ test('owner packet fails closed on ProgramData and IDL capacity before writes', 
   assert.match(packet, /solana program extend HXCUWKR2/);
   assert.match(packet, /head -c 346856 post-upgrade-allocated-payload\.bin/);
   assert.match(packet, /test ! -s post-upgrade-nonzero-padding\.bin/);
+  assert.doesNotMatch(packet, /^anchor idl authority /m);
+  assert.match(packet, /read-anchor-idl-authority\.mjs/);
+});
+
+test('Anchor 1.0 IDL authority readback decodes the legacy account header', () => {
+  const account = Buffer.alloc(44);
+  const response = { result: { value: { data: [account.toString('base64'), 'base64'] } } };
+  assert.equal(readAnchorIdlAuthority(response), '11111111111111111111111111111111');
+  assert.throws(
+    () => readAnchorIdlAuthority({ result: { value: { data: [Buffer.alloc(43).toString('base64')] } } }),
+    /expected at least 44/
+  );
 });
