@@ -71,6 +71,7 @@ function readPackageMetadata() {
   assert(metadata.exports && metadata.exports['.'], 'root export must be declared');
   assert(metadata.exports['./wallet-control-challenge'], 'wallet-control subpath export must be declared');
   assert(metadata.exports['./x402-discovery'], 'x402-discovery subpath export must be declared');
+  assert(metadata.exports['./idls/*'], 'idls subpath export must be declared');
   assert(Array.isArray(metadata.files) && metadata.files.includes('src/'), 'files must include src/');
   assert(Array.isArray(metadata.files) && metadata.files.includes('idls/'), 'files must include idls/');
   const bundled = Array.isArray(metadata.bundleDependencies)
@@ -115,6 +116,21 @@ function readPackSurface() {
       archivePaths.includes('package/node_modules/@solana/web3.js/package.json'),
       'pack artifact must include the temporary @solana/web3.js safety bundle',
     );
+
+    const consumerDir = path.join(tempDir, 'consumer');
+    fs.mkdirSync(consumerDir);
+    run('npm', ['init', '--yes'], { cwd: consumerDir, quiet: true });
+    run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--silent', tarballPath], {
+      cwd: consumerDir,
+      quiet: true,
+    });
+    run(process.execPath, [
+      '-e',
+      `const assert = require('node:assert/strict');\n` +
+        `const idl = require('@brainai/satp-client/idls/v3/escrow_v3.json');\n` +
+        `assert.equal(idl.address, 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C');\n` +
+        `console.log('packed IDL consumer require OK');`,
+    ], { cwd: consumerDir });
 
     const files = pack[0].files || [];
     filePaths = files.map((file) => file.path).sort();

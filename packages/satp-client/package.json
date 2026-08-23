@@ -22,6 +22,7 @@
       "default": "./src/x402-discovery.js"
     },
     "./src/*": "./src/*",
+    "./idls/*": "./idls/*",
     "./package.json": "./package.json"
   },
   "files": [

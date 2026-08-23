@@ -19,6 +19,9 @@ const {
 } = require('./src');
 const walletControlChallengeSubpath = require('@brainai/satp-client/wallet-control-challenge');
 const runtimeAuthorizationEvidenceSubpath = require('@brainai/satp-client/runtime-authorization-evidence');
+const packageMetadata = require('./package.json');
+
+assert.equal(packageMetadata.exports['./idls/*'], './idls/*');
 
 const DEVNET_RPC = 'https://api.devnet.solana.com';
 const MAINNET_RPC = 'https://api.mainnet-beta.solana.com';
