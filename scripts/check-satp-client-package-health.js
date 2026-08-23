@@ -72,6 +72,7 @@ function readPackageMetadata() {
   assert(metadata.exports['./wallet-control-challenge'], 'wallet-control subpath export must be declared');
   assert(metadata.exports['./x402-discovery'], 'x402-discovery subpath export must be declared');
   assert(Array.isArray(metadata.files) && metadata.files.includes('src/'), 'files must include src/');
+  assert(Array.isArray(metadata.files) && metadata.files.includes('idls/'), 'files must include idls/');
   const bundled = Array.isArray(metadata.bundleDependencies)
     ? metadata.bundleDependencies
     : [metadata.bundleDependencies];
@@ -124,6 +125,12 @@ function readPackSurface() {
   for (const required of [
     'package.json',
     'README.md',
+    'idls/v3/attestations_v3.json',
+    'idls/v3/escrow_v3.json',
+    'idls/v3/identity_v3.json',
+    'idls/v3/reputation_v3.json',
+    'idls/v3/reviews_v3.json',
+    'idls/v3/validation_v3.json',
     'src/index.js',
     'src/index.d.ts',
     'src/wallet-control-challenge.js',
@@ -131,6 +138,20 @@ function readPackSurface() {
   ]) {
     assert(filePaths.includes(required), `pack surface missing ${required}`);
   }
+
+  const expectedIdlPaths = [
+    'idls/v3/attestations_v3.json',
+    'idls/v3/escrow_v3.json',
+    'idls/v3/identity_v3.json',
+    'idls/v3/reputation_v3.json',
+    'idls/v3/reviews_v3.json',
+    'idls/v3/validation_v3.json',
+  ];
+  const packedIdlPaths = filePaths.filter((file) => file.startsWith('idls/'));
+  assert(
+    JSON.stringify(packedIdlPaths) === JSON.stringify(expectedIdlPaths),
+    `pack surface IDLs must be exactly ${expectedIdlPaths.join(', ')}; got ${packedIdlPaths.join(', ')}`,
+  );
 
   for (const blocked of [
     'package-lock.json',
