@@ -71,7 +71,9 @@ function readPackageMetadata() {
   assert(metadata.exports && metadata.exports['.'], 'root export must be declared');
   assert(metadata.exports['./wallet-control-challenge'], 'wallet-control subpath export must be declared');
   assert(metadata.exports['./x402-discovery'], 'x402-discovery subpath export must be declared');
+  assert(metadata.exports['./idls/*'], 'idls subpath export must be declared');
   assert(Array.isArray(metadata.files) && metadata.files.includes('src/'), 'files must include src/');
+  assert(Array.isArray(metadata.files) && metadata.files.includes('idls/'), 'files must include idls/');
   const bundled = Array.isArray(metadata.bundleDependencies)
     ? metadata.bundleDependencies
     : [metadata.bundleDependencies];
@@ -115,6 +117,21 @@ function readPackSurface() {
       'pack artifact must include the temporary @solana/web3.js safety bundle',
     );
 
+    const consumerDir = path.join(tempDir, 'consumer');
+    fs.mkdirSync(consumerDir);
+    run('npm', ['init', '--yes'], { cwd: consumerDir, quiet: true });
+    run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--silent', tarballPath], {
+      cwd: consumerDir,
+      quiet: true,
+    });
+    run(process.execPath, [
+      '-e',
+      `const assert = require('node:assert/strict');\n` +
+        `const idl = require('@brainai/satp-client/idls/v3/escrow_v3.json');\n` +
+        `assert.equal(idl.address, 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C');\n` +
+        `console.log('packed IDL consumer require OK');`,
+    ], { cwd: consumerDir });
+
     const files = pack[0].files || [];
     filePaths = files.map((file) => file.path).sort();
   } finally {
@@ -124,6 +141,12 @@ function readPackSurface() {
   for (const required of [
     'package.json',
     'README.md',
+    'idls/v3/attestations_v3.json',
+    'idls/v3/escrow_v3.json',
+    'idls/v3/identity_v3.json',
+    'idls/v3/reputation_v3.json',
+    'idls/v3/reviews_v3.json',
+    'idls/v3/validation_v3.json',
     'src/index.js',
     'src/index.d.ts',
     'src/wallet-control-challenge.js',
@@ -131,6 +154,20 @@ function readPackSurface() {
   ]) {
     assert(filePaths.includes(required), `pack surface missing ${required}`);
   }
+
+  const expectedIdlPaths = [
+    'idls/v3/attestations_v3.json',
+    'idls/v3/escrow_v3.json',
+    'idls/v3/identity_v3.json',
+    'idls/v3/reputation_v3.json',
+    'idls/v3/reviews_v3.json',
+    'idls/v3/validation_v3.json',
+  ];
+  const packedIdlPaths = filePaths.filter((file) => file.startsWith('idls/'));
+  assert(
+    JSON.stringify(packedIdlPaths) === JSON.stringify(expectedIdlPaths),
+    `pack surface IDLs must be exactly ${expectedIdlPaths.join(', ')}; got ${packedIdlPaths.join(', ')}`,
+  );
 
   for (const blocked of [
     'package-lock.json',
