@@ -49,5 +49,5 @@ jobs:
       - name: Verify the publish artifact
         run: npm run check:satp-client-health
 
-      - name: Publish with npm Trusted Publishing
-        run: npm publish ./packages/satp-client --access public --provenance
+      - name: Publish to the rc channel with npm Trusted Publishing
+        run: npm publish ./packages/satp-client --access public --provenance --tag rc
