@@ -781,7 +781,7 @@ export class SATPSDK {
 
 // ─── V3 SDK ──────────────────────────────────────────────
 
-export { SATPV3SDK } from './v3-sdk';
+export { SATPV3SDK, V3_ESCROW_PLATFORM_TREASURY } from './v3-sdk';
 
 // ─── V2 PDA Helpers ─────────────────────────────────────
 

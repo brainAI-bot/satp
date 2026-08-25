@@ -850,6 +850,7 @@ module.exports = {
   // V3 SDK (local extracted scaffold)
   SATPV3SDK,
   createSATPClient,
+  V3_ESCROW_PLATFORM_TREASURY: v3sdk.V3_ESCROW_PLATFORM_TREASURY,
   SatpV3Client: v3sdk.SATPV3SDK,
   SatpV3Builders: v3sdk,
 

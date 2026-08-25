@@ -8,6 +8,12 @@ use anchor_lang::solana_program::{
 use solana_sha256_hasher::hash as sol_hash;
 use std::str::FromStr;
 
+/// Immutable AgentFolio/SATP platform fee policy for SOL escrow releases.
+pub const PLATFORM_FEE_BPS: u64 = 500;
+pub const BPS_DENOMINATOR: u64 = 10_000;
+pub const PLATFORM_TREASURY: Pubkey =
+    pubkey!("FriU1FEpWbdgVrTcS49YV5mVv2oqN6poaVQjzq2BS5be");
+
 #[cfg(all(feature = "devnet", feature = "mainnet"))]
 compile_error!("enable at most one escrow_v3 source identity feature");
 
@@ -337,6 +343,7 @@ pub mod escrow_v3 {
     /// Client releases full remaining funds to agent.
     /// Allowed in Active or WorkSubmitted status.
     pub fn release(ctx: Context<Release>) -> Result<()> {
+        validate_platform_treasury(ctx.accounts.treasury.key())?;
         let escrow = &mut ctx.accounts.escrow;
         require!(escrow.currency == EscrowCurrency::Sol, EscrowV3Error::WrongCurrency);
         require!(
@@ -348,12 +355,26 @@ pub mod escrow_v3 {
             .ok_or(EscrowV3Error::ArithmeticOverflow)?;
         require!(remaining > 0, EscrowV3Error::NothingToRelease);
 
+        let fee_split = calculate_platform_fee_split(remaining)?;
+
         escrow.released_amount = escrow.amount;
         escrow.status = EscrowStatus::Released;
 
-        // Transfer remaining SOL to agent
-        **escrow.to_account_info().try_borrow_mut_lamports()? -= remaining;
-        **ctx.accounts.agent.to_account_info().try_borrow_mut_lamports()? += remaining;
+        transfer_fee_split(
+            &escrow.to_account_info(),
+            &ctx.accounts.agent.to_account_info(),
+            &ctx.accounts.treasury.to_account_info(),
+            fee_split,
+        )?;
+
+        emit!(PlatformFeeRouted {
+            escrow: escrow.key(),
+            agent: escrow.agent,
+            treasury: ctx.accounts.treasury.key(),
+            gross_amount: remaining,
+            agent_amount: fee_split.agent_amount,
+            platform_fee: fee_split.platform_fee,
+        });
 
         emit!(EscrowReleased {
             escrow: escrow.key(),
@@ -417,6 +438,7 @@ pub mod escrow_v3 {
     /// Client releases a partial amount (milestone payment).
     /// Escrow stays Active until fully released or cancelled.
     pub fn partial_release(ctx: Context<Release>, amount: u64) -> Result<()> {
+        validate_platform_treasury(ctx.accounts.treasury.key())?;
         let escrow = &mut ctx.accounts.escrow;
         require!(escrow.currency == EscrowCurrency::Sol, EscrowV3Error::WrongCurrency);
         require!(
@@ -429,13 +451,27 @@ pub mod escrow_v3 {
             .ok_or(EscrowV3Error::ArithmeticOverflow)?;
         require!(amount <= remaining, EscrowV3Error::InsufficientFunds);
 
+        let fee_split = calculate_platform_fee_split(amount)?;
+
         escrow.released_amount = escrow.released_amount
             .checked_add(amount)
             .ok_or(EscrowV3Error::ArithmeticOverflow)?;
 
-        // Transfer partial amount to agent
-        **escrow.to_account_info().try_borrow_mut_lamports()? -= amount;
-        **ctx.accounts.agent.to_account_info().try_borrow_mut_lamports()? += amount;
+        transfer_fee_split(
+            &escrow.to_account_info(),
+            &ctx.accounts.agent.to_account_info(),
+            &ctx.accounts.treasury.to_account_info(),
+            fee_split,
+        )?;
+
+        emit!(PlatformFeeRouted {
+            escrow: escrow.key(),
+            agent: escrow.agent,
+            treasury: ctx.accounts.treasury.key(),
+            gross_amount: amount,
+            agent_amount: fee_split.agent_amount,
+            platform_fee: fee_split.platform_fee,
+        });
 
         // If fully released, mark as Released
         if escrow.released_amount == escrow.amount {
@@ -1020,6 +1056,73 @@ fn transfer_checked_from_vault<'info>(
         .map_err(Into::into)
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct PlatformFeeSplit {
+    agent_amount: u64,
+    platform_fee: u64,
+}
+
+fn validate_platform_treasury(treasury: Pubkey) -> Result<()> {
+    require_keys_eq!(
+        treasury,
+        PLATFORM_TREASURY,
+        EscrowV3Error::WrongTreasury
+    );
+    Ok(())
+}
+
+/// Split a gross SOL release using floor rounding while preserving every lamport.
+fn calculate_platform_fee_split(gross_amount: u64) -> Result<PlatformFeeSplit> {
+    require!(gross_amount > 0, EscrowV3Error::ZeroAmount);
+
+    // Fail closed if a hostile/corrupt state cannot be represented safely.
+    let platform_fee = gross_amount
+        .checked_mul(PLATFORM_FEE_BPS)
+        .ok_or(EscrowV3Error::ArithmeticOverflow)?
+        / BPS_DENOMINATOR;
+    let agent_amount = gross_amount
+        .checked_sub(platform_fee)
+        .ok_or(EscrowV3Error::ArithmeticOverflow)?;
+
+    Ok(PlatformFeeSplit {
+        agent_amount,
+        platform_fee,
+    })
+}
+
+fn transfer_fee_split<'info>(
+    escrow: &AccountInfo<'info>,
+    agent: &AccountInfo<'info>,
+    treasury: &AccountInfo<'info>,
+    split: PlatformFeeSplit,
+) -> Result<()> {
+    transfer_lamports(escrow, agent, split.agent_amount)?;
+    transfer_lamports(escrow, treasury, split.platform_fee)
+}
+
+fn transfer_lamports<'info>(
+    source: &AccountInfo<'info>,
+    destination: &AccountInfo<'info>,
+    amount: u64,
+) -> Result<()> {
+    if amount == 0 {
+        return Ok(());
+    }
+
+    let next_source = source
+        .lamports()
+        .checked_sub(amount)
+        .ok_or(EscrowV3Error::InsufficientFunds)?;
+    let next_destination = destination
+        .lamports()
+        .checked_add(amount)
+        .ok_or(EscrowV3Error::ArithmeticOverflow)?;
+
+    **source.try_borrow_mut_lamports()? = next_source;
+    **destination.try_borrow_mut_lamports()? = next_destination;
+    Ok(())
+}
+
 /// Parsed tail fields from a Genesis Record.
 /// We need: genesis_record, is_active, authority, reputation_score, verification_level.
 struct GenesisTail {
@@ -1282,6 +1385,10 @@ pub struct Release<'info> {
         constraint = escrow.agent == agent.key() @ EscrowV3Error::WrongAgent,
     )]
     pub agent: UncheckedAccount<'info>,
+
+    /// CHECK: Must equal the immutable PLATFORM_TREASURY; validated before mutation.
+    #[account(mut)]
+    pub treasury: UncheckedAccount<'info>,
 }
 
 #[derive(Accounts)]
@@ -1684,6 +1791,9 @@ pub enum EscrowV3Error {
 
     #[msg("SPL token account data is invalid")]
     InvalidTokenAccount,
+
+    #[msg("Wrong platform treasury wallet")]
+    WrongTreasury,
 }
 
 // ═══════════════════════════════════════════════
@@ -1727,6 +1837,16 @@ pub struct PartialRelease {
 }
 
 #[event]
+pub struct PlatformFeeRouted {
+    pub escrow: Pubkey,
+    pub agent: Pubkey,
+    pub treasury: Pubkey,
+    pub gross_amount: u64,
+    pub agent_amount: u64,
+    pub platform_fee: u64,
+}
+
+#[event]
 pub struct EscrowCancelled {
     pub escrow: Pubkey,
     pub client: Pubkey,
@@ -1754,4 +1874,52 @@ pub struct DisputeResolved {
     pub agent_amount: u64,
     pub client_amount: u64,
     pub resolved_by: Pubkey,
+}
+
+#[cfg(test)]
+mod fee_routing_tests {
+    use super::*;
+
+    fn assert_split(gross: u64, expected_agent: u64, expected_fee: u64) {
+        let split = calculate_platform_fee_split(gross).expect("valid gross amount");
+        assert_eq!(split.agent_amount, expected_agent);
+        assert_eq!(split.platform_fee, expected_fee);
+        assert_eq!(split.agent_amount.checked_add(split.platform_fee), Some(gross));
+    }
+
+    #[test]
+    fn fee_split_uses_floor_rounding_and_conserves_gross() {
+        assert_split(10_000, 9_500, 500);
+        assert_split(101, 96, 5);
+        assert_split(20, 19, 1);
+        assert_split(19, 19, 0);
+        assert_split(1, 1, 0);
+    }
+
+    #[test]
+    fn fee_split_fails_closed_on_multiplication_overflow() {
+        assert!(calculate_platform_fee_split(u64::MAX).is_err());
+        let largest_safe_gross = u64::MAX / PLATFORM_FEE_BPS;
+        let expected_fee = largest_safe_gross * PLATFORM_FEE_BPS / BPS_DENOMINATOR;
+        assert_split(
+            largest_safe_gross,
+            largest_safe_gross - expected_fee,
+            expected_fee,
+        );
+    }
+
+    #[test]
+    fn fee_split_rejects_zero() {
+        assert!(calculate_platform_fee_split(0).is_err());
+    }
+
+    #[test]
+    fn platform_treasury_is_fixed() {
+        assert_eq!(
+            PLATFORM_TREASURY.to_string(),
+            "FriU1FEpWbdgVrTcS49YV5mVv2oqN6poaVQjzq2BS5be"
+        );
+        assert!(validate_platform_treasury(PLATFORM_TREASURY).is_ok());
+        assert!(validate_platform_treasury(Pubkey::default()).is_err());
+    }
 }

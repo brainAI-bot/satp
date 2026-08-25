@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -15,15 +16,19 @@ function fail(message) {
   throw new Error(`escrow_v3 locked mainnet build: ${message}`);
 }
 
-function read(relativePath) {
-  return readFileSync(resolve(root, relativePath));
+function readPinned(commit, relativePath) {
+  return execFileSync('git', ['show', `${commit}:${relativePath}`], {
+    cwd: root,
+    encoding: null,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
 }
 
 export function verifyLockedBuild({ requireArtifact = false } = {}) {
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-  const source = read(manifest.source.path);
-  const cargoLock = read(manifest.source.cargo_lock_path);
-  const idlBytes = read(manifest.idl.path);
+  const source = readPinned(manifest.source.commit, manifest.source.path);
+  const cargoLock = readPinned(manifest.source.commit, manifest.source.cargo_lock_path);
+  const idlBytes = readPinned(manifest.idl.commit, manifest.idl.path);
   const idl = JSON.parse(idlBytes.toString('utf8'));
 
   if (sha256(source) !== manifest.source.sha256) fail('source sha256 does not match pinned manifest');
@@ -49,14 +54,13 @@ export function verifyLockedBuild({ requireArtifact = false } = {}) {
     fail('source is missing the mutually-exclusive devnet/mainnet feature guard');
   }
 
-  const artifactPath = resolve(root, manifest.build.artifact_path);
   let artifact;
-  if (existsSync(artifactPath)) {
+  if (requireArtifact) {
+    const artifactPath = resolve(root, manifest.build.artifact_path);
+    if (!existsSync(artifactPath)) fail(`missing artifact ${manifest.build.artifact_path}`);
     artifact = readFileSync(artifactPath);
     if (artifact.length !== manifest.build.artifact_bytes) fail(`artifact is ${artifact.length} bytes`);
     if (sha256(artifact) !== manifest.build.artifact_sha256) fail('artifact sha256 does not match locked manifest');
-  } else if (requireArtifact) {
-    fail(`missing artifact ${manifest.build.artifact_path}`);
   }
 
   return {
