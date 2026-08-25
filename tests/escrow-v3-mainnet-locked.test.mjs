@@ -29,9 +29,14 @@ test('fee-routing candidate is separate from the deployed locked-build record', 
   assert.equal(locked.idl.commit, '008464206ff89f0012cbf071335dd59c3d4bd1b8');
   assert.equal(locked.build.artifact_sha256, '4f21da13659cbe99a606b408a5f1d3523c0e41de20538028939bbb1b54c3cc0d');
   assert.equal(locked.signing_packet, 'docs/escrow-v3-mainnet-signing-packet.md');
-  assert.equal(candidate.status, 'changes_requested');
-  assert.equal(candidate.source.commit, '2930ca34bb36cc419f64b45cf2367896a93c19c5');
-  assert.equal(candidate.build.artifact_bytes, 345744);
+  assert.equal(candidate.status, 'independent_review_pending');
+  assert.equal(candidate.source.commit, 'a35568bc3926bd44d73680813bda0e8d5371705f');
+  assert.equal(candidate.idl.commit, candidate.source.commit);
+  assert.equal(candidate.build.artifact_bytes, 350304);
+  assert.equal(candidate.programdata_capacity.required_extension_bytes, 3448);
+  assert.equal(candidate.programdata_capacity.status, 'extension_required_before_buffer_write');
+  assert.equal(candidate.candidate_head, candidate.source.commit);
+  assert.equal(candidate.reviewed_head, null);
   assert.notEqual(candidate.source.commit, locked.source.commit);
   assert.match(packet, /NO-GO until exact-head independent review, green checks/);
   assert.match(packet, /Transaction A calls `release` once/);

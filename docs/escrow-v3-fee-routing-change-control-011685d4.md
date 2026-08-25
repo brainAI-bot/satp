@@ -5,27 +5,27 @@ explicit Owner approval in HQ.** Preparation of this packet performed no chain
 write, signing, keypair access, money movement, npm publication, production
 mutation, or roadmap change.
 
-## Reviewed candidate (changes requested; not deployed)
+## Reworked candidate (independent review pending; not deployed)
 
 This record is intentionally separate from
 `docs/escrow-v3-mainnet-locked-build.json`. The locked-build file continues to
 describe the bytes deployed at slot 441423817; the values below describe only
-the pre-rework candidate reviewed at head
-`6ac1f10a354429d7f3f03098c926f103756b1b14`. New source, SBF, and IDL hashes
-must replace these candidate values after rework and before any approval.
+the reworked candidate at source commit
+`a35568bc3926bd44d73680813bda0e8d5371705f`. Exact-head independent review
+and green checks remain mandatory before any approval.
 
 | Field | Value |
 | --- | --- |
 | Program | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` |
 | ProgramData | `Fg1DJyKX9CngiMihZxJY2zjaQ8T1PK5QuiVhNvJmeTqk` |
 | Certified source base | `93fc6c0d86302cfe8b0d8c798ba2817d7eeace44` |
-| Candidate source commit | `2930ca34bb36cc419f64b45cf2367896a93c19c5` |
-| Source SHA-256 | `d94957985c9fcd61cfcadbaadceaf81eb74fffddba26838726862a932e4bdd3c` |
+| Candidate source commit | `a35568bc3926bd44d73680813bda0e8d5371705f` |
+| Source SHA-256 | `380b20d36f18253a5c382ec1abc4a1147a08092a9a42cdae25e5d954f41acd0a` |
 | Cargo.lock SHA-256 | `d98db19e0d86ca3248376d4857b150b240be05c4bc3a409d7cb638ce4d5d2237` |
 | Build command | `cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml --features mainnet` |
-| Candidate SBF | `345744` bytes / `31234c83c007d39616ca7002e38a087e9e5ef69c3a074d97211e501ffddae704` |
-| Allocated payload | `346856` bytes; candidate fits with `1112` zero-padding bytes |
-| Padded payload SHA-256 | `5471b9fc45ed03bd9ddd468224c7002a77e664a1481d4c9bf9358283bc11a62b` |
+| Candidate SBF | `350304` bytes / `27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a` |
+| Allocated payload | `346856` bytes; candidate exceeds allocation by `3448` bytes |
+| Padded payload SHA-256 | N/A; ProgramData extension is required before buffer writes |
 | Generated IDL | `9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10` |
 | IDL compressed bytes | `3254` (within the recorded `6764`-byte payload capacity) |
 | Treasury | `FriU1FEpWbdgVrTcS49YV5mVv2oqN6poaVQjzq2BS5be` |
@@ -76,7 +76,10 @@ larger than `346856`, or unavailable rollback payload is an unconditional stop.
 
 These are templates, not authorization. The Owner supplies signer references
 privately and first verifies their public identities. Use `--no-auto-extend`;
-this candidate requires no ProgramData extension.
+the candidate is larger than the current ProgramData allocation, so the Owner
+packet must be amended and independently reviewed with an explicit bounded
+extension step before any buffer write. The commands below remain non-executable
+templates until that amendment exists.
 
 ```sh
 solana program write-buffer target/deploy/escrow_v3.so \
