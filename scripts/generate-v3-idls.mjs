@@ -7,7 +7,7 @@ import { join, relative, resolve } from 'node:path';
 const root = resolve(new URL('..', import.meta.url).pathname);
 const outDir = resolve(root, 'idls/v3');
 const clientDiscriminatorPath = resolve(root, 'packages/satp-client/src/v3-idl-discriminators.js');
-const sourceRef = 'brainAI-bot/satp@0bf088e5618f173dff7e0fba622bc2911212c52e';
+const sourceRef = 'brainAI-bot/satp@2930ca34bb36cc419f64b45cf2367896a93c19c5';
 const generationCommand = 'node scripts/generate-v3-idls.mjs';
 const checkOnly = process.argv.includes('--check');
 

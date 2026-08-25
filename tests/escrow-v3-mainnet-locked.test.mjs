@@ -11,6 +11,26 @@ test('locked escrow_v3 mainnet inputs and 14-instruction IDL are internally cons
   assert.equal(result.instruction_count, 14);
 });
 
+test('fee-routing candidate packet remains approval-gated and binds two validations', () => {
+  const manifest = JSON.parse(readFileSync(
+    new URL('../docs/escrow-v3-mainnet-locked-build.json', import.meta.url),
+    'utf8',
+  ));
+  const packet = readFileSync(new URL(`../${manifest.signing_packet}`, import.meta.url), 'utf8');
+
+  assert.equal(manifest.status, 'independent_review_pending');
+  assert.equal(manifest.source.commit, '2930ca34bb36cc419f64b45cf2367896a93c19c5');
+  assert.equal(manifest.build.artifact_bytes, 345744);
+  assert.match(packet, /NO-GO until exact-head independent review, green checks/);
+  assert.match(packet, /Transaction A calls `release` once/);
+  assert.match(packet, /Transaction B calls `partial_release` once/);
+  assert.match(packet, /Stop after two submissions regardless of outcome/);
+  assert.match(packet, /platform_fee = floor\(gross \* 500 \/ 10000\)/);
+  assert.match(packet, /wrong treasury fails before\s+state or balance mutation/);
+  assert.match(packet, /USDC settlement is explicitly unchanged/);
+  assert.match(packet, /performed no chain\s+write, signing, keypair access, money movement/);
+});
+
 test('owner packet fails closed on ProgramData and IDL capacity before writes', () => {
   const packet = readFileSync(new URL('../docs/escrow-v3-mainnet-signing-packet.md', import.meta.url), 'utf8');
 
