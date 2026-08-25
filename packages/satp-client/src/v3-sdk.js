@@ -30,6 +30,7 @@ const { deserializeGenesisRecord } = require('./borsh-reader');
 
 const DEVNET_RPC = 'https://api.devnet.solana.com';
 const MAINNET_RPC = 'https://api.mainnet-beta.solana.com';
+const V3_ESCROW_PLATFORM_TREASURY = new PublicKey('FriU1FEpWbdgVrTcS49YV5mVv2oqN6poaVQjzq2BS5be');
 
 function isMainnetRpc(rpcUrl) {
   return typeof rpcUrl === 'string' && /mainnet/i.test(rpcUrl);
@@ -1438,6 +1439,7 @@ class SATPV3SDK {
         { pubkey: escrowKey, isSigner: false, isWritable: true },
         { pubkey: clientKey, isSigner: true, isWritable: false },
         { pubkey: agentKey, isSigner: false, isWritable: true },
+        { pubkey: V3_ESCROW_PLATFORM_TREASURY, isSigner: false, isWritable: true },
       ],
       data: disc,
     });
@@ -1479,6 +1481,7 @@ class SATPV3SDK {
         { pubkey: escrowKey, isSigner: false, isWritable: true },
         { pubkey: clientKey, isSigner: true, isWritable: false },
         { pubkey: agentKey, isSigner: false, isWritable: true },
+        { pubkey: V3_ESCROW_PLATFORM_TREASURY, isSigner: false, isWritable: true },
       ],
       data,
     });
@@ -2044,6 +2047,7 @@ class SATPV3SDK {
 module.exports = {
   createSATPClient,
   SATPV3SDK,
+  V3_ESCROW_PLATFORM_TREASURY,
   anchorDiscriminator,
   serializeString,
   serializeVecString,

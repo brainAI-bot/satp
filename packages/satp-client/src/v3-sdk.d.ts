@@ -3,6 +3,9 @@ import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 export type Network = 'mainnet' | 'devnet';
 export type AgentIdOrHash = string | Buffer;
 
+/** Immutable writable recipient for the 500 bps SOL escrow platform fee. */
+export const V3_ESCROW_PLATFORM_TREASURY: PublicKey;
+
 export interface SATPV3SDKOptions {
   network?: Network;
   rpcUrl?: string;
