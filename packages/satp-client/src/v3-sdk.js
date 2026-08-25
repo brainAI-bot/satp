@@ -99,6 +99,16 @@ function normalizeCurrency(currency) {
   return value;
 }
 
+function validateFixedTreasuryOption(opts = {}) {
+  if (opts.treasury === undefined || opts.treasury === null) return;
+  const requested = new PublicKey(opts.treasury);
+  if (!requested.equals(V3_ESCROW_PLATFORM_TREASURY)) {
+    throw new Error(
+      `Escrow V3 SOL treasury must equal ${V3_ESCROW_PLATFORM_TREASURY.toBase58()}`,
+    );
+  }
+}
+
 function resolveTokenMint(currency, mint) {
   if (mint) return new PublicKey(mint);
   if (currency === 'USDC') return V3_DEVNET_TOKEN_MINTS.USDC;
@@ -1426,6 +1436,7 @@ class SATPV3SDK {
     if (normalizeCurrency(opts.currency) === 'USDC') {
       return this.buildUsdcEscrowRelease(client, agent, escrowPDA, opts);
     }
+    validateFixedTreasuryOption(opts);
 
     const clientKey = new PublicKey(client);
     const agentKey = new PublicKey(agent);
@@ -1464,6 +1475,7 @@ class SATPV3SDK {
     if (normalizeCurrency(opts.currency) === 'USDC') {
       return this.buildPartialUsdcEscrowRelease(client, agent, escrowPDA, amount, opts);
     }
+    validateFixedTreasuryOption(opts);
 
     const clientKey = new PublicKey(client);
     const agentKey = new PublicKey(agent);

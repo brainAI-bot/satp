@@ -7,20 +7,32 @@ import { verifyLockedBuild } from '../scripts/verify-escrow-v3-mainnet-locked.mj
 test('locked escrow_v3 mainnet inputs and 14-instruction IDL are internally consistent', () => {
   const result = verifyLockedBuild();
   assert.equal(result.ok, true);
+  assert.equal(result.source_commit, '0bf088e5618f173dff7e0fba622bc2911212c52e');
+  assert.equal(result.artifact_sha256, null);
   assert.equal(result.idl_address, 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C');
   assert.equal(result.instruction_count, 14);
 });
 
-test('fee-routing candidate packet remains approval-gated and binds two validations', () => {
-  const manifest = JSON.parse(readFileSync(
+test('fee-routing candidate is separate from the deployed locked-build record', () => {
+  const locked = JSON.parse(readFileSync(
     new URL('../docs/escrow-v3-mainnet-locked-build.json', import.meta.url),
     'utf8',
   ));
-  const packet = readFileSync(new URL(`../${manifest.signing_packet}`, import.meta.url), 'utf8');
+  const candidate = JSON.parse(readFileSync(
+    new URL('../docs/escrow-v3-fee-routing-candidate-011685d4.json', import.meta.url),
+    'utf8',
+  ));
+  const packet = readFileSync(new URL(`../${candidate.change_control_packet}`, import.meta.url), 'utf8');
 
-  assert.equal(manifest.status, 'independent_review_pending');
-  assert.equal(manifest.source.commit, '2930ca34bb36cc419f64b45cf2367896a93c19c5');
-  assert.equal(manifest.build.artifact_bytes, 345744);
+  assert.equal(locked.status, 'owner_signing_pending');
+  assert.equal(locked.source.commit, '0bf088e5618f173dff7e0fba622bc2911212c52e');
+  assert.equal(locked.idl.commit, '008464206ff89f0012cbf071335dd59c3d4bd1b8');
+  assert.equal(locked.build.artifact_sha256, '4f21da13659cbe99a606b408a5f1d3523c0e41de20538028939bbb1b54c3cc0d');
+  assert.equal(locked.signing_packet, 'docs/escrow-v3-mainnet-signing-packet.md');
+  assert.equal(candidate.status, 'changes_requested');
+  assert.equal(candidate.source.commit, '2930ca34bb36cc419f64b45cf2367896a93c19c5');
+  assert.equal(candidate.build.artifact_bytes, 345744);
+  assert.notEqual(candidate.source.commit, locked.source.commit);
   assert.match(packet, /NO-GO until exact-head independent review, green checks/);
   assert.match(packet, /Transaction A calls `release` once/);
   assert.match(packet, /Transaction B calls `partial_release` once/);

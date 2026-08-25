@@ -36,14 +36,21 @@ function assertSolFeeRoutingInstruction(ix, name, expectedDataLength) {
     'treasury is the audited immutable recipient',
   );
 
+  await assert.rejects(
+    sdk.buildEscrowRelease(client, agent, escrow, { treasury: wrongTreasury }),
+    /Escrow V3 SOL treasury must equal FriU1FEpWbdgVrTcS49YV5mVv2oqN6poaVQjzq2BS5be/,
+  );
+  await assert.rejects(
+    sdk.buildPartialRelease(client, agent, escrow, 19, { treasury: wrongTreasury }),
+    /Escrow V3 SOL treasury must equal FriU1FEpWbdgVrTcS49YV5mVv2oqN6poaVQjzq2BS5be/,
+  );
+
   const full = await sdk.buildEscrowRelease(client, agent, escrow, {
-    treasury: wrongTreasury,
+    treasury: V3_ESCROW_PLATFORM_TREASURY,
   });
   assertSolFeeRoutingInstruction(full.transaction.instructions[0], 'release', 8);
 
-  const partial = await sdk.buildPartialRelease(client, agent, escrow, 19, {
-    treasury: wrongTreasury,
-  });
+  const partial = await sdk.buildPartialRelease(client, agent, escrow, 19);
   const partialIx = partial.transaction.instructions[0];
   assertSolFeeRoutingInstruction(partialIx, 'partial_release', 16);
   assert.equal(partialIx.data.readBigUInt64LE(8), 19n, 'gross partial amount is encoded exactly');

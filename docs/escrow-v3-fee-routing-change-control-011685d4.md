@@ -5,7 +5,14 @@ explicit Owner approval in HQ.** Preparation of this packet performed no chain
 write, signing, keypair access, money movement, npm publication, production
 mutation, or roadmap change.
 
-## Locked candidate
+## Reviewed candidate (changes requested; not deployed)
+
+This record is intentionally separate from
+`docs/escrow-v3-mainnet-locked-build.json`. The locked-build file continues to
+describe the bytes deployed at slot 441423817; the values below describe only
+the pre-rework candidate reviewed at head
+`6ac1f10a354429d7f3f03098c926f103756b1b14`. New source, SBF, and IDL hashes
+must replace these candidate values after rework and before any approval.
 
 | Field | Value |
 | --- | --- |
@@ -38,9 +45,10 @@ agent_amount + platform_fee = gross
 
 Zero release remains rejected, dust below 20 lamports routes zero fee without
 loss, multiplication overflow fails closed, and a wrong treasury fails before
-state or balance mutation. The shared identity verifier replaces duplicate SOL
-logic with the already-used USDC verifier; its checks and error mapping are
-unchanged and this keeps the candidate within the existing allocation.
+state or balance mutation. A dedicated `PlatformFeeRouted` event records the
+gross amount, agent amount, platform fee, and fixed treasury for every SOL fee
+split. The original inline `create_escrow` identity and authorization block is
+untouched by the rework.
 
 ## Approval gates
 

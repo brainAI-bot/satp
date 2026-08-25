@@ -13,6 +13,8 @@ on:
       - "idls/v3/escrow_v3.json"
       - "docs/escrow-v3-mainnet-locked-build.json"
       - "docs/escrow-v3-mainnet-signing-packet.md"
+      - "docs/escrow-v3-fee-routing-candidate-011685d4.json"
+      - "docs/escrow-v3-fee-routing-change-control-011685d4.md"
       - "scripts/build-escrow-v3-mainnet-locked.sh"
       - "scripts/generate-v3-idls.mjs"
       - "scripts/verify-escrow-v3-mainnet-locked.mjs"

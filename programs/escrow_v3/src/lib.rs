@@ -89,15 +89,80 @@ pub mod escrow_v3 {
             EscrowV3Error::AgentCannotBeArbiter
         );
 
-        // Shared SOL/USDC verifier keeps the identity boundary byte-for-byte aligned.
-        verify_agent_identity(
-            &ctx.accounts.agent_identity,
-            &ctx.accounts.agent_wallet.key(),
-            &agent_id,
-            min_verification_level,
-            require_born,
-        )?;
+        // ═══════════════════════════════════════
+        // VERIFY AGENT IDENTITY (CPI-less check)
+        // ═══════════════════════════════════════
+        //
+        // We verify the agent's Genesis Record exists by:
+        // 1. Computing expected PDA from agent_id
+        // 2. Checking the passed account matches
+        // 3. Verifying it's owned by identity_v3 program
+        // 4. Reading fields to check trust requirements
+
+        let identity_account = &ctx.accounts.agent_identity;
+
+        // Verify the account is owned by identity_v3
+        require!(
+            identity_account.owner == &IDENTITY_V3_PROGRAM_ID,
+            EscrowV3Error::InvalidIdentityOwner
+        );
+
+        // Verify PDA derivation matches
         let agent_id_hash = compute_sha256(agent_id.as_bytes());
+        let (expected_pda, _bump) = Pubkey::find_program_address(
+            &[b"genesis", &agent_id_hash],
+            &IDENTITY_V3_PROGRAM_ID,
+        );
+        require!(
+            identity_account.key() == expected_pda,
+            EscrowV3Error::InvalidIdentityPda
+        );
+
+        // Read Genesis Record fields for trust enforcement
+        let data = identity_account.try_borrow_data()?;
+        require!(data.len() > 8, EscrowV3Error::InvalidIdentityAccount);
+
+        // Parse relevant fields from Genesis Record
+        // Layout (after 8-byte discriminator):
+        //   agent_id_hash: [u8; 32]                    offset 8
+        //   agent_name: String (4 + len)                offset 40
+        //   ... (variable length strings) ...
+        //   We need: genesis_record (i64), reputation_score (u64), verification_level (u8)
+        //   These are at the end of variable-length data.
+        //
+        // Rather than walk the entire struct, we walk the variable-length fields
+        // to find the fixed fields at the end.
+
+        let parsed = parse_genesis_tail(&data)?;
+
+        // TD-004: Verify identity is active (not deactivated)
+        require!(
+            parsed.is_active,
+            EscrowV3Error::AgentIdentityDeactivated
+        );
+
+        // TD-002: Verify agent_wallet matches the Genesis Record authority
+        // Prevents funds going to unintended recipient
+        require!(
+            ctx.accounts.agent_wallet.key() == parsed.authority,
+            EscrowV3Error::AgentWalletMismatch
+        );
+
+        // Check born status if required
+        if require_born {
+            require!(
+                parsed.genesis_record > 0,
+                EscrowV3Error::AgentNotBorn
+            );
+        }
+
+        // Check minimum verification level
+        if min_verification_level > 0 {
+            require!(
+                parsed.verification_level >= min_verification_level,
+                EscrowV3Error::InsufficientVerificationLevel
+            );
+        }
 
         // ═══════════════════════════════════════
         // INITIALIZE ESCROW
@@ -302,6 +367,15 @@ pub mod escrow_v3 {
             fee_split,
         )?;
 
+        emit!(PlatformFeeRouted {
+            escrow: escrow.key(),
+            agent: escrow.agent,
+            treasury: ctx.accounts.treasury.key(),
+            gross_amount: remaining,
+            agent_amount: fee_split.agent_amount,
+            platform_fee: fee_split.platform_fee,
+        });
+
         emit!(EscrowReleased {
             escrow: escrow.key(),
             agent: escrow.agent,
@@ -389,6 +463,15 @@ pub mod escrow_v3 {
             &ctx.accounts.treasury.to_account_info(),
             fee_split,
         )?;
+
+        emit!(PlatformFeeRouted {
+            escrow: escrow.key(),
+            agent: escrow.agent,
+            treasury: ctx.accounts.treasury.key(),
+            gross_amount: amount,
+            agent_amount: fee_split.agent_amount,
+            platform_fee: fee_split.platform_fee,
+        });
 
         // If fully released, mark as Released
         if escrow.released_amount == escrow.amount {
@@ -1751,6 +1834,16 @@ pub struct PartialRelease {
     pub amount: u64,
     pub total_released: u64,
     pub remaining: u64,
+}
+
+#[event]
+pub struct PlatformFeeRouted {
+    pub escrow: Pubkey,
+    pub agent: Pubkey,
+    pub treasury: Pubkey,
+    pub gross_amount: u64,
+    pub agent_amount: u64,
+    pub platform_fee: u64,
 }
 
 #[event]
