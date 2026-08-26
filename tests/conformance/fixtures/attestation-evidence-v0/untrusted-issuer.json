@@ -1,0 +1,4 @@
+{
+  "optionsPatch": { "trustedIssuers": ["did:web:other.example"] },
+  "expectedReason": "untrusted-issuer"
+}

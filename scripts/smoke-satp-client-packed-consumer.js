@@ -227,6 +227,13 @@ try {
     "for (const key of ['buildWalletControlChallenge', 'canonicalWalletControlChallenge', 'hashWalletControlChallenge', 'deriveWalletControlChallengePdas', 'verifyWalletControlChallengeSignature']) {",
     "  if (typeof walletControl[key] !== 'function') throw new Error('missing wallet-control subpath export: ' + key);",
     "}",
+    "const attestationEvidence = require('@brainai/satp-client/attestation-evidence');",
+    "const attestationEvidenceResolved = require.resolve('@brainai/satp-client/attestation-evidence');",
+    "if (!attestationEvidenceResolved.includes('node_modules')) throw new Error('attestation-evidence subpath did not resolve from clean consumer node_modules');",
+    "for (const key of ['normalizeSatpAttestationEvidence', 'verifySatpAttestationEvidence']) {",
+    "  if (typeof satp[key] !== 'function') throw new Error('missing attestation-evidence root export: ' + key);",
+    "  if (typeof attestationEvidence[key] !== 'function') throw new Error('missing attestation-evidence subpath export: ' + key);",
+    "}",
     "const runtimeEvidence = require('@brainai/satp-client/runtime-authorization-evidence');",
     "if (typeof runtimeEvidence !== 'object' || runtimeEvidence === null) throw new Error('runtime-authorization-evidence subpath failed');",
     "const x402Discovery = require('@brainai/satp-client/x402-discovery');",
@@ -246,7 +253,7 @@ try {
     "if (!satp.isAccountType(Buffer.concat([genesis, Buffer.from([0])]), 'GenesisRecord')) throw new Error('isAccountType failed for generated discriminator');",
     "const reader = new satp.BorshReader(Buffer.from([7]));",
     "if (reader.readU8() !== 7) throw new Error('BorshReader export smoke failed');",
-    "console.log('satp-client packed consumer OK: explicit exports ., wallet-control-challenge, runtime-authorization-evidence, x402-discovery, package.json; source wildcard modules ' + publicSourceModules.join(', ') + '; root ' + resolved);",
+    "console.log('satp-client packed consumer OK: explicit exports ., wallet-control-challenge, attestation-evidence, runtime-authorization-evidence, x402-discovery, package.json; source wildcard modules ' + publicSourceModules.join(', ') + '; root ' + resolved);",
   ].join('\n');
 
   const output = execFileSync(process.execPath, ['-e', check], {

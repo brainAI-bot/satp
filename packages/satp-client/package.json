@@ -13,6 +13,10 @@
       "types": "./src/index.d.ts",
       "default": "./src/wallet-control-challenge.js"
     },
+    "./attestation-evidence": {
+      "types": "./src/index.d.ts",
+      "default": "./src/attestation-evidence.js"
+    },
     "./runtime-authorization-evidence": {
       "types": "./src/index.d.ts",
       "default": "./src/runtime-authorization-evidence.js"
@@ -36,6 +40,7 @@
     "check:package-health": "node ../../scripts/check-satp-client-package-health.js",
     "test": "node test.js",
     "test:runtime-policy": "node --test test-runtime-policy-adapter.js",
+    "test:attestation-evidence": "node --test test-attestation-evidence.js",
     "test:runtime-authorization-evidence": "node --test test-runtime-authorization-evidence.js",
     "runtime-policy:example": "node examples/runtime-policy-adapter.js",
     "test:wallet-control": "node test-wallet-control-challenge.js",

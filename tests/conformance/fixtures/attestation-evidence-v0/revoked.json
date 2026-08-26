@@ -1,0 +1,4 @@
+{
+  "inputPatch": { "revocation": { "status": "revoked" } },
+  "expectedReason": "revoked"
+}

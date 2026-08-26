@@ -98,6 +98,70 @@ test('third-party runtime rejects malformed attestations before app trust', () =
   assert.match(result.errors.join('\n'), /schemaVersion/);
   assert.match(result.errors.join('\n'), /subjectIdentity/);
   assert.match(result.errors.join('\n'), /attestationPda/);
+  assert.match(result.errors.join('\n'), /invalid-evidence/);
+});
+
+test('third-party runtime preserves the record freshness.notAfter gate', () => {
+  const runtime = createThirdPartySatpRuntime();
+  const attestation = clone(runtime.loadFixture('attestation-positive.json').record);
+  attestation.freshness = { notAfter: 1767139200 };
+
+  const result = verifySatpAttestation(attestation);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /stale: freshness\.notAfter is not fresh/);
+});
+
+test('third-party runtime preserves the RC-S6 reader compatibility gate', () => {
+  const runtime = createThirdPartySatpRuntime();
+  const attestation = clone(runtime.loadFixture('attestation-positive.json').record);
+  attestation.schemaCompatibility = { minReaderVersion: 'rc-s5' };
+
+  const result = verifySatpAttestation(attestation);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /schemaCompatibility: record predates the RC-S6 reader/);
+});
+
+test('third-party runtime fails revokedAt omission closed', () => {
+  const runtime = createThirdPartySatpRuntime();
+  const attestation = clone(runtime.loadFixture('attestation-positive.json').record);
+  delete attestation.revokedAt;
+
+  const result = verifySatpAttestation(attestation);
+  assert.equal(result.ok, false);
+  assert.equal(result.verification.reasonCode, 'revoked');
+});
+
+test('third-party runtime evaluates host-supplied subject and evidence bindings', () => {
+  const runtime = createThirdPartySatpRuntime();
+  const attestation = clone(runtime.loadFixture('attestation-positive.json').record);
+  const evidenceUri = `urn:satp:attestation:${attestation.attestationId}`;
+
+  const subjectMismatch = verifySatpAttestation(attestation, {
+    expectedSubject: 'satp:agent:other',
+    expectedEvidenceDigest: attestation.evidenceHash,
+    expectedEvidenceUri: evidenceUri,
+  });
+  assert.equal(subjectMismatch.ok, false);
+  assert.equal(subjectMismatch.verification.reasonCode, 'subject-mismatch');
+  assert.equal(subjectMismatch.verification.checks.subjectMatches, false);
+
+  const digestMismatch = verifySatpAttestation(attestation, {
+    expectedSubject: attestation.subjectIdentity.agentId,
+    expectedEvidenceDigest: 'b'.repeat(64),
+    expectedEvidenceUri: evidenceUri,
+  });
+  assert.equal(digestMismatch.ok, false);
+  assert.equal(digestMismatch.verification.reasonCode, 'invalid-evidence');
+  assert.equal(digestMismatch.verification.checks.evidenceBound, false);
+
+  const uriMismatch = verifySatpAttestation(attestation, {
+    expectedSubject: attestation.subjectIdentity.agentId,
+    expectedEvidenceDigest: attestation.evidenceHash,
+    expectedEvidenceUri: 'urn:satp:attestation:host-held-artifact',
+  });
+  assert.equal(uriMismatch.ok, false);
+  assert.equal(uriMismatch.verification.reasonCode, 'invalid-evidence');
+  assert.equal(uriMismatch.verification.checks.evidenceBound, false);
 });
 
 test('third-party runtime rejects malformed trust packets', () => {

@@ -1,0 +1,4 @@
+{
+  "optionsPatch": { "expectedSubject": "satp:agent:other" },
+  "expectedReason": "subject-mismatch"
+}

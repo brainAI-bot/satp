@@ -1,0 +1,4 @@
+{
+  "inputPatch": { "method": "did-web-v2" },
+  "expectedReason": "unsupported-method"
+}

@@ -9,6 +9,7 @@ const {
   getV3AttestationPDA,
   hashAgentId,
   validateSatpTrustPacket,
+  verifySatpAttestationEvidence,
 } = require('../../../packages/satp-client/src');
 
 const DEFAULT_NETWORK = 'devnet';
@@ -222,59 +223,52 @@ function verifySatpIdentity(record, { validationTime = DEFAULT_VALIDATION_TIME }
   return result(errors, details);
 }
 
-function verifySatpAttestation(record, { validationTime = DEFAULT_VALIDATION_TIME } = {}) {
+function verifySatpAttestation(record, {
+  validationTime = DEFAULT_VALIDATION_TIME,
+  expectedSubject,
+  expectedEvidenceDigest,
+  expectedEvidenceUri,
+} = {}) {
   const errors = [];
   const details = new Set();
 
   if (!record || typeof record !== 'object') {
     addError(errors, details, 'attestation', 'attestation record must be an object');
-    return result(errors, details);
+    const verification = verifySatpAttestationEvidence(record, {});
+    addError(errors, details, verification.reasonCode, verification.message);
+    return result(errors, details, { verification });
   }
-  if (record.schemaVersion !== 'satp.attestation.v1') {
+
+  const source = record;
+  if (source.schemaVersion !== 'satp.attestation.v1') {
     addError(errors, details, 'schemaVersion', 'expected satp.attestation.v1');
   } else {
     addDetail(details, 'schemaVersion');
   }
-  if (record.recordType !== 'attestation') {
+  if (source.recordType !== 'attestation') {
     addError(errors, details, 'recordType', 'expected attestation');
   }
 
-  checkNetwork(record, errors, details);
-  checkSubjectIdentity(record.subjectIdentity, errors, details);
-  assertPublicKey(record.subjectWallet, errors, details, 'subjectWallet');
-  assertPublicKey(record.issuer, errors, details, 'issuer');
-  checkHash(record.evidenceHash, errors, details, 'evidenceHash');
-  checkHash(record.metadataHash, errors, details, 'metadataHash');
+  checkNetwork(source, errors, details);
+  checkSubjectIdentity(source.subjectIdentity, errors, details);
+  assertPublicKey(source.subjectWallet, errors, details, 'subjectWallet');
+  assertPublicKey(source.issuer, errors, details, 'issuer');
+  checkHash(source.evidenceHash, errors, details, 'evidenceHash');
+  checkHash(source.metadataHash, errors, details, 'metadataHash');
+  checkFreshness(source, errors, details, validationTime);
 
-  if (!SUPPORTED_ISSUER_TRUST_CLASSES.has(record.issuerTrustClass)) {
-    addError(errors, details, 'issuerTrustClass', 'unsupported issuer trust class: ' + record.issuerTrustClass);
-  } else {
-    addDetail(details, 'issuerTrustClass');
-  }
-  if (!SUPPORTED_CANONICAL_CLAIM_TYPES.has(record.canonicalClaimType)) {
-    addError(errors, details, 'claimType', 'unsupported canonical claim type');
-  } else {
-    addDetail(details, 'claimType');
-  }
-  if (record.status === 'revoked' || record.revokedAt !== null) {
-    addError(errors, details, 'revoked', 'revoked attestation must fail closed');
-  }
-  if (record.status !== 'active') {
-    addError(errors, details, 'status', 'attestation must be active');
-  }
-
-  if (record.subjectIdentity && record.issuer && record.claimType && record.pda) {
+  if (source.subjectIdentity && source.issuer && source.claimType && source.pda) {
     try {
       const [attestationPda, attestationBump] = getV3AttestationPDA(
-        record.subjectIdentity.agentId,
-        record.issuer,
-        record.claimType,
-        record.network || DEFAULT_NETWORK
+        source.subjectIdentity.agentId,
+        source.issuer,
+        source.claimType,
+        source.network || DEFAULT_NETWORK
       );
       if (
-        record.pda.attestation !== attestationPda.toBase58() ||
-        record.pda.attestationBump !== attestationBump ||
-        record.attestationId !== attestationPda.toBase58()
+        source.pda.attestation !== attestationPda.toBase58() ||
+        source.pda.attestationBump !== attestationBump ||
+        source.attestationId !== attestationPda.toBase58()
       ) {
         addError(errors, details, 'attestationPda', 'attestation PDA does not match subject/issuer/claim');
       } else {
@@ -285,8 +279,59 @@ function verifySatpAttestation(record, { validationTime = DEFAULT_VALIDATION_TIM
     }
   }
 
-  checkFreshness(record, errors, details, validationTime);
-  return result(errors, details);
+  const subject = source.subjectIdentity && source.subjectIdentity.agentId;
+  const evidenceUri = `urn:satp:attestation:${source.attestationId || 'unresolved'}`;
+  const asTimestamp = (value) => Number.isFinite(Number(value))
+    ? new Date(Number(value) * 1000).toISOString()
+    : value;
+  const resolverOutput = {
+    schemaVersion: source.schemaVersion === 'satp.attestation.v1'
+      ? 'satp.attestationEvidence.v0'
+      : source.schemaVersion,
+    subject,
+    issuer: source.issuer,
+    evidence: {
+      digest: source.evidenceHash,
+      uri: evidenceUri,
+    },
+    method: source.canonicalClaimType,
+    freshness: {
+      observedAt: asTimestamp(source.issuedAt),
+      validUntil: asTimestamp(source.expiresAt),
+    },
+    revocation: {
+      status: source.status === 'active' && source.revokedAt === null ? 'active' : 'revoked',
+      checkedAt: asTimestamp(source.issuedAt),
+    },
+    nextCheck: {
+      at: asTimestamp(source.expiresAt),
+      refreshAvailable: false,
+    },
+  };
+  const verification = verifySatpAttestationEvidence(resolverOutput, {
+    now: new Date(validationTime * 1000),
+    expectedSubject: expectedSubject === undefined ? subject : expectedSubject,
+    trustedIssuers: SUPPORTED_ISSUER_TRUST_CLASSES.has(source.issuerTrustClass) ? [source.issuer] : [],
+    expectedEvidenceDigest: expectedEvidenceDigest === undefined
+      ? source.evidenceHash
+      : expectedEvidenceDigest,
+    expectedEvidenceUri: expectedEvidenceUri === undefined ? evidenceUri : expectedEvidenceUri,
+    supportedMethods: SUPPORTED_CANONICAL_CLAIM_TYPES.has(source.canonicalClaimType)
+      ? [source.canonicalClaimType]
+      : [],
+  });
+
+  for (const [name, passed] of Object.entries(verification.checks)) {
+    if (passed) addDetail(details, name);
+  }
+  if (verification.checks.issuerTrusted) addDetail(details, 'issuerTrustClass');
+  if (verification.checks.methodSupported) addDetail(details, 'claimType');
+  if (verification.checks.fresh && verification.checks.nextCheckCurrent) addDetail(details, 'freshness');
+  if (!verification.ok) {
+    addError(errors, details, verification.reasonCode, verification.message);
+  }
+
+  return result(errors, details, { verification });
 }
 
 function verifySatpTrustPacket(packet, { validationTime = DEFAULT_VALIDATION_TIME } = {}) {

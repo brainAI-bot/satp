@@ -105,6 +105,153 @@ export interface SatpTrustPacketValidation {
   errors: string[];
 }
 
+export const SATP_ATTESTATION_EVIDENCE_SCHEMA_VERSION: 'satp.attestationEvidence.v0';
+export const SATP_ATTESTATION_EVIDENCE_REASON_CODES: Readonly<{
+  INVALID_EVIDENCE: 'invalid-evidence';
+  REVOKED: 'revoked';
+  REFRESH_UNAVAILABLE: 'refresh-unavailable';
+  STALE: 'stale';
+  UNSUPPORTED_METHOD: 'unsupported-method';
+  UNTRUSTED_ISSUER: 'untrusted-issuer';
+  SUBJECT_MISMATCH: 'subject-mismatch';
+}>;
+
+export interface SatpAttestationEvidenceDigest {
+  algorithm: 'sha256';
+  value: string;
+}
+
+export interface SatpAttestationEvidence {
+  schemaVersion: 'satp.attestationEvidence.v0';
+  subject: string;
+  issuer: string;
+  evidence: {
+    digest: SatpAttestationEvidenceDigest;
+    uri: string;
+  };
+  method: string;
+  freshness: {
+    observedAt: string;
+    validUntil: string;
+  };
+  revocation: {
+    status: 'active' | 'revoked';
+    checkedAt: string;
+  };
+  nextCheck: {
+    at: string;
+    refreshAvailable: boolean;
+  };
+}
+
+export interface SatpAttestationEvidenceInput {
+  schemaVersion?: string;
+  schema_version?: string;
+  subject?: string | { id?: string; value?: string };
+  subjectId?: string;
+  subject_id?: string;
+  issuer?: string | { id?: string; value?: string };
+  issuerId?: string;
+  issuer_id?: string;
+  evidence?: {
+    digest?: SatpAttestationEvidenceDigest | string;
+    uri?: string;
+  };
+  evidenceDigest?: SatpAttestationEvidenceDigest | string;
+  evidence_digest?: SatpAttestationEvidenceDigest | string;
+  evidenceUri?: string;
+  evidence_uri?: string;
+  method?: string;
+  verificationMethod?: string;
+  verification_method?: string;
+  freshness?: {
+    observedAt?: string | number | Date;
+    observed_at?: string | number | Date;
+    validUntil?: string | number | Date;
+    valid_until?: string | number | Date;
+  };
+  observedAt?: string | number | Date;
+  observed_at?: string | number | Date;
+  validUntil?: string | number | Date;
+  valid_until?: string | number | Date;
+  expiresAt?: string | number | Date;
+  expires_at?: string | number | Date;
+  revocation?: {
+    status?: 'active' | 'revoked';
+    checkedAt?: string | number | Date;
+    checked_at?: string | number | Date;
+  };
+  revoked?: boolean;
+  revocationCheckedAt?: string | number | Date;
+  revocation_checked_at?: string | number | Date;
+  nextCheck?: {
+    at?: string | number | Date;
+    nextCheckAt?: string | number | Date;
+    next_check_at?: string | number | Date;
+    refreshAvailable?: boolean;
+    refresh_available?: boolean;
+  };
+  next_check?: SatpAttestationEvidenceInput['nextCheck'];
+  nextCheckAt?: string | number | Date;
+  next_check_at?: string | number | Date;
+  refreshAvailable?: boolean;
+  refresh_available?: boolean;
+}
+
+export interface SatpAttestationEvidenceVerificationOptions {
+  now?: string | number | Date;
+  expectedSubject: string | { id?: string; value?: string };
+  trustedIssuers: string | string[] | Set<string>;
+  expectedEvidenceDigest: SatpAttestationEvidenceDigest | string;
+  expectedEvidenceUri: string;
+  supportedMethods: string | string[] | Set<string>;
+}
+
+export type SatpAttestationEvidenceReasonCode =
+  | 'invalid-evidence'
+  | 'revoked'
+  | 'refresh-unavailable'
+  | 'stale'
+  | 'unsupported-method'
+  | 'untrusted-issuer'
+  | 'subject-mismatch';
+
+export interface SatpAttestationEvidenceVerification {
+  ok: boolean;
+  reason: SatpAttestationEvidenceReasonCode | null;
+  reasonCode: SatpAttestationEvidenceReasonCode | null;
+  reasonCodes: SatpAttestationEvidenceReasonCode[];
+  message: string;
+  evidence: SatpAttestationEvidence | null;
+  checks: {
+    structurallyValid: boolean;
+    subjectMatches: boolean;
+    issuerTrusted: boolean;
+    evidenceBound: boolean;
+    methodSupported: boolean;
+    notRevoked: boolean;
+    fresh: boolean;
+    nextCheckCurrent: boolean;
+  };
+  guardrails: {
+    offlineOnly: true;
+    networkRequests: false;
+    writesSolanaState: false;
+    usesKeypairs: false;
+    signsPayloads: false;
+    authorizesPayment: false;
+  };
+}
+
+export function normalizeSatpAttestationEvidence(
+  input: SatpAttestationEvidenceInput
+): SatpAttestationEvidence;
+
+export function verifySatpAttestationEvidence(
+  input: SatpAttestationEvidenceInput,
+  options: SatpAttestationEvidenceVerificationOptions
+): SatpAttestationEvidenceVerification;
+
 export const RUNTIME_AUTHORIZATION_EVIDENCE_SCHEMA_VERSION: 'satp.runtimeAuthorizationEvidence.v0';
 export const RUNTIME_AUTHORIZATION_EVIDENCE_PROFILE_ID: 'satp.runtimeAuthorizationEvidence';
 export const RUNTIME_AUTHORIZATION_EVIDENCE_PROFILE_VERSION: '0';

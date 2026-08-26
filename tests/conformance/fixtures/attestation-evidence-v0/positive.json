@@ -1,0 +1,33 @@
+{
+  "input": {
+    "schemaVersion": "satp.attestationEvidence.v0",
+    "subject": "satp:agent:alpha",
+    "issuer": "did:web:issuer.example",
+    "evidence": {
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "uri": "https://evidence.example/attestations/alpha"
+    },
+    "method": "did-web-v1",
+    "freshness": {
+      "observedAt": "2026-08-26T10:00:00.000Z",
+      "validUntil": "2026-08-26T12:00:00.000Z"
+    },
+    "revocation": {
+      "status": "active",
+      "checkedAt": "2026-08-26T10:05:00.000Z"
+    },
+    "nextCheck": {
+      "at": "2026-08-26T11:00:00.000Z",
+      "refreshAvailable": true
+    }
+  },
+  "options": {
+    "now": "2026-08-26T10:30:00.000Z",
+    "expectedSubject": "satp:agent:alpha",
+    "trustedIssuers": ["did:web:issuer.example"],
+    "expectedEvidenceDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expectedEvidenceUri": "https://evidence.example/attestations/alpha",
+    "supportedMethods": ["did-web-v1"]
+  },
+  "expectedReason": null
+}
