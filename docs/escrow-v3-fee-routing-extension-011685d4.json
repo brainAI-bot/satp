@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "status": "review_pending_no_writes",
+  "program": {
+    "program_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
+    "program_data": "Fg1DJyKX9CngiMihZxJY2zjaQ8T1PK5QuiVhNvJmeTqk",
+    "upgrade_authority": "Bq1niVKyTECn4HDxAJWiHZvRMCZndZtC113yj3Rkbroc"
+  },
+  "candidate_manifest": "docs/escrow-v3-fee-routing-candidate-011685d4.json",
+  "change_control_packet": "docs/escrow-v3-fee-routing-change-control-011685d4.md",
+  "reproducibility": {
+    "required_distinct_clean_hosts": 2,
+    "source_commit": "a35568bc3926bd44d73680813bda0e8d5371705f",
+    "build_command": "cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml --features mainnet",
+    "expected_artifact_bytes": 350304,
+    "expected_artifact_sha256": "27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a",
+    "expected_idl_sha256": "9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10",
+    "attestation_required_fields": [
+      "host_identity",
+      "clean_checkout_commit",
+      "source_sha256",
+      "cargo_lock_sha256",
+      "tool_versions",
+      "build_command",
+      "artifact_bytes",
+      "artifact_sha256",
+      "idl_sha256",
+      "log_sha256"
+    ],
+    "recorded_attestations": [
+      {
+        "role": "author_build",
+        "host_identity": "darwin-arm64-macos-26",
+        "artifact_bytes": 350304,
+        "artifact_sha256": "27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a",
+        "status": "recorded_in_candidate_manifest"
+      },
+      {
+        "role": "independent_build",
+        "host_identity": null,
+        "artifact_bytes": null,
+        "artifact_sha256": null,
+        "status": "required_before_owner_approval"
+      }
+    ]
+  },
+  "allocation": {
+    "current_payload_bytes": 346856,
+    "candidate_artifact_bytes": 350304,
+    "additional_program_bytes": 3448,
+    "target_payload_bytes": 350304,
+    "programdata_header_bytes": 45,
+    "target_account_bytes": 350349,
+    "observed_finalized_slot": 441750334,
+    "observed_current_lamports": 2415321840,
+    "observed_target_rent_exempt_lamports": 2439319920,
+    "observed_rent_top_up_lamports": 23998080,
+    "observation_status": "read_only_snapshot_reconfirm_before_owner_approval",
+    "extension_transaction_limit": 1,
+    "retry_limit": 0,
+    "post_extension_prefix_bytes": 346856,
+    "post_extension_prefix_sha256": "4f21da13659cbe99a606b408a5f1d3523c0e41de20538028939bbb1b54c3cc0d",
+    "post_extension_zero_suffix_bytes": 3448,
+    "deploy_auto_extend": false
+  },
+  "route_proof": {
+    "aggregate_transaction_limit": 2,
+    "retry_limit": 0,
+    "minimum_gross_lamports_per_route": 20,
+    "fee_basis_points": 500,
+    "treasury": "FriU1FEpWbdgVrTcS49YV5mVv2oqN6poaVQjzq2BS5be",
+    "required_receipt_fields": [
+      "signature",
+      "slot",
+      "block_time",
+      "finalized_confirmation",
+      "program_id",
+      "instruction_discriminator_hex",
+      "ordered_accounts",
+      "gross_lamports",
+      "pre_balances",
+      "post_balances",
+      "transaction_fee_lamports",
+      "escrow_delta_lamports",
+      "agent_delta_lamports",
+      "treasury_delta_lamports",
+      "platform_fee_event",
+      "raw_transaction_json_sha256"
+    ],
+    "routes": [
+      {
+        "name": "release",
+        "instruction_discriminator_hex": "fdf90fce1c7fc1f1",
+        "ordered_accounts": [
+          "escrow",
+          "client",
+          "agent",
+          "treasury"
+        ],
+        "required_submissions": 1,
+        "status": "not_executed"
+      },
+      {
+        "name": "partial_release",
+        "instruction_discriminator_hex": "140465f53583d508",
+        "ordered_accounts": [
+          "escrow",
+          "client",
+          "agent",
+          "treasury"
+        ],
+        "required_submissions": 1,
+        "status": "not_executed"
+      }
+    ],
+    "platform_fee_event_discriminator_hex": "f81b63224f0de0cf"
+  }
+}

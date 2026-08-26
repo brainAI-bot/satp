@@ -64,6 +64,7 @@
     ]
   },
   "change_control_packet": "docs/escrow-v3-fee-routing-change-control-011685d4.md",
+  "extension_packet": "docs/escrow-v3-fee-routing-extension-011685d4.json",
   "candidate_head": "a35568bc3926bd44d73680813bda0e8d5371705f",
   "reviewed_head": null,
   "review_outcome": "pending"

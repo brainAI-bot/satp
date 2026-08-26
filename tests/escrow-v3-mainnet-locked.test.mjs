@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { readAnchorIdlAuthority } from '../scripts/read-anchor-idl-authority.mjs';
+import { verifyFeeRoutingExtension } from '../scripts/verify-escrow-v3-fee-routing-extension.mjs';
 import { verifyLockedBuild } from '../scripts/verify-escrow-v3-mainnet-locked.mjs';
 
 test('locked escrow_v3 mainnet inputs and 14-instruction IDL are internally consistent', () => {
@@ -35,17 +36,31 @@ test('fee-routing candidate is separate from the deployed locked-build record', 
   assert.equal(candidate.build.artifact_bytes, 350304);
   assert.equal(candidate.programdata_capacity.required_extension_bytes, 3448);
   assert.equal(candidate.programdata_capacity.status, 'extension_required_before_buffer_write');
+  assert.equal(candidate.extension_packet, 'docs/escrow-v3-fee-routing-extension-011685d4.json');
   assert.equal(candidate.candidate_head, candidate.source.commit);
   assert.equal(candidate.reviewed_head, null);
   assert.notEqual(candidate.source.commit, locked.source.commit);
-  assert.match(packet, /NO-GO until exact-head independent review, green checks/);
+  assert.match(packet, /NO-GO until two-host candidate reproducibility, exact-head independent\s+review, green checks/);
   assert.match(packet, /Transaction A calls `release` once/);
   assert.match(packet, /Transaction B calls `partial_release` once/);
-  assert.match(packet, /Stop after two submissions regardless of outcome/);
+  assert.match(packet, /Stop after two submissions regardless of\s+outcome/);
   assert.match(packet, /platform_fee = floor\(gross \* 500 \/ 10000\)/);
   assert.match(packet, /wrong treasury fails before\s+state or balance mutation/);
   assert.match(packet, /USDC settlement is explicitly unchanged/);
-  assert.match(packet, /performed no chain\s+write, signing, keypair access, money movement/);
+  assert.match(packet, /performed no chain\s+write, signing, keypair access, money\s+movement/);
+});
+
+test('fee-routing extension is exactly bounded and route proofs are IDL-bound', () => {
+  const result = verifyFeeRoutingExtension();
+
+  assert.equal(result.ok, true);
+  assert.equal(result.source_commit, 'a35568bc3926bd44d73680813bda0e8d5371705f');
+  assert.equal(result.artifact_bytes, 350304);
+  assert.equal(result.artifact_sha256, '27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a');
+  assert.equal(result.required_distinct_clean_hosts, 2);
+  assert.equal(result.additional_program_bytes, 3448);
+  assert.equal(result.target_payload_bytes, 350304);
+  assert.deepEqual(result.route_names, ['release', 'partial_release']);
 });
 
 test('owner packet fails closed on ProgramData and IDL capacity before writes', () => {
