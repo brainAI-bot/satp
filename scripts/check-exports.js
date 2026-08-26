@@ -20,6 +20,8 @@ const requiredExports = [
   'getGenesisPDA',
   'prepareIdentityAttestationRequest',
   'verifyIdentityAttestationRequest',
+  'normalizeSatpAttestationEvidence',
+  'verifySatpAttestationEvidence',
   'buildSatpTrustPacket',
   'validateSatpTrustPacket',
   'normalizeRuntimeAuthorizationEvidence',
@@ -156,6 +158,7 @@ if (actionDescriptor[1].includes('requiresApproval')) {
 }
 
 const walletControlChallenge = require('@brainai/satp-client/wallet-control-challenge');
+const attestationEvidence = require('@brainai/satp-client/attestation-evidence');
 const x402Discovery = require('@brainai/satp-client/x402-discovery');
 const runtimeAuthorizationEvidence = require('@brainai/satp-client/runtime-authorization-evidence');
 for (const key of [
@@ -170,6 +173,18 @@ for (const key of [
   }
   if (typeof walletControlChallenge[key] !== 'function') {
     throw new Error(`SATP wallet-control subpath export ${key} is not a function`);
+  }
+}
+
+for (const key of [
+  'normalizeSatpAttestationEvidence',
+  'verifySatpAttestationEvidence',
+]) {
+  if (typeof satp[key] !== 'function') {
+    throw new Error(`SATP root export ${key} is not a function`);
+  }
+  if (typeof attestationEvidence[key] !== 'function') {
+    throw new Error(`SATP attestation-evidence subpath export ${key} is not a function`);
   }
 }
 

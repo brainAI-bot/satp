@@ -803,6 +803,7 @@ const {
   evaluateRuntimePolicy,
 } = require('./runtime-policy-adapter');
 const walletControlChallenge = require('./wallet-control-challenge');
+const attestationEvidence = require('./attestation-evidence');
 const runtimeAuthorizationEvidence = require('./runtime-authorization-evidence');
 const x402Discovery = require('./x402-discovery');
 const signerPolicy = require('./signer-policy');
@@ -902,6 +903,10 @@ module.exports = {
   hashWalletControlChallenge: walletControlChallenge.hashWalletControlChallenge,
   deriveWalletControlChallengePdas: walletControlChallenge.deriveWalletControlChallengePdas,
   verifyWalletControlChallengeSignature: walletControlChallenge.verifyWalletControlChallengeSignature,
+  SATP_ATTESTATION_EVIDENCE_SCHEMA_VERSION: attestationEvidence.SATP_ATTESTATION_EVIDENCE_SCHEMA_VERSION,
+  SATP_ATTESTATION_EVIDENCE_REASON_CODES: attestationEvidence.SATP_ATTESTATION_EVIDENCE_REASON_CODES,
+  normalizeSatpAttestationEvidence: attestationEvidence.normalizeSatpAttestationEvidence,
+  verifySatpAttestationEvidence: attestationEvidence.verifySatpAttestationEvidence,
   RUNTIME_AUTHORIZATION_EVIDENCE_SCHEMA_VERSION: runtimeAuthorizationEvidence.RUNTIME_AUTHORIZATION_EVIDENCE_SCHEMA_VERSION,
   RUNTIME_AUTHORIZATION_EVIDENCE_PROFILE_ID: runtimeAuthorizationEvidence.RUNTIME_AUTHORIZATION_EVIDENCE_PROFILE_ID,
   RUNTIME_AUTHORIZATION_EVIDENCE_PROFILE_VERSION: runtimeAuthorizationEvidence.RUNTIME_AUTHORIZATION_EVIDENCE_PROFILE_VERSION,

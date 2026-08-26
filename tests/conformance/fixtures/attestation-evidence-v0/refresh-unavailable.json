@@ -1,0 +1,5 @@
+{
+  "inputPatch": { "nextCheck": { "refreshAvailable": false } },
+  "optionsPatch": { "now": "2026-08-26T11:01:00.000Z" },
+  "expectedReason": "refresh-unavailable"
+}

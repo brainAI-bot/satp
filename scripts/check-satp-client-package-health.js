@@ -70,6 +70,7 @@ function readPackageMetadata() {
   assert(metadata.types === 'src/index.d.ts', 'types must point at src/index.d.ts');
   assert(metadata.exports && metadata.exports['.'], 'root export must be declared');
   assert(metadata.exports['./wallet-control-challenge'], 'wallet-control subpath export must be declared');
+  assert(metadata.exports['./attestation-evidence'], 'attestation-evidence subpath export must be declared');
   assert(metadata.exports['./x402-discovery'], 'x402-discovery subpath export must be declared');
   assert(metadata.exports['./idls/*'], 'idls subpath export must be declared');
   assert(Array.isArray(metadata.files) && metadata.files.includes('src/'), 'files must include src/');
@@ -149,6 +150,7 @@ function readPackSurface() {
     'idls/v3/validation_v3.json',
     'src/index.js',
     'src/index.d.ts',
+    'src/attestation-evidence.js',
     'src/wallet-control-challenge.js',
     'src/x402-discovery.js',
   ]) {
@@ -190,11 +192,13 @@ function smokeRequireImportExports() {
     const packageDir = ${JSON.stringify(packageDir)};
     async function main() {
       const satp = require(path.join(packageDir, 'src'));
+      const attestationEvidence = require(path.join(packageDir, 'src/attestation-evidence.js'));
       const wallet = require(path.join(packageDir, 'src/wallet-control-challenge.js'));
       const x402 = require(path.join(packageDir, 'src/x402-discovery.js'));
-      for (const key of ['SATPV3SDK', 'createSATPClient', 'buildSatpTrustPacket', 'evaluateRuntimePolicy']) {
+      for (const key of ['SATPV3SDK', 'createSATPClient', 'buildSatpTrustPacket', 'evaluateRuntimePolicy', 'normalizeSatpAttestationEvidence', 'verifySatpAttestationEvidence']) {
         assert.equal(typeof satp[key], 'function', key + ' root export must be a function');
       }
+      assert.equal(typeof attestationEvidence.verifySatpAttestationEvidence, 'function');
       assert.equal(typeof wallet.buildWalletControlChallenge, 'function');
       assert.equal(typeof x402.parseX402DiscoveryMetadata, 'function');
       const imported = await import(pathToFileURL(path.join(packageDir, 'src/index.js')).href);

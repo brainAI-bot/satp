@@ -98,6 +98,7 @@ test('third-party runtime rejects malformed attestations before app trust', () =
   assert.match(result.errors.join('\n'), /schemaVersion/);
   assert.match(result.errors.join('\n'), /subjectIdentity/);
   assert.match(result.errors.join('\n'), /attestationPda/);
+  assert.match(result.errors.join('\n'), /invalid-evidence/);
 });
 
 test('third-party runtime rejects malformed trust packets', () => {
