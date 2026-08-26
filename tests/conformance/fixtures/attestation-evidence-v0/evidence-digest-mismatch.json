@@ -1,0 +1,8 @@
+{
+  "inputPatch": {
+    "evidence": {
+      "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  },
+  "expectedReason": "invalid-evidence"
+}

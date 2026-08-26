@@ -98,6 +98,24 @@ for (const name of [
   });
 }
 
+for (const name of [
+  'evidence-digest-mismatch.json',
+  'evidence-uri-mismatch.json',
+]) {
+  test(`${name} reaches the evidence binding check and fails closed`, () => {
+    const fixture = scenario(name);
+    const result = verifySatpAttestationEvidence(fixture.input, fixture.options);
+    assert.equal(result.ok, false);
+    assert.equal(result.reasonCode, SATP_ATTESTATION_EVIDENCE_REASON_CODES.INVALID_EVIDENCE);
+    assert.equal(result.message, 'evidence digest or URI does not match the expected evidence binding');
+    assert.equal(result.checks.structurallyValid, true);
+    assert.equal(result.checks.subjectMatches, true);
+    assert.equal(result.checks.issuerTrusted, true);
+    assert.equal(result.checks.evidenceBound, false);
+    assert.notEqual(result.evidence, null);
+  });
+}
+
 test('fails closed without explicit host trust, subject, method, digest, or URI context', () => {
   const result = verifySatpAttestationEvidence(scenario('positive.json').input);
   assert.equal(result.ok, false);

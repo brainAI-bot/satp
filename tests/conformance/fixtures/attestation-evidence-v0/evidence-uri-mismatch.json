@@ -1,0 +1,8 @@
+{
+  "inputPatch": {
+    "evidence": {
+      "uri": "https://evidence.example/attestations/other"
+    }
+  },
+  "expectedReason": "invalid-evidence"
+}

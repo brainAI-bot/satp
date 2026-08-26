@@ -223,7 +223,12 @@ function verifySatpIdentity(record, { validationTime = DEFAULT_VALIDATION_TIME }
   return result(errors, details);
 }
 
-function verifySatpAttestation(record, { validationTime = DEFAULT_VALIDATION_TIME } = {}) {
+function verifySatpAttestation(record, {
+  validationTime = DEFAULT_VALIDATION_TIME,
+  expectedSubject,
+  expectedEvidenceDigest,
+  expectedEvidenceUri,
+} = {}) {
   const errors = [];
   const details = new Set();
 
@@ -305,10 +310,12 @@ function verifySatpAttestation(record, { validationTime = DEFAULT_VALIDATION_TIM
   };
   const verification = verifySatpAttestationEvidence(resolverOutput, {
     now: new Date(validationTime * 1000),
-    expectedSubject: subject,
+    expectedSubject: expectedSubject === undefined ? subject : expectedSubject,
     trustedIssuers: SUPPORTED_ISSUER_TRUST_CLASSES.has(source.issuerTrustClass) ? [source.issuer] : [],
-    expectedEvidenceDigest: source.evidenceHash,
-    expectedEvidenceUri: evidenceUri,
+    expectedEvidenceDigest: expectedEvidenceDigest === undefined
+      ? source.evidenceHash
+      : expectedEvidenceDigest,
+    expectedEvidenceUri: expectedEvidenceUri === undefined ? evidenceUri : expectedEvidenceUri,
     supportedMethods: SUPPORTED_CANONICAL_CLAIM_TYPES.has(source.canonicalClaimType)
       ? [source.canonicalClaimType]
       : [],

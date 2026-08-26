@@ -31,7 +31,16 @@ const identity = runtime.loadFixture('identity-positive.json').record;
 const attestation = runtime.loadFixture('attestation-positive.json').record;
 const trustPacket = runtime.loadFixture('trust-packet-positive.json').record.packet;
 
-const result = runtime.verifyBundle({ identity, attestation, trustPacket });
+// These expectations come from the host's request and the artifact it holds,
+// not from the untrusted attestation record being verified.
+const result = runtime.verifyBundle(
+  { identity, attestation, trustPacket },
+  {
+    expectedSubject: 'rc-s6-fixture-agent',
+    expectedEvidenceDigest: '414f0c9b1ded7a0636e2215c93d37b91c247592f4319d3ff302cd1085bbac710',
+    expectedEvidenceUri: 'urn:satp:attestation:8z8Kd729S2kqtXGjLFczXVpGTyqy7rHpEKbWaHb5zZFv',
+  }
+);
 console.log(result.ok, result.boundary.agentFolioRuntimeRequired);
 ```
 
