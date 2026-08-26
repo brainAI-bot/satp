@@ -250,6 +250,7 @@ function verifySatpAttestation(record, { validationTime = DEFAULT_VALIDATION_TIM
   assertPublicKey(source.issuer, errors, details, 'issuer');
   checkHash(source.evidenceHash, errors, details, 'evidenceHash');
   checkHash(source.metadataHash, errors, details, 'metadataHash');
+  checkFreshness(source, errors, details, validationTime);
 
   if (source.subjectIdentity && source.issuer && source.claimType && source.pda) {
     try {
@@ -294,7 +295,7 @@ function verifySatpAttestation(record, { validationTime = DEFAULT_VALIDATION_TIM
       validUntil: asTimestamp(source.expiresAt),
     },
     revocation: {
-      status: source.status === 'active' && source.revokedAt == null ? 'active' : 'revoked',
+      status: source.status === 'active' && source.revokedAt === null ? 'active' : 'revoked',
       checkedAt: asTimestamp(source.issuedAt),
     },
     nextCheck: {

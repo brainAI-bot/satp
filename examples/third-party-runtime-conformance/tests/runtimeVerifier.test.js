@@ -101,6 +101,36 @@ test('third-party runtime rejects malformed attestations before app trust', () =
   assert.match(result.errors.join('\n'), /invalid-evidence/);
 });
 
+test('third-party runtime preserves the record freshness.notAfter gate', () => {
+  const runtime = createThirdPartySatpRuntime();
+  const attestation = clone(runtime.loadFixture('attestation-positive.json').record);
+  attestation.freshness = { notAfter: 1767139200 };
+
+  const result = verifySatpAttestation(attestation);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /stale: freshness\.notAfter is not fresh/);
+});
+
+test('third-party runtime preserves the RC-S6 reader compatibility gate', () => {
+  const runtime = createThirdPartySatpRuntime();
+  const attestation = clone(runtime.loadFixture('attestation-positive.json').record);
+  attestation.schemaCompatibility = { minReaderVersion: 'rc-s5' };
+
+  const result = verifySatpAttestation(attestation);
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /schemaCompatibility: record predates the RC-S6 reader/);
+});
+
+test('third-party runtime fails revokedAt omission closed', () => {
+  const runtime = createThirdPartySatpRuntime();
+  const attestation = clone(runtime.loadFixture('attestation-positive.json').record);
+  delete attestation.revokedAt;
+
+  const result = verifySatpAttestation(attestation);
+  assert.equal(result.ok, false);
+  assert.equal(result.verification.reasonCode, 'revoked');
+});
+
 test('third-party runtime rejects malformed trust packets', () => {
   const runtime = createThirdPartySatpRuntime();
   const packet = clone(runtime.loadFixture('trust-packet-positive.json').record.packet);

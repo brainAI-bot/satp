@@ -1,6 +1,7 @@
 'use strict';
 
 const SATP_ATTESTATION_EVIDENCE_SCHEMA_VERSION = 'satp.attestationEvidence.v0';
+const SATP_ATTESTATION_EVIDENCE_URI_SCHEMES = new Set(['https:', 'urn:']);
 
 const SATP_ATTESTATION_EVIDENCE_REASON_CODES = Object.freeze({
   INVALID_EVIDENCE: 'invalid-evidence',
@@ -64,8 +65,8 @@ function normalizeUri(value) {
     throw new Error('evidence.uri must be an absolute URI');
   }
   const scheme = parsed.protocol.toLowerCase();
-  if (!scheme || ['javascript:', 'data:', 'vbscript:'].includes(scheme)) {
-    throw new Error('evidence.uri must use a non-executable absolute URI scheme');
+  if (!SATP_ATTESTATION_EVIDENCE_URI_SCHEMES.has(scheme)) {
+    throw new Error('evidence.uri must use the https: or urn: scheme');
   }
   return uri;
 }

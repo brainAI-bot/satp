@@ -104,12 +104,16 @@ test('fails closed without explicit host trust, subject, method, digest, or URI 
   assert.equal(result.reasonCode, SATP_ATTESTATION_EVIDENCE_REASON_CODES.SUBJECT_MISMATCH);
 });
 
-test('rejects executable evidence URI schemes before host trust evaluation', () => {
+test('accepts only explicitly supported evidence URI schemes before host trust evaluation', () => {
   const fixture = scenario('positive.json');
   for (const uri of [
     'javascript:alert(1)',
     'data:text/plain,evidence',
     'vbscript:msgbox(1)',
+    'file:///etc/passwd',
+    'blob:https://evidence.example/attestations/alpha',
+    'wss://evidence.example/attestations/alpha',
+    'custom:evidence',
   ]) {
     const input = mergeNested(fixture.input, { evidence: { uri } });
     const result = verifySatpAttestationEvidence(input, {
