@@ -12,8 +12,11 @@ machine-readable bounds are locked in
 This record is intentionally separate from
 `docs/escrow-v3-mainnet-locked-build.json`. The locked-build file continues to
 describe the bytes deployed at slot 441423817; the values below describe only
-the reworked candidate at source commit
-`a35568bc3926bd44d73680813bda0e8d5371705f`. Exact-head independent review
+the reworked candidate at canonical merged source commit
+`3f8188bec89db0d4a081931f35272e10185d1c0d`. This squash-merge commit contains
+the same source, Cargo.lock, and IDL hashes as the reviewed PR source commit
+`a35568bc3926bd44d73680813bda0e8d5371705f`, while remaining reachable from a
+clean clone of `main`. Exact-head independent review
 and green checks remain mandatory before any approval.
 
 | Field | Value |
@@ -21,7 +24,7 @@ and green checks remain mandatory before any approval.
 | Program | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` |
 | ProgramData | `Fg1DJyKX9CngiMihZxJY2zjaQ8T1PK5QuiVhNvJmeTqk` |
 | Certified source base | `93fc6c0d86302cfe8b0d8c798ba2817d7eeace44` |
-| Candidate source commit | `a35568bc3926bd44d73680813bda0e8d5371705f` |
+| Candidate source commit | `3f8188bec89db0d4a081931f35272e10185d1c0d` |
 | Source SHA-256 | `380b20d36f18253a5c382ec1abc4a1147a08092a9a42cdae25e5d954f41acd0a` |
 | Cargo.lock SHA-256 | `d98db19e0d86ca3248376d4857b150b240be05c4bc3a409d7cb638ce4d5d2237` |
 | Build command | `cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml --features mainnet` |
@@ -56,7 +59,7 @@ untouched by the rework.
 
 The candidate bytes are not approvable until two distinct clean hosts reproduce
 the exact same result from the immutable Git object, not from a working tree.
-Each host must archive commit `a35568bc3926bd44d73680813bda0e8d5371705f`,
+Each host must archive commit `3f8188bec89db0d4a081931f35272e10185d1c0d`,
 verify source SHA-256 `380b20d36f18253a5c382ec1abc4a1147a08092a9a42cdae25e5d954f41acd0a`
 and Cargo.lock SHA-256
 `d98db19e0d86ca3248376d4857b150b240be05c4bc3a409d7cb638ce4d5d2237`,

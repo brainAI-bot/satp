@@ -67,7 +67,7 @@ jobs:
             echo "## escrow_v3 fee-routing candidate attestation"
             echo '```text'
             echo "run_id=${GITHUB_RUN_ID} run_attempt=${GITHUB_RUN_ATTEMPT}"
-            echo "checkout=${GITHUB_SHA} source_commit=a35568bc3926bd44d73680813bda0e8d5371705f"
+            echo "checkout=${GITHUB_SHA} source_commit=3f8188bec89db0d4a081931f35272e10185d1c0d"
             shasum -a 256 target/fee-routing-candidate/escrow_v3.so
             stat -f '%N %z bytes' target/fee-routing-candidate/escrow_v3.so
             shasum -a 256 build-sbf-fee-routing-candidate.log

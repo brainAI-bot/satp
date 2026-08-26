@@ -31,7 +31,7 @@ test('fee-routing candidate is separate from the deployed locked-build record', 
   assert.equal(locked.build.artifact_sha256, '4f21da13659cbe99a606b408a5f1d3523c0e41de20538028939bbb1b54c3cc0d');
   assert.equal(locked.signing_packet, 'docs/escrow-v3-mainnet-signing-packet.md');
   assert.equal(candidate.status, 'independent_review_pending');
-  assert.equal(candidate.source.commit, 'a35568bc3926bd44d73680813bda0e8d5371705f');
+  assert.equal(candidate.source.commit, '3f8188bec89db0d4a081931f35272e10185d1c0d');
   assert.equal(candidate.idl.commit, candidate.source.commit);
   assert.equal(candidate.build.artifact_bytes, 350304);
   assert.equal(candidate.programdata_capacity.required_extension_bytes, 3448);
@@ -54,7 +54,7 @@ test('fee-routing extension is exactly bounded and route proofs are IDL-bound', 
   const result = verifyFeeRoutingExtension();
 
   assert.equal(result.ok, true);
-  assert.equal(result.source_commit, 'a35568bc3926bd44d73680813bda0e8d5371705f');
+  assert.equal(result.source_commit, '3f8188bec89db0d4a081931f35272e10185d1c0d');
   assert.equal(result.artifact_bytes, 350304);
   assert.equal(result.artifact_sha256, '27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a');
   assert.equal(result.required_distinct_clean_hosts, 2);
