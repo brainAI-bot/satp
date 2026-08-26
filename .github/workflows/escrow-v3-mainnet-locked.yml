@@ -15,15 +15,86 @@ on:
       - "docs/escrow-v3-mainnet-signing-packet.md"
       - "docs/escrow-v3-fee-routing-candidate-011685d4.json"
       - "docs/escrow-v3-fee-routing-change-control-011685d4.md"
+      - "docs/escrow-v3-fee-routing-extension-011685d4.json"
       - "scripts/build-escrow-v3-mainnet-locked.sh"
+      - "scripts/build-escrow-v3-fee-routing-candidate.sh"
       - "scripts/generate-v3-idls.mjs"
       - "scripts/verify-escrow-v3-mainnet-locked.mjs"
+      - "scripts/verify-escrow-v3-fee-routing-extension.mjs"
       - "tests/escrow-v3-mainnet-locked.test.mjs"
 
 permissions:
   contents: read
 
 jobs:
+  fee-routing-candidate-build:
+    name: Fee-routing candidate reproducibility
+    runs-on: macos-26
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out full source history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pinned Rust toolchains
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          # The action makes the last toolchain the default; the SBF build is
+          # intentionally fixed to 1.86.0 and LiteSVM selects 1.97.1 explicitly.
+          toolchain: "1.97.1,1.86.0"
+          cache: false
+          rustflags: ""
+
+      - name: Install Solana CLI 2.1.21
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.21/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+
+      - name: Reproduce fee-routing candidate from pinned commit
+        run: scripts/build-escrow-v3-fee-routing-candidate.sh
+
+      - name: Prove handler fee arithmetic and fixed treasury
+        run: cargo +1.97.1 test --manifest-path programs/escrow_v3/Cargo.toml --features mainnet fee_routing_tests
+
+      - name: Prove release routes and rollback in LiteSVM
+        run: cargo +1.97.1 test --manifest-path tests/litesvm-fee-routing/Cargo.toml --locked
+
+      - name: Record candidate build attestation
+        run: |
+          {
+            echo "## escrow_v3 fee-routing candidate attestation"
+            echo '```text'
+            echo "run_id=${GITHUB_RUN_ID} run_attempt=${GITHUB_RUN_ATTEMPT}"
+            echo "checkout=${GITHUB_SHA} source_commit=3f8188bec89db0d4a081931f35272e10185d1c0d"
+            shasum -a 256 target/fee-routing-candidate/escrow_v3.so
+            stat -f '%N %z bytes' target/fee-routing-candidate/escrow_v3.so
+            shasum -a 256 build-sbf-fee-routing-candidate.log
+            uname -m
+            sw_vers
+            rustc --version
+            cargo --version
+            rustc +1.97.1 --version
+            cargo +1.97.1 --version
+            solana --version
+            cargo-build-sbf --version
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload candidate attestation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: escrow-v3-fee-routing-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            target/fee-routing-candidate/escrow_v3.so
+            build-sbf-fee-routing-candidate.log
+            docs/escrow-v3-fee-routing-candidate-011685d4.json
+            docs/escrow-v3-fee-routing-extension-011685d4.json
+            idls/v3/escrow_v3.json
+          if-no-files-found: error
+          retention-days: 90
+
   locked-mainnet-build:
     name: Locked mainnet build
     runs-on: macos-26
@@ -48,6 +119,9 @@ jobs:
 
       - name: Build and verify locked artifact
         run: scripts/build-escrow-v3-mainnet-locked.sh
+
+      - name: Verify fee-routing extension bounds
+        run: node scripts/verify-escrow-v3-fee-routing-extension.mjs
 
       - name: Record immutable build evidence
         run: |

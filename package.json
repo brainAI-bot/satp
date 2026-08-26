@@ -35,6 +35,7 @@
     "test:escrow-build-proof-reference": "node --test tests/escrow-v3-build-proof-reference.test.mjs",
     "test:escrow-mainnet-provenance": "node --test tests/escrow-v3-mainnet-provenance.test.mjs",
     "test:escrow-mainnet-locked": "node --test tests/escrow-v3-mainnet-locked.test.mjs",
+    "verify:escrow-fee-routing-extension": "node scripts/verify-escrow-v3-fee-routing-extension.mjs",
     "check:escrow-release-readiness": "node scripts/check-escrow-v3-release-readiness.mjs && node --test tests/escrow-v3-release-readiness-guard.test.mjs",
     "verify:escrow-mainnet-provenance:live": "node scripts/verify-escrow-v3-mainnet-provenance.mjs --live",
     "test:v3": "node packages/satp-client/test-v3.js",

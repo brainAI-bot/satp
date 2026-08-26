@@ -8,7 +8,7 @@
   },
   "source": {
     "repository": "brainAI-bot/satp",
-    "commit": "a35568bc3926bd44d73680813bda0e8d5371705f",
+    "commit": "3f8188bec89db0d4a081931f35272e10185d1c0d",
     "path": "programs/escrow_v3/src/lib.rs",
     "sha256": "380b20d36f18253a5c382ec1abc4a1147a08092a9a42cdae25e5d954f41acd0a",
     "cargo_lock_path": "Cargo.lock",
@@ -42,7 +42,7 @@
     "status": "extension_required_before_buffer_write"
   },
   "idl": {
-    "commit": "a35568bc3926bd44d73680813bda0e8d5371705f",
+    "commit": "3f8188bec89db0d4a081931f35272e10185d1c0d",
     "path": "idls/v3/escrow_v3.json",
     "sha256": "9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10",
     "address": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
@@ -64,7 +64,8 @@
     ]
   },
   "change_control_packet": "docs/escrow-v3-fee-routing-change-control-011685d4.md",
-  "candidate_head": "a35568bc3926bd44d73680813bda0e8d5371705f",
+  "extension_packet": "docs/escrow-v3-fee-routing-extension-011685d4.json",
+  "candidate_head": "3f8188bec89db0d4a081931f35272e10185d1c0d",
   "reviewed_head": null,
   "review_outcome": "pending"
 }
