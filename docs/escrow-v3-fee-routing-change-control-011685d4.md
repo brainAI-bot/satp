@@ -1,7 +1,8 @@
 # Escrow V3 SOL fee-routing change control [#011685d4]
 
-Status: **NO-GO until two-host candidate reproducibility, exact-head independent
-review, green checks, and one explicit Owner approval in HQ.** Preparation of
+Status: **NO-GO until exact-head independent review, green checks, and one
+explicit Owner approval in HQ.** Two-host candidate reproducibility is complete.
+Preparation of
 this amended packet performed no chain write, signing, keypair access, money
 movement, npm publication, production mutation, or roadmap change. Its
 machine-readable bounds are locked in
@@ -76,10 +77,21 @@ artifact_sha256=27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a
 idl_sha256=9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10
 ```
 
-The recorded author build is only attestation one. A green build that reproduces
-the older deployed `4f21da13…` payload does not satisfy attestation two for this
-candidate. The independent reviewer must bind both attestation identifiers and
-log hashes into the exact-head verdict before Owner approval.
+Both required hosts reproduced the candidate:
+
+| Role | Non-secret host identity | SBF bytes / SHA-256 | Build-log SHA-256 |
+| --- | --- | --- | --- |
+| Author | `brainchain-mac-mini/darwin-arm64/macos-26.4` | `350304` / `27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a` | `4d68d7ac7e61b30ed1b4988fdba388ed92efdfbfa5650bfb8ac6d994a22279c5` |
+| Independent | `github-actions/macos-26/run-32916499013/attempt-1` | `350304` / `27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a` | `d2b5fcf3f9bfa8bda4aebd79e9d9b2c46a85a5740cae7450e7c8544c1eab12dc` |
+
+Both used host Rust/Cargo `1.86.0`, Solana CLI and cargo-build-sbf `2.1.21`,
+platform tools `v1.52` / SBF rustc `1.89.0-dev`, the exact command above, and
+produced IDL SHA-256
+`9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10`.
+The independent artifact is retained as
+`escrow-v3-fee-routing-candidate-32916499013-1` on workflow run
+`32916499013`. The independent reviewer must bind both attestation identifiers
+and log hashes into the exact-head verdict before Owner approval.
 
 The same clean-host job runs the handler-level fee arithmetic/treasury tests and
 `fee_routing_litesvm`. The LiteSVM suite loads the pinned candidate SBF, executes

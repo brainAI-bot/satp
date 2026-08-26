@@ -43,6 +43,23 @@ export function verifyFeeRoutingExtension() {
   if (extension.reproducibility.expected_artifact_sha256 !== candidate.build.artifact_sha256) fail('candidate artifact hash drift');
   if (extension.reproducibility.expected_idl_sha256 !== candidate.idl.sha256) fail('candidate IDL hash drift');
   if (extension.reproducibility.required_distinct_clean_hosts !== 2) fail('two clean build hosts are mandatory');
+  const attestations = extension.reproducibility.recorded_attestations;
+  if (!Array.isArray(attestations) || attestations.length !== 2) fail('exactly two build attestations are required');
+  if (new Set(attestations.map((entry) => entry.host_identity)).size !== 2) fail('build hosts are not distinct');
+  for (const attestation of attestations) {
+    if (!attestation.host_identity || attestation.status !== 'reproduced') fail('build attestation is incomplete');
+    if (attestation.clean_checkout_commit !== candidate.source.commit) fail('attestation source commit drift');
+    if (attestation.source_sha256 !== candidate.source.sha256) fail('attestation source hash drift');
+    if (attestation.cargo_lock_sha256 !== candidate.source.cargo_lock_sha256) fail('attestation Cargo.lock hash drift');
+    if (attestation.build_command !== candidate.build.command) fail('attestation build command drift');
+    if (attestation.artifact_bytes !== candidate.build.artifact_bytes) fail('attestation artifact size drift');
+    if (attestation.artifact_sha256 !== candidate.build.artifact_sha256) fail('attestation artifact hash drift');
+    if (attestation.idl_sha256 !== candidate.idl.sha256) fail('attestation IDL hash drift');
+    if (!/^[0-9a-f]{64}$/.test(attestation.log_sha256)) fail('attestation build-log hash missing');
+    for (const [tool, version] of Object.entries(candidate.toolchain)) {
+      if (attestation.tool_versions?.[tool] !== version) fail(`attestation ${tool} version drift`);
+    }
+  }
 
   const allocation = extension.allocation;
   if (allocation.current_payload_bytes !== candidate.programdata_capacity.allocated_payload_bytes) fail('current allocation drift');
@@ -94,6 +111,7 @@ export function verifyFeeRoutingExtension() {
     artifact_sha256: candidate.build.artifact_sha256,
     artifact_bytes: candidate.build.artifact_bytes,
     required_distinct_clean_hosts: extension.reproducibility.required_distinct_clean_hosts,
+    reproduced_host_identities: attestations.map((entry) => entry.host_identity),
     additional_program_bytes: allocation.additional_program_bytes,
     target_payload_bytes: allocation.target_payload_bytes,
     route_names: [...expectedRoutes.keys()],

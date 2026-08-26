@@ -40,7 +40,8 @@ test('fee-routing candidate is separate from the deployed locked-build record', 
   assert.equal(candidate.candidate_head, candidate.source.commit);
   assert.equal(candidate.reviewed_head, null);
   assert.notEqual(candidate.source.commit, locked.source.commit);
-  assert.match(packet, /NO-GO until two-host candidate reproducibility, exact-head independent\s+review, green checks/);
+  assert.match(packet, /NO-GO until exact-head independent review, green checks/);
+  assert.match(packet, /Two-host candidate reproducibility is complete/);
   assert.match(packet, /Transaction A calls `release` once/);
   assert.match(packet, /Transaction B calls `partial_release` once/);
   assert.match(packet, /Stop after two submissions regardless of\s+outcome/);
@@ -58,6 +59,10 @@ test('fee-routing extension is exactly bounded and route proofs are IDL-bound', 
   assert.equal(result.artifact_bytes, 350304);
   assert.equal(result.artifact_sha256, '27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a');
   assert.equal(result.required_distinct_clean_hosts, 2);
+  assert.deepEqual(result.reproduced_host_identities, [
+    'brainchain-mac-mini/darwin-arm64/macos-26.4',
+    'github-actions/macos-26/run-32916499013/attempt-1',
+  ]);
   assert.equal(result.additional_program_bytes, 3448);
   assert.equal(result.target_payload_bytes, 350304);
   assert.deepEqual(result.route_names, ['release', 'partial_release']);

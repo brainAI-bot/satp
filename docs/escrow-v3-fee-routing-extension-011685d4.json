@@ -30,17 +30,48 @@
     "recorded_attestations": [
       {
         "role": "author_build",
-        "host_identity": "darwin-arm64-macos-26",
+        "host_identity": "brainchain-mac-mini/darwin-arm64/macos-26.4",
+        "clean_checkout_commit": "3f8188bec89db0d4a081931f35272e10185d1c0d",
+        "source_sha256": "380b20d36f18253a5c382ec1abc4a1147a08092a9a42cdae25e5d954f41acd0a",
+        "cargo_lock_sha256": "d98db19e0d86ca3248376d4857b150b240be05c4bc3a409d7cb638ce4d5d2237",
+        "tool_versions": {
+          "host_rustc": "1.86.0",
+          "host_cargo": "1.86.0",
+          "solana_cli": "2.1.21",
+          "cargo_build_sbf": "2.1.21",
+          "platform_tools": "v1.52",
+          "sbf_rustc": "1.89.0-dev"
+        },
+        "build_command": "cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml --features mainnet",
         "artifact_bytes": 350304,
         "artifact_sha256": "27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a",
-        "status": "recorded_in_candidate_manifest"
+        "idl_sha256": "9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10",
+        "log_sha256": "4d68d7ac7e61b30ed1b4988fdba388ed92efdfbfa5650bfb8ac6d994a22279c5",
+        "status": "reproduced"
       },
       {
         "role": "independent_build",
-        "host_identity": null,
-        "artifact_bytes": null,
-        "artifact_sha256": null,
-        "status": "required_before_owner_approval"
+        "host_identity": "github-actions/macos-26/run-32916499013/attempt-1",
+        "clean_checkout_commit": "3f8188bec89db0d4a081931f35272e10185d1c0d",
+        "workflow_head_commit": "f4640690ba02005052484035cab5fcd9c09f44dd",
+        "source_sha256": "380b20d36f18253a5c382ec1abc4a1147a08092a9a42cdae25e5d954f41acd0a",
+        "cargo_lock_sha256": "d98db19e0d86ca3248376d4857b150b240be05c4bc3a409d7cb638ce4d5d2237",
+        "tool_versions": {
+          "host_rustc": "1.86.0",
+          "host_cargo": "1.86.0",
+          "solana_cli": "2.1.21",
+          "cargo_build_sbf": "2.1.21",
+          "platform_tools": "v1.52",
+          "sbf_rustc": "1.89.0-dev"
+        },
+        "build_command": "cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml --features mainnet",
+        "artifact_bytes": 350304,
+        "artifact_sha256": "27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a",
+        "idl_sha256": "9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10",
+        "log_sha256": "d2b5fcf3f9bfa8bda4aebd79e9d9b2c46a85a5740cae7450e7c8544c1eab12dc",
+        "workflow_run": "https://github.com/brainAI-bot/satp/actions/runs/32916499013",
+        "artifact_name": "escrow-v3-fee-routing-candidate-32916499013-1",
+        "status": "reproduced"
       }
     ]
   },
