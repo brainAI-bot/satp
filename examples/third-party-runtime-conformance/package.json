@@ -5,7 +5,7 @@
   "description": "Offline SATP third-party runtime conformance example without AgentFolio infrastructure.",
   "type": "commonjs",
   "scripts": {
-    "check": "node --check src/runtimeVerifier.js tests/*.test.js",
+    "check": "node --check src/*.js tests/*.test.js",
     "test": "node --test tests/*.test.js"
   }
 }

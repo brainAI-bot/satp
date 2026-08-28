@@ -44,6 +44,36 @@ const result = runtime.verifyBundle(
 console.log(result.ok, result.boundary.agentFolioRuntimeRequired);
 ```
 
+### Fixture-first external adapter
+
+An external host can keep fixture loading under its own control and inject only
+that loader into the conformance adapter. The adapter owns no filesystem,
+network, RPC, signer, transaction, payment, package-publish, or deploy path:
+
+```js
+const fs = require('node:fs');
+const { createFixtureFirstExternalAdapter } = require('./src/externalAdapter');
+const { createThirdPartySatpRuntime } = require('./src/runtimeVerifier');
+
+const runtime = createThirdPartySatpRuntime();
+const adapter = createFixtureFirstExternalAdapter({
+  loadFixture: (name) => runtime.loadFixture(name),
+});
+const fixtureCase = JSON.parse(
+  fs.readFileSync('./fixtures/external-adapter-positive.json', 'utf8')
+);
+
+const result = adapter.verifyCase(fixtureCase);
+console.log(result.status, result.checks);
+```
+
+The checked-in manifest binds the identity, attestation, and trust packet
+fixtures to host-supplied subject/evidence expectations. A consumer may replace
+the loader with its own fixture store without changing SATP verification. The
+returned `conformant` status is a local compatibility result only;
+`authorizationGranted` remains `false`, and it must not be treated as approval
+to sign, pay, send a transaction, or write to a live system.
+
 ## Consumer boundary
 
 The example treats the consuming app as a generic runtime named
@@ -53,7 +83,8 @@ shape, and trust packet verification.
 
 ```text
 third-party app fixture input
-  -> SATP runtime verifier
+  -> host-owned fixture loader
+  -> SATP external fixture adapter + runtime verifier
   -> identity, attestation, and trust packet verdicts
   -> read-only app decision
 ```

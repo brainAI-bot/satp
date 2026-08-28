@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "satp.external-fixture-adapter.case.v1",
+  "caseId": "identity-attestation-trust-packet-positive",
+  "fixtures": {
+    "identity": "identity-positive.json",
+    "attestation": "attestation-positive.json",
+    "trustPacket": "trust-packet-positive.json"
+  },
+  "expectations": {
+    "expectedSubject": "rc-s6-fixture-agent",
+    "expectedEvidenceDigest": "414f0c9b1ded7a0636e2215c93d37b91c247592f4319d3ff302cd1085bbac710",
+    "expectedEvidenceUri": "urn:satp:attestation:8z8Kd729S2kqtXGjLFczXVpGTyqy7rHpEKbWaHb5zZFv"
+  }
+}
