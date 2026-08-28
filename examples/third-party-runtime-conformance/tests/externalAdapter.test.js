@@ -113,6 +113,24 @@ test('external adapter requires host evidence expectations before calling the ho
   assert.equal(loadAttempted, false);
 });
 
+test('external adapter rejects unknown expectations before calling the host loader', () => {
+  let loadAttempted = false;
+  const adapter = createFixtureFirstExternalAdapter({
+    loadFixture() {
+      loadAttempted = true;
+      throw new Error('must not load a case with unknown expectations');
+    },
+  });
+  const testCase = loadCase();
+  testCase.expectations.validationTime = 0;
+
+  assert.throws(
+    () => adapter.verifyCase(testCase),
+    /unknown expectation: validationTime/
+  );
+  assert.equal(loadAttempted, false);
+});
+
 test('external adapter owns no filesystem, network, AgentFolio, signing, or transaction integration', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'externalAdapter.js'), 'utf8');
 

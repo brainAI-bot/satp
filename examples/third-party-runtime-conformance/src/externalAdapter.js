@@ -5,6 +5,11 @@ const { verifyBundle } = require('./runtimeVerifier');
 const EXTERNAL_ADAPTER_CASE_SCHEMA = 'satp.external-fixture-adapter.case.v1';
 const EXTERNAL_ADAPTER_PROFILE = 'satp.external-fixture-adapter.v1';
 const FIXTURE_KEYS = ['identity', 'attestation', 'trustPacket'];
+const EXPECTATION_KEYS = [
+  'expectedSubject',
+  'expectedEvidenceDigest',
+  'expectedEvidenceUri',
+];
 
 function assertFixtureName(value, key) {
   if (typeof value !== 'string' || !/^[a-z0-9-]+\.json$/.test(value)) {
@@ -15,6 +20,12 @@ function assertFixtureName(value, key) {
 function assertExpectations(expectations) {
   if (!expectations || typeof expectations !== 'object') {
     throw new Error('External adapter expectations are required');
+  }
+  const unknownExpectation = Object.keys(expectations).find(
+    (key) => !EXPECTATION_KEYS.includes(key)
+  );
+  if (unknownExpectation) {
+    throw new Error('External adapter unknown expectation: ' + unknownExpectation);
   }
   if (typeof expectations.expectedSubject !== 'string' || expectations.expectedSubject.length === 0) {
     throw new Error('External adapter expectedSubject is required');
@@ -94,7 +105,11 @@ function createFixtureFirstExternalAdapter({ loadFixture, verifier = verifyBundl
       const bundle = Object.fromEntries(
         FIXTURE_KEYS.map((key) => [key, unwrapFixture(key, loaded[key])])
       );
-      const verification = verifier(bundle, caseDefinition.expectations);
+      const verification = verifier(bundle, {
+        expectedSubject: caseDefinition.expectations.expectedSubject,
+        expectedEvidenceDigest: caseDefinition.expectations.expectedEvidenceDigest,
+        expectedEvidenceUri: caseDefinition.expectations.expectedEvidenceUri,
+      });
 
       return {
         schemaVersion: EXTERNAL_ADAPTER_PROFILE,
