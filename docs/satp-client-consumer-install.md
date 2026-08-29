@@ -15,24 +15,21 @@ publishes it and updates install-ready docs. See
 
 | Channel | Use when | Dependency |
 | --- | --- | --- |
-| Stable npm | Production or default AgentFolio and other consumer installs should stay on the stable public package. | `@brainai/satp-client@2.0.6` or `@brainai/satp-client` |
+| Stable npm | Production or default AgentFolio and other consumer installs should stay on the stable public package. | `@brainai/satp-client@2.0.8` or `@brainai/satp-client` |
 | Historical rc exact version | Explicit HQ-assigned reproduction or lockfile evidence for the historical pre-stable artifact. | `@brainai/satp-client@2.0.2` |
 | Release candidate tag | Explicit HQ-assigned rc validation where a moving dist-tag is acceptable and the task names the tag as the target. | `@brainai/satp-client@rc` |
 | Reviewed Git commit | HQ-assigned PR coordination or source-review installs tied to an exact reviewed SATP commit. | `git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
-Registry readback on 2026-08-02 shows npm `latest` resolves to
-`@brainai/satp-client@2.0.6` and the `rc` dist-tag resolves to `2.0.2`.
-Stable consumers should use `latest`/`2.0.6` unless HQ assigns an explicit
+Registry publish/readback on 2026-08-29 shows npm `latest` resolves to
+`@brainai/satp-client@2.0.8` and the `rc` dist-tag resolves to `2.0.2`.
+Stable consumers should use `latest`/`2.0.8` unless HQ assigns an explicit
 release-candidate validation task; that default follows the stable-channel
 behavior recorded by the package naming decision rather than a new AgentFolio
 product approval.
 
-Stable 2.0.6 provenance: Owner-approved `REQ-6b35eb58` is the 2.0.6
-roadmap-gate approval authority; HQ task
-`SATP-NPM-PUBLISH-APPROVAL-EFFECTIVE-20260802` records the 2.0.6
-publish/readback execution. Owner-approved `REQ-cc84fa3a` and PR #115 remain the
-historical stable-line / 2.0.2 public provenance. This document records that
-live registry state; it does not authorize a new publish or dist-tag mutation.
+Version 2.0.8 is the clean replacement for the oversized 2.0.7 artifact. Its
+tarball excludes `node_modules`; `@solana/web3.js` remains a normal runtime
+dependency resolved by the consuming application.
 
 ## RC-S6 semantic uncertainty compatibility
 
@@ -56,7 +53,7 @@ Consumers must not promote RC-S6 uncertainty outcomes into verified badges,
 ranking, eligibility, trust-score changes, payment state, escrow readiness,
 protected-action access, npm latest adoption, mainnet readiness, product launch
 copy, or AgentFolio product approval. Stable consumer installs should remain on
-`@brainai/satp-client@2.0.6` unless a separate HQ task assigns rc validation or
+`@brainai/satp-client@2.0.8` unless a separate HQ task assigns rc validation or
 commit-pinned review.
 
 ## Stable npm dependency path
@@ -64,13 +61,13 @@ commit-pinned review.
 Use the current published npm package for stable consumer installs:
 
 ```bash
-npm install @brainai/satp-client@2.0.6
+npm install @brainai/satp-client@2.0.8
 ```
 
 ```json
 {
   "dependencies": {
-    "@brainai/satp-client": "2.0.6"
+    "@brainai/satp-client": "2.0.8"
   }
 }
 ```
@@ -108,7 +105,7 @@ npm install @brainai/satp-client@rc
 ```
 
 The current `rc` tag resolves to the historical `2.0.2` package, which is older
-than stable `latest` `2.0.6`; it is not the default forward-looking consumer
+than stable `latest` `2.0.8`; it is not the default forward-looking consumer
 channel.
 
 Branch-only development and PR review can still use a commit-addressed Git
@@ -187,15 +184,14 @@ The repo also carries a repeatable clean-consumer smoke:
 npm run smoke:consumer-install
 ```
 
-## Source remediation candidate for the uuid advisory
+## Consumer override for the uuid advisory
 
-The currently published stable package in a clean consumer without a root
-override reports a moderate advisory chain through
+The package in a clean consumer without a root override reports a moderate
+advisory chain through
 `@solana/web3.js -> jayson -> uuid` for
 [`GHSA-w5hq-g745-h8pq`](https://github.com/advisories/GHSA-w5hq-g745-h8pq).
 The affected `uuid` range is `<11.1.1`; the upstream dependency path is owned
-by `@solana/web3.js` and `jayson`. Publishing remains a separate, explicitly
-authorized release action; this source remediation does not publish anything.
+by `@solana/web3.js` and `jayson`.
 
 The SATP source tree pins the same transitive path with an npm override at the
 repository root and in `packages/satp-client/package.json`:
@@ -211,34 +207,31 @@ repository root and in `packages/satp-client/package.json`:
 ```
 
 An npm override in a dependency package is not inherited by its consumers.
-Until upstream widens the `jayson` uuid range, the release-candidate package
-therefore bundles `@solana/web3.js` and the lockfile-resolved production tree.
-That keeps Web3's `jayson -> uuid` resolution inside the reviewed SATP client
-artifact at `uuid >=11.1.1`; a clean consumer does not need its own override.
-This is a temporary packaging safety fence, not an upstream fix. It increases
-the tarball size and must be removed when Web3/jayson resolves a safe uuid
-version natively.
+Until upstream widens the `jayson` uuid range, applications that require a
+zero-finding production audit must repeat the override in their root
+`package.json`. The release does not bundle `@solana/web3.js` or any other
+dependency; npm installs the dependency tree normally in the consumer.
 
 The packed-client smoke installs the candidate tarball into a temporary clean
-consumer with no overrides and runs
+consumer with the documented root override and runs
 `npm audit --omit=dev --audit-level=moderate`, so CI fails if the clean
 production dependency tree regresses to the affected `uuid` range.
 
 The network-enabled CI path additionally inspects the exact packed-client
-dependency path without a consumer override:
+dependency path with the documented consumer override:
 
 ```bash
 npm run check:satp-client-uuid-advisory
 ```
 
-That check fails if the bundled `@solana/web3.js -> jayson -> uuid` path
+That check fails if the normal `@solana/web3.js -> jayson -> uuid` path
 resolves below `11.1.1`,
 if `GHSA-w5hq-g745-h8pq` remains in the audited tree, or if any production
 vulnerability is reported. It does not pin the local SATP client version.
 Registry-dependent packed-consumer and advisory checks are excluded from
 `ci:offline` and `ci:offline-with-examples`. Upstream dependency updates should
-still trigger review of the temporary bundle, the repository override, and
-issue #134 so both temporary controls are removed when no longer necessary.
+still trigger review of the repository and consumer overrides and issue #134 so
+the temporary controls are removed when no longer necessary.
 
 ## Offline identity attestation request helper
 

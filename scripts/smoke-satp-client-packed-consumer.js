@@ -47,6 +47,11 @@ try {
       private: true,
       version: '0.0.0',
       dependencies: {},
+      overrides: {
+        jayson: {
+          uuid: `^${fixedUuidVersion}`,
+        },
+      },
     }, null, 2) + '\n',
   );
 
@@ -58,7 +63,7 @@ try {
     cwd: tempRoot,
     stdio: 'pipe',
   });
-  console.log('clean consumer npm audit --omit=dev --audit-level=moderate OK: 0 vulnerabilities');
+  console.log('clean consumer with documented uuid override: npm audit --omit=dev --audit-level=moderate OK');
 
   const installedPackageRoot = path.join(
     tempRoot,
@@ -75,14 +80,14 @@ try {
     'utf8',
   );
 
-  if (!installedPackage.bundleDependencies?.includes('@solana/web3.js')) {
-    throw new Error('packed client does not declare the temporary @solana/web3.js safety bundle');
+  if (installedPackage.bundleDependencies !== undefined) {
+    throw new Error('packed client must not declare bundleDependencies');
   }
   const web3ManifestPath = require.resolve('@solana/web3.js/package.json', {
     paths: [installedPackageRoot],
   });
-  if (!web3ManifestPath.startsWith(`${installedPackageRoot}${path.sep}`)) {
-    throw new Error('packed client resolved @solana/web3.js outside its bundled dependency tree');
+  if (web3ManifestPath.startsWith(`${installedPackageRoot}${path.sep}node_modules${path.sep}`)) {
+    throw new Error('packed client contains a bundled @solana/web3.js dependency tree');
   }
   const jaysonManifestPath = require.resolve('jayson/package.json', {
     paths: [path.dirname(web3ManifestPath)],
@@ -92,7 +97,7 @@ try {
   });
   const uuidVersion = JSON.parse(fs.readFileSync(uuidManifestPath, 'utf8')).version;
   if (isVersionBefore(uuidVersion, fixedUuidVersion)) {
-    throw new Error(`packed client resolved affected uuid ${uuidVersion}`);
+    throw new Error(`consumer uuid override resolved affected uuid ${uuidVersion}`);
   }
 
   const stableBanner = `Current stable npm package: **@brainai/satp-client@${releaseMetadata.stableLatest}**`;
@@ -262,7 +267,7 @@ try {
   });
   process.stdout.write(output);
   console.log(
-    `satp-client packed README OK: ${installedPackage.version}; bundled uuid ${uuidVersion}; ${documentedExampleLinks.size} documented examples discovered and executed`,
+    `satp-client packed README OK: ${installedPackage.version}; consumer override uuid ${uuidVersion}; ${documentedExampleLinks.size} documented examples discovered and executed`,
   );
 } finally {
   fs.rmSync(tempRoot, { recursive: true, force: true });

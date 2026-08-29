@@ -1,4 +1,4 @@
-name: Publish SATP client 2.0.7
+name: Publish SATP client 2.0.8
 
 on:
   workflow_dispatch:
@@ -8,12 +8,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: publish-satp-client-2.0.7
+  group: publish-satp-client-2.0.8
   cancel-in-progress: false
 
 jobs:
   publish:
-    name: Publish @brainai/satp-client@2.0.7
+    name: Publish @brainai/satp-client@2.0.8
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -33,12 +33,12 @@ jobs:
         run: npm install --global npm@11.5.2
 
       - name: Verify fixed release version
-        run: test "$(node -p "require('./packages/satp-client/package.json').version")" = "2.0.7"
+        run: test "$(node -p "require('./packages/satp-client/package.json').version")" = "2.0.8"
 
       - name: Refuse to overwrite an existing release
         run: |
-          if npm view @brainai/satp-client@2.0.7 version >/dev/null 2>&1; then
-            echo "@brainai/satp-client@2.0.7 already exists; refusing to publish"
+          if npm view @brainai/satp-client@2.0.8 version >/dev/null 2>&1; then
+            echo "@brainai/satp-client@2.0.8 already exists; refusing to publish"
             exit 1
           fi
 
@@ -55,13 +55,15 @@ jobs:
           tags="$(npm view @brainai/satp-client dist-tags --json)"
           node -e '
             const tags = JSON.parse(process.argv[1]);
-            if (tags.latest !== "2.0.6") {
-              throw new Error(`refusing publish: expected latest=2.0.6, got ${String(tags.latest)}`);
+            if (tags.latest !== "2.0.7" || tags.rc !== "2.0.2") {
+              throw new Error(
+                `refusing publish: expected latest=2.0.7 and rc=2.0.2, got latest=${String(tags.latest)} and rc=${String(tags.rc)}`,
+              );
             }
           ' "$tags"
 
-      - name: Publish to the rc channel with npm Trusted Publishing
-        run: npm publish ./packages/satp-client --access public --provenance --tag rc
+      - name: Publish clean replacement with npm Trusted Publishing
+        run: npm publish ./packages/satp-client --access public --provenance
 
       - name: Verify npm dist-tags after publish
         shell: bash
@@ -70,9 +72,9 @@ jobs:
           tags="$(npm view @brainai/satp-client dist-tags --json)"
           node -e '
             const tags = JSON.parse(process.argv[1]);
-            if (tags.latest !== "2.0.6" || tags.rc !== "2.0.7") {
+            if (tags.latest !== "2.0.8" || tags.rc !== "2.0.2") {
               throw new Error(
-                `unexpected post-publish dist-tags: expected latest=2.0.6 and rc=2.0.7, got latest=${String(tags.latest)} and rc=${String(tags.rc)}`,
+                `unexpected post-publish dist-tags: expected latest=2.0.8 and rc=2.0.2, got latest=${String(tags.latest)} and rc=${String(tags.rc)}`,
               );
             }
           ' "$tags"

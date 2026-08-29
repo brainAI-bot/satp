@@ -1,7 +1,7 @@
 {
   "name": "@brainai/satp-client",
-  "version": "2.0.7",
-  "description": "SATP client SDK surface prepared for release-candidate review; publish only after the release packet passes.",
+  "version": "2.0.8",
+  "description": "SATP client SDK for reviewed Solana Agent Trust Protocol integrations.",
   "main": "src/index.js",
   "types": "src/index.d.ts",
   "exports": {
@@ -73,9 +73,6 @@
     "bs58": "^6.0.0",
     "rpc-websockets": "9.3.5"
   },
-  "bundleDependencies": [
-    "@solana/web3.js"
-  ],
   "private": false,
   "overrides": {
     "ws": "^8.21.0",
