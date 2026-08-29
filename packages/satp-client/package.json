@@ -1,7 +1,7 @@
 {
   "name": "@brainai/satp-client",
-  "version": "2.0.7",
-  "description": "SATP client SDK surface prepared for release-candidate review; publish only after the release packet passes.",
+  "version": "2.0.8",
+  "description": "SATP client SDK for reviewed Solana Agent Trust Protocol integrations.",
   "main": "src/index.js",
   "types": "src/index.d.ts",
   "exports": {
@@ -28,8 +28,8 @@
   "files": [
     "src/",
     "idls/",
-    "examples/",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "prepack": "npm ci --workspaces=false --ignore-scripts --no-audit --no-fund --silent && node scripts/materialize-v3-idls.js",
@@ -68,9 +68,6 @@
     "bs58": "^6.0.0",
     "rpc-websockets": "9.3.5"
   },
-  "bundleDependencies": [
-    "@solana/web3.js"
-  ],
   "private": false,
   "overrides": {
     "ws": "^8.21.0",

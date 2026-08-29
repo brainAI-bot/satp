@@ -3,7 +3,7 @@
 **Solana Agent Trust Protocol** - JavaScript/TypeScript SDK for reading and
 building reviewed SATP V3 program interactions.
 
-Current stable npm package: **@brainai/satp-client@2.0.6** | unpublished source candidate: **@brainai/satp-client@2.0.7** | rc dist-tag: **@brainai/satp-client@2.0.2** | Programs: **6**
+Current stable npm package: **@brainai/satp-client@2.0.8** | rc dist-tag: **@brainai/satp-client@2.0.2** | Programs: **6**
 
 ## Installation
 
@@ -11,29 +11,24 @@ Choose stable, rc, or Git based on what the consumer needs to prove:
 
 | Channel | Use when | Command |
 | --- | --- | --- |
-| Stable npm | Default production-style consumption of the stable public package. | `npm install @brainai/satp-client@2.0.6` |
+| Stable npm | Default production-style consumption of the stable public package. | `npm install @brainai/satp-client@2.0.8` |
 | Historical rc exact version | Explicit HQ-assigned reproduction or lockfile evidence for the historical pre-stable artifact. | `npm install @brainai/satp-client@2.0.2` |
 | Release candidate tag | Explicit HQ-assigned rc validation where a moving dist-tag is acceptable and the task names the tag as the target. | `npm install @brainai/satp-client@rc` |
 | Reviewed Git commit | PR coordination or source-review installs tied to an exact SATP commit. | `npm install git+https://github.com/brainAI-bot/satp.git#<SATP_COMMIT>` |
 
-Registry readback on 2026-08-20 shows npm `latest` resolves to
-`@brainai/satp-client@2.0.6` and the `rc` dist-tag resolves to `2.0.2`.
-Stable consumers should use `latest`/`2.0.6` unless HQ assigns an explicit
+Registry publish/readback on 2026-08-29 shows npm `latest` resolves to
+`@brainai/satp-client@2.0.8` and the `rc` dist-tag resolves to `2.0.2`.
+Stable consumers should use `latest`/`2.0.8` unless HQ assigns an explicit
 release-candidate validation task.
 
-Registry publish/readback on 2026-08-02 confirms `2.0.6` is the stable npm
-package. This documentation update does not publish the package or move any npm
-dist-tag.
-
-Source release-prep on 2026-08-20 advances package metadata to `2.0.7` as the
-next unpublished patch candidate containing the packed-consumer UUID advisory
-remediation merged in PR #145. This source candidate is not published and does
-not change the stable or `rc` registry tags.
+Version `2.0.8` replaces the oversized `2.0.7` artifact. It keeps runtime
+dependencies as normal npm dependencies and excludes `node_modules` from the
+published tarball.
 
 For stable consumer installs, pin the current published npm package:
 
 ```bash
-npm install @brainai/satp-client@2.0.6
+npm install @brainai/satp-client@2.0.8
 ```
 
 For rc validation:
@@ -59,11 +54,6 @@ The old `0.0.0-extraction` label was extraction-branch metadata and is not the
 current consumer package. Do not treat branch-only Git installs as npm latest.
 Continue to [Quick Start](#quick-start) for an installed-package flow that uses
 only files shipped in the package.
-
-The consumer-root `node` commands below use the stable npm package layout. For
-the reviewed Git-commit channel, insert `packages/satp-client/` after
-`node_modules/@brainai/satp-client/` because that channel installs the repository
-root package rather than the standalone npm artifact.
 
 Mainnet program IDs are present for the reviewed V3 registry, but availability
 is not action approval. Mainnet writes, deploys, keypair use, authority changes,
@@ -91,11 +81,11 @@ escrow readiness, mainnet readiness, npm latest adoption, or product approval.
 This installed-package quickstart covers an offline read-only SDK flow.
 
 For copy-paste MCP, A2A/agent-runtime, and x402 paid-endpoint examples, see the
-packed [`examples/adoption-quickstarts.js`](examples/adoption-quickstarts.js)
-or run this command from the consumer project root after installation:
+source [`examples/adoption-quickstarts.js`](https://github.com/brainAI-bot/satp/blob/079f2a85ad912d4eff2bca5516d214829246784b/packages/satp-client/examples/adoption-quickstarts.js).
+From a SATP source checkout, run this command from the repository root:
 
 ```bash
-node node_modules/@brainai/satp-client/examples/adoption-quickstarts.js
+node packages/satp-client/examples/adoption-quickstarts.js
 ```
 
 ```javascript
@@ -229,12 +219,12 @@ read-only: x402 payment metadata can identify where evidence may be fetched, but
 it is discovery/evidence lookup only and never authorizes SATP action execution,
 spending, live payment, signing, transactions, or host policy bypass.
 
-Run the packed
-[`examples/x402-discovery-evidence-lookup.js`](./examples/x402-discovery-evidence-lookup.js)
-from the consumer project root:
+Run the source
+[`examples/x402-discovery-evidence-lookup.js`](https://github.com/brainAI-bot/satp/blob/079f2a85ad912d4eff2bca5516d214829246784b/packages/satp-client/examples/x402-discovery-evidence-lookup.js)
+from a SATP checkout's repository root:
 
 ```bash
-node node_modules/@brainai/satp-client/examples/x402-discovery-evidence-lookup.js
+node packages/satp-client/examples/x402-discovery-evidence-lookup.js
 ```
 
 The example parses discovery metadata, builds an evidence lookup descriptor, and
@@ -246,12 +236,12 @@ builds a runtime policy action descriptor. It asserts
 The proposed issue #14 Track C endpoint spec for third-party SATP reputation
 and evidence consumers lives in the
 [source repository](https://github.com/brainAI-bot/satp/blob/main/docs/x402-reputation-evidence-lookup-api.md).
-Its packed
-[`examples/x402-reputation-evidence-lookup-client.js`](./examples/x402-reputation-evidence-lookup-client.js)
-is runnable from the consumer project root with:
+Its source
+[`examples/x402-reputation-evidence-lookup-client.js`](https://github.com/brainAI-bot/satp/blob/079f2a85ad912d4eff2bca5516d214829246784b/packages/satp-client/examples/x402-reputation-evidence-lookup-client.js)
+is runnable from a SATP checkout's repository root with:
 
 ```bash
-node node_modules/@brainai/satp-client/examples/x402-reputation-evidence-lookup-client.js
+node packages/satp-client/examples/x402-reputation-evidence-lookup-client.js
 ```
 
 ### Runtime Policy Adapter Helper

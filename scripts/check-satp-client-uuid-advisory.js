@@ -43,6 +43,11 @@ try {
       private: true,
       version: '0.0.0',
       dependencies: {},
+      overrides: {
+        jayson: {
+          uuid: `^${fixedUuidVersion}`,
+        },
+      },
     }, null, 2) + '\n',
   );
 
@@ -55,8 +60,8 @@ try {
   const web3ManifestPath = require.resolve('@solana/web3.js/package.json', {
     paths: [installedPackageRoot],
   });
-  if (!web3ManifestPath.startsWith(`${installedPackageRoot}${path.sep}`)) {
-    throw new Error('clean consumer resolved @solana/web3.js outside the SATP client safety bundle');
+  if (web3ManifestPath.startsWith(`${installedPackageRoot}${path.sep}node_modules${path.sep}`)) {
+    throw new Error('packed client unexpectedly contains a bundled @solana/web3.js dependency tree');
   }
   const jaysonManifestPath = require.resolve('jayson/package.json', {
     paths: [path.dirname(web3ManifestPath)],
@@ -73,7 +78,7 @@ try {
     `uuid@${uuidVersion}`,
   ];
   if (isVersionBefore(uuidVersion, fixedUuidVersion)) {
-    throw new Error(`packed client remediation failed: resolved affected uuid ${uuidVersion}`);
+    throw new Error(`consumer override failed: resolved affected uuid ${uuidVersion}`);
   }
 
   const auditResult = spawnSync('npm', ['audit', '--omit=dev', '--json'], {
@@ -102,7 +107,7 @@ try {
   );
   if (uuidAdvisory) {
     throw new Error(
-      `packed client remediation failed: GHSA-w5hq-g745-h8pq remains at uuid ${uuidVersion}`,
+      `consumer override failed: GHSA-w5hq-g745-h8pq remains at uuid ${uuidVersion}`,
     );
   }
   if (auditResult.status !== 0) {

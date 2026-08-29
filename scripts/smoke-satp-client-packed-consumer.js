@@ -47,6 +47,11 @@ try {
       private: true,
       version: '0.0.0',
       dependencies: {},
+      overrides: {
+        jayson: {
+          uuid: `^${fixedUuidVersion}`,
+        },
+      },
     }, null, 2) + '\n',
   );
 
@@ -58,7 +63,7 @@ try {
     cwd: tempRoot,
     stdio: 'pipe',
   });
-  console.log('clean consumer npm audit --omit=dev --audit-level=moderate OK: 0 vulnerabilities');
+  console.log('clean consumer with documented uuid override: npm audit --omit=dev --audit-level=moderate OK');
 
   const installedPackageRoot = path.join(
     tempRoot,
@@ -75,14 +80,14 @@ try {
     'utf8',
   );
 
-  if (!installedPackage.bundleDependencies?.includes('@solana/web3.js')) {
-    throw new Error('packed client does not declare the temporary @solana/web3.js safety bundle');
+  if (installedPackage.bundleDependencies !== undefined) {
+    throw new Error('packed client must not declare bundleDependencies');
   }
   const web3ManifestPath = require.resolve('@solana/web3.js/package.json', {
     paths: [installedPackageRoot],
   });
-  if (!web3ManifestPath.startsWith(`${installedPackageRoot}${path.sep}`)) {
-    throw new Error('packed client resolved @solana/web3.js outside its bundled dependency tree');
+  if (web3ManifestPath.startsWith(`${installedPackageRoot}${path.sep}node_modules${path.sep}`)) {
+    throw new Error('packed client contains a bundled @solana/web3.js dependency tree');
   }
   const jaysonManifestPath = require.resolve('jayson/package.json', {
     paths: [path.dirname(web3ManifestPath)],
@@ -92,7 +97,7 @@ try {
   });
   const uuidVersion = JSON.parse(fs.readFileSync(uuidManifestPath, 'utf8')).version;
   if (isVersionBefore(uuidVersion, fixedUuidVersion)) {
-    throw new Error(`packed client resolved affected uuid ${uuidVersion}`);
+    throw new Error(`consumer uuid override resolved affected uuid ${uuidVersion}`);
   }
 
   const stableBanner = `Current stable npm package: **@brainai/satp-client@${releaseMetadata.stableLatest}**`;
@@ -119,95 +124,14 @@ try {
     throw new Error('packed README contains repository-relative docs paths');
   }
 
-  const bashBlocks = [];
-  let activeFence = null;
-  for (const line of installedReadme.split(/\r?\n/)) {
-    if (activeFence === null) {
-      const opener = line.match(/^```([^\s`]*)\s*$/);
-      if (opener) {
-        activeFence = { language: opener[1].toLowerCase(), lines: [] };
-      }
-      continue;
-    }
-    if (/^```\s*$/.test(line)) {
-      if (['bash', 'sh', 'shell'].includes(activeFence.language)) {
-        bashBlocks.push(activeFence.lines);
-      }
-      activeFence = null;
-      continue;
-    }
-    activeFence.lines.push(line);
+  if (/\]\((?:\.\/)?examples\//.test(installedReadme)) {
+    throw new Error('packed README contains a package-relative example link');
   }
-
-  const documentedNodeTargets = new Set();
-  const nodeInvocation = /(?:^|(?:&&|\|\||;)\s*)node\s+(?:"([^"]+)"|'([^']+)'|([^\s;&|#]+))/g;
-  for (const lines of bashBlocks) {
-    for (const line of lines) {
-      if (line.trimStart().startsWith('#')) continue;
-      nodeInvocation.lastIndex = 0;
-      for (const match of line.matchAll(nodeInvocation)) {
-        documentedNodeTargets.add(match[1] || match[2] || match[3]);
-      }
-    }
+  if (installedReadme.includes('node node_modules/@brainai/satp-client/examples/')) {
+    throw new Error('packed README instructs consumers to run an example excluded from the artifact');
   }
-  if (documentedNodeTargets.size === 0) {
-    throw new Error('packed README contains no discoverable node commands in bash fences');
-  }
-
-  const documentedExampleLinks = new Set();
-  const exampleLink = /\]\((?:\.\/)?(examples\/[^)\s#?]+)\)/g;
-  for (const match of installedReadme.matchAll(exampleLink)) {
-    documentedExampleLinks.add(match[1]);
-  }
-  if (documentedExampleLinks.size === 0) {
-    throw new Error('packed README contains no discoverable example links');
-  }
-
-  const commandedPackagePaths = new Set();
-  for (const target of documentedNodeTargets) {
-    const installedTarget = path.resolve(tempRoot, target);
-    const packageRelative = path.relative(installedPackageRoot, installedTarget);
-    if (
-      packageRelative === ''
-      || packageRelative === '..'
-      || packageRelative.startsWith(`..${path.sep}`)
-      || path.isAbsolute(packageRelative)
-    ) {
-      throw new Error(`packed README node command escapes installed package: ${target}`);
-    }
-    if (!fs.statSync(installedTarget, { throwIfNoEntry: false })?.isFile()) {
-      throw new Error(`packed README node command target missing from artifact: ${target}`);
-    }
-    const packagePath = packageRelative.split(path.sep).join('/');
-    commandedPackagePaths.add(packagePath);
-    execFileSync(process.execPath, [installedTarget], {
-      cwd: tempRoot,
-      stdio: 'pipe',
-    });
-  }
-
-  for (const examplePath of documentedExampleLinks) {
-    const installedExamplePath = path.resolve(installedPackageRoot, examplePath);
-    const packageRelative = path.relative(installedPackageRoot, installedExamplePath);
-    if (
-      packageRelative === '..'
-      || packageRelative.startsWith(`..${path.sep}`)
-      || path.isAbsolute(packageRelative)
-    ) {
-      throw new Error(`packed README example link escapes installed package: ${examplePath}`);
-    }
-    if (!fs.statSync(installedExamplePath, { throwIfNoEntry: false })?.isFile()) {
-      throw new Error(`packed README example link missing from artifact: ${examplePath}`);
-    }
-    if (!commandedPackagePaths.has(examplePath)) {
-      throw new Error(`packed README example link has no runnable node command: ${examplePath}`);
-    }
-  }
-
-  for (const packagePath of commandedPackagePaths) {
-    if (packagePath.startsWith('examples/') && !documentedExampleLinks.has(packagePath)) {
-      throw new Error(`packed README node example has no matching link: ${packagePath}`);
-    }
+  if (fs.existsSync(path.join(installedPackageRoot, 'examples'))) {
+    throw new Error('packed client unexpectedly includes examples/');
   }
 
   const check = [
@@ -255,7 +179,7 @@ try {
   });
   process.stdout.write(output);
   console.log(
-    `satp-client packed README OK: ${installedPackage.version}; bundled uuid ${uuidVersion}; ${documentedExampleLinks.size} documented examples discovered and executed`,
+    `satp-client packed README OK: ${installedPackage.version}; consumer override uuid ${uuidVersion}; examples excluded from artifact`,
   );
 } finally {
   fs.rmSync(tempRoot, { recursive: true, force: true });
