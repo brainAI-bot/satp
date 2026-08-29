@@ -18,10 +18,10 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - name: Check out the default branch
+      - name: Check out the immutable 2.0.8 release source
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: 25aa48ca646f628e186692e567d048d1027ba7df
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -47,6 +47,9 @@ jobs:
 
       - name: Verify the publish artifact
         run: npm run check:satp-client-health
+
+      - name: List the tarball before publish
+        run: npm pack ./packages/satp-client --dry-run
 
       - name: Verify npm latest is still the approved baseline
         shell: bash

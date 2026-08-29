@@ -32,8 +32,8 @@
   "files": [
     "src/",
     "idls/",
-    "examples/",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "prepack": "npm ci --workspaces=false --ignore-scripts --no-audit --no-fund --silent && node scripts/materialize-v3-idls.js",

@@ -75,6 +75,9 @@ function readPackageMetadata() {
   assert(metadata.exports['./idls/*'], 'idls subpath export must be declared');
   assert(Array.isArray(metadata.files) && metadata.files.includes('src/'), 'files must include src/');
   assert(Array.isArray(metadata.files) && metadata.files.includes('idls/'), 'files must include idls/');
+  assert(Array.isArray(metadata.files) && metadata.files.includes('README.md'), 'files must include README.md');
+  assert(Array.isArray(metadata.files) && metadata.files.includes('LICENSE'), 'files must include LICENSE');
+  assert(!metadata.files.includes('examples/'), 'files must not include examples/');
   assert(
     metadata.bundleDependencies === undefined,
     'bundleDependencies must be absent so the published tarball cannot include node_modules',
@@ -139,6 +142,7 @@ function readPackSurface() {
   for (const required of [
     'package.json',
     'README.md',
+    'LICENSE',
     'idls/v3/attestations_v3.json',
     'idls/v3/escrow_v3.json',
     'idls/v3/identity_v3.json',
@@ -177,7 +181,18 @@ function readPackSurface() {
     assert(!filePaths.includes(blocked), `pack surface includes blocked file ${blocked}`);
   }
 
-  assert(filePaths.length <= 40, `pack surface unexpectedly contains ${filePaths.length} files`);
+  const unexpectedPaths = filePaths.filter((file) => (
+    file !== 'package.json'
+    && file !== 'README.md'
+    && file !== 'LICENSE'
+    && !file.startsWith('src/')
+    && !file.startsWith('idls/v3/')
+  ));
+  assert(
+    unexpectedPaths.length === 0,
+    `pack surface contains files outside package.json, README.md, LICENSE, src/, and idls/v3/: ${unexpectedPaths.join(', ')}`,
+  );
+  assert(filePaths.length <= 30, `pack surface unexpectedly contains ${filePaths.length} files`);
   console.log(`pack surface OK: ${filePaths.length} package files; no bundled node_modules`);
   return filePaths;
 }

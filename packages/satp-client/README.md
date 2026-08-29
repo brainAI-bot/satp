@@ -86,11 +86,11 @@ escrow readiness, mainnet readiness, npm latest adoption, or product approval.
 This installed-package quickstart covers an offline read-only SDK flow.
 
 For copy-paste MCP, A2A/agent-runtime, and x402 paid-endpoint examples, see the
-packed [`examples/adoption-quickstarts.js`](examples/adoption-quickstarts.js)
-or run this command from the consumer project root after installation:
+source [`examples/adoption-quickstarts.js`](https://github.com/brainAI-bot/satp/blob/main/packages/satp-client/examples/adoption-quickstarts.js).
+From a SATP source checkout, run this command from the repository root:
 
 ```bash
-node node_modules/@brainai/satp-client/examples/adoption-quickstarts.js
+node packages/satp-client/examples/adoption-quickstarts.js
 ```
 
 ```javascript
@@ -224,12 +224,12 @@ read-only: x402 payment metadata can identify where evidence may be fetched, but
 it is discovery/evidence lookup only and never authorizes SATP action execution,
 spending, live payment, signing, transactions, or host policy bypass.
 
-Run the packed
-[`examples/x402-discovery-evidence-lookup.js`](./examples/x402-discovery-evidence-lookup.js)
-from the consumer project root:
+Run the source
+[`examples/x402-discovery-evidence-lookup.js`](https://github.com/brainAI-bot/satp/blob/main/packages/satp-client/examples/x402-discovery-evidence-lookup.js)
+from a SATP checkout's repository root:
 
 ```bash
-node node_modules/@brainai/satp-client/examples/x402-discovery-evidence-lookup.js
+node packages/satp-client/examples/x402-discovery-evidence-lookup.js
 ```
 
 The example parses discovery metadata, builds an evidence lookup descriptor, and
@@ -241,12 +241,12 @@ builds a runtime policy action descriptor. It asserts
 The proposed issue #14 Track C endpoint spec for third-party SATP reputation
 and evidence consumers lives in the
 [source repository](https://github.com/brainAI-bot/satp/blob/main/docs/x402-reputation-evidence-lookup-api.md).
-Its packed
-[`examples/x402-reputation-evidence-lookup-client.js`](./examples/x402-reputation-evidence-lookup-client.js)
-is runnable from the consumer project root with:
+Its source
+[`examples/x402-reputation-evidence-lookup-client.js`](https://github.com/brainAI-bot/satp/blob/main/packages/satp-client/examples/x402-reputation-evidence-lookup-client.js)
+is runnable from a SATP checkout's repository root with:
 
 ```bash
-node node_modules/@brainai/satp-client/examples/x402-reputation-evidence-lookup-client.js
+node packages/satp-client/examples/x402-reputation-evidence-lookup-client.js
 ```
 
 ### Runtime Policy Adapter Helper
