@@ -19,7 +19,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@brainai/satp-client": "2.0.7",
+    "@brainai/satp-client": "2.0.8",
     "@brainai/satp-core": "0.0.0-extraction",
     "@brainai/satp-solana": "0.0.0-extraction"
   }

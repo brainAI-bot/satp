@@ -75,12 +75,12 @@ function readPackageMetadata() {
   assert(metadata.exports['./idls/*'], 'idls subpath export must be declared');
   assert(Array.isArray(metadata.files) && metadata.files.includes('src/'), 'files must include src/');
   assert(Array.isArray(metadata.files) && metadata.files.includes('idls/'), 'files must include idls/');
-  const bundled = Array.isArray(metadata.bundleDependencies)
-    ? metadata.bundleDependencies
-    : [metadata.bundleDependencies];
+  assert(Array.isArray(metadata.files) && metadata.files.includes('README.md'), 'files must include README.md');
+  assert(Array.isArray(metadata.files) && metadata.files.includes('LICENSE'), 'files must include LICENSE');
+  assert(!metadata.files.includes('examples/'), 'files must not include examples/');
   assert(
-    bundled.length === 1 && bundled[0] === '@solana/web3.js',
-    'bundleDependencies must contain only the temporary @solana/web3.js safety bundle',
+    metadata.bundleDependencies === undefined,
+    'bundleDependencies must be absent so the published tarball cannot include node_modules',
   );
   assert(metadata.publishConfig && metadata.publishConfig.access === 'public', 'publishConfig.access must remain public');
   assert(!('tag' in metadata.publishConfig), 'stable package metadata must not force the rc dist-tag');
@@ -114,8 +114,8 @@ function readPackSurface() {
     const archive = run('tar', ['-tzf', tarballPath], { quiet: true });
     const archivePaths = archive.stdout.split(/\r?\n/).filter(Boolean);
     assert(
-      archivePaths.includes('package/node_modules/@solana/web3.js/package.json'),
-      'pack artifact must include the temporary @solana/web3.js safety bundle',
+      !archivePaths.some((archivePath) => archivePath.startsWith('package/node_modules/')),
+      'pack artifact must not include any node_modules files',
     );
 
     const consumerDir = path.join(tempDir, 'consumer');
@@ -142,6 +142,7 @@ function readPackSurface() {
   for (const required of [
     'package.json',
     'README.md',
+    'LICENSE',
     'idls/v3/attestations_v3.json',
     'idls/v3/escrow_v3.json',
     'idls/v3/identity_v3.json',
@@ -180,7 +181,19 @@ function readPackSurface() {
     assert(!filePaths.includes(blocked), `pack surface includes blocked file ${blocked}`);
   }
 
-  console.log(`pack surface OK: ${filePaths.length} package files; @solana/web3.js bundle verified from tarball`);
+  const unexpectedPaths = filePaths.filter((file) => (
+    file !== 'package.json'
+    && file !== 'README.md'
+    && file !== 'LICENSE'
+    && !file.startsWith('src/')
+    && !file.startsWith('idls/v3/')
+  ));
+  assert(
+    unexpectedPaths.length === 0,
+    `pack surface contains files outside package.json, README.md, LICENSE, src/, and idls/v3/: ${unexpectedPaths.join(', ')}`,
+  );
+  assert(filePaths.length <= 30, `pack surface unexpectedly contains ${filePaths.length} files`);
+  console.log(`pack surface OK: ${filePaths.length} package files; no bundled node_modules`);
   return filePaths;
 }
 
