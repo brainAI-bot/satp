@@ -11,6 +11,10 @@ concurrency:
   group: publish-satp-client-2.0.8
   cancel-in-progress: false
 
+env:
+  SATP_CLIENT_RELEASE_SOURCE: 25aa48ca646f628e186692e567d048d1027ba7df
+  SATP_CLIENT_RELEASE_TREE: cd8ed9518287553986baf5eb64f8a367c0e48d2f
+
 jobs:
   publish:
     name: Publish @brainai/satp-client@2.0.8
@@ -21,7 +25,17 @@ jobs:
       - name: Check out the immutable 2.0.8 release source
         uses: actions/checkout@v4
         with:
-          ref: 25aa48ca646f628e186692e567d048d1027ba7df
+          ref: ${{ env.SATP_CLIENT_RELEASE_SOURCE }}
+
+      - name: Verify the reviewed 2.0.8 release tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual_tree="$(git rev-parse 'HEAD^{tree}')"
+          if [[ "$actual_tree" != "$SATP_CLIENT_RELEASE_TREE" ]]; then
+            echo "release tree mismatch: expected $SATP_CLIENT_RELEASE_TREE, got $actual_tree" >&2
+            exit 1
+          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

@@ -1,6 +1,8 @@
 {
   "checkedAt": "2026-08-29T11:06:00Z",
   "package": "@brainai/satp-client",
+  "releaseSourceCommit": "25aa48ca646f628e186692e567d048d1027ba7df",
+  "releaseSourceTree": "cd8ed9518287553986baf5eb64f8a367c0e48d2f",
   "stableLatest": "2.0.8",
   "rcDistTag": "2.0.2"
 }
