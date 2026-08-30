@@ -15,7 +15,7 @@ const gapManifest = {
 
 test('current release and consumer guidance surfaces fail closed', () => {
   const result = assertEscrowV3ReleaseReadinessSurfaces();
-  assert.equal(result.manifest.status, 'source_binary_verified_published_idl_stale');
+  assert.equal(result.manifest.status, 'source_binary_verified_published_idls_stale');
   assert.equal(result.manifest.conclusion.source_equals_deployed_binary, true);
   assert.equal(result.manifest.conclusion.published_idl_matches_canonical_repo_idl, false);
   assert.equal(result.manifest.conclusion.consumer_escrow_unpause_ready, false);
@@ -35,7 +35,7 @@ test('treats either the gap status or failed three-way certification as unresolv
 
 test('allows verified source/binary equality without opening consumer escrow', () => {
   const manifest = {
-    status: 'source_binary_verified_published_idl_stale',
+    status: 'source_binary_verified_published_idls_stale',
     conclusion: {
       source_equals_deployed_binary: true,
       published_idl_matches_canonical_repo_idl: false,

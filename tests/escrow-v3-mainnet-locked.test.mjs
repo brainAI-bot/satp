@@ -50,15 +50,17 @@ test('fee-routing candidate is separate from the deployed locked-build record', 
   assert.equal(candidate.candidate_head, candidate.source.commit);
   assert.equal(candidate.reviewed_head, null);
   assert.notEqual(candidate.source.commit, locked.source.commit);
-  assert.match(packet, /NO-GO until exact-head independent review, green checks/);
-  assert.match(packet, /Two-host candidate reproducibility is complete/);
+  assert.match(packet, /HISTORICAL PRE-EXECUTION RECORD/);
+  assert.match(packet, /runtime upgrade finalized at\s+slot `442907465`/);
+  assert.match(packet, /does not authorize another\s+chain write/);
+  assert.match(packet, /Both required hosts reproduced the candidate/);
   assert.match(packet, /Transaction A calls `release` once/);
   assert.match(packet, /Transaction B calls `partial_release` once/);
   assert.match(packet, /Stop after two submissions regardless of\s+outcome/);
   assert.match(packet, /platform_fee = floor\(gross \* 500 \/ 10000\)/);
   assert.match(packet, /wrong treasury fails before\s+state or balance mutation/);
   assert.match(packet, /USDC settlement is explicitly unchanged/);
-  assert.match(packet, /performed no chain\s+write, signing, keypair access, money\s+movement/);
+  assert.match(packet, /does not authorize another\s+chain write, signing operation, keypair access, money movement/);
 });
 
 test('fee-routing extension is exactly bounded and route proofs are IDL-bound', () => {
