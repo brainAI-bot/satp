@@ -164,6 +164,15 @@ conformance, security, release, and mainnet authority gates remain open.
   production SATP dependency path. [#204cd91f] [shipped]
 - Consumer-facing SATP copy in AgentFolio must not imply mainnet or escrow
   readiness before those gates are separately verified. [#53ffa5e3] [shipped]
+- Bind and read back the already-recorded escrow-v3 deploy/program-authority
+  signer paths, confirm ProgramData capacity, and produce the locked preflight
+  packet without exposing or changing key material. [pending]
+- Execute the separately approved bounded mainnet redeploy through the locked
+  workflow, stopping on the first failed preflight or transaction receipt.
+  [pending]
+- After the write, independently verify deployed program bytes, runtime and
+  published IDL parity, fee-routing behavior, and the AgentFolio consumer fence
+  before any escrow unpause. [pending]
 - Consumer escrow remains disabled: the mainnet program bytes match pinned
   source commit `0bf088e5618f173dff7e0fba622bc2911212c52e`, but the published
   Anchor IDL is a stale 9-instruction interface while the verified-source
