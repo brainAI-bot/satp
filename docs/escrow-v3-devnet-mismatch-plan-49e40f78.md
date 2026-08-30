@@ -7,6 +7,13 @@ devnet registry remains scoped to the existing devnet deployment. This record
 does not deploy, upgrade, publish an IDL, rotate keys, or change program
 authority.
 
+Superseded 2026-08-30: `docs/escrow-v3-deployed-truth.json` proves SATP commit
+`0bf088e5618f173dff7e0fba622bc2911212c52e` rebuilds byte-for-byte to the
+current mainnet program dump. The published Anchor IDL remains stale at 9
+instructions; `idls/v3/escrow_v3.json` is the 14-instruction canonical
+repository reference generated from the verified deployed source. The evidence
+below is retained as historical diagnosis only.
+
 ## Read-Only Evidence
 
 | Item | Value |

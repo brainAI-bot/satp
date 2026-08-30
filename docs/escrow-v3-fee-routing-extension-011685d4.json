@@ -160,5 +160,24 @@
       }
     ],
     "platform_fee_event_discriminator_hex": "f81b63224f0de0cf"
+  },
+  "owner_gated_riders": {
+    "audit_items": [
+      "S7",
+      "AF18"
+    ],
+    "scope": "USDC escrow program-layer SPL routes",
+    "candidate_source_commit": "3f8188bec89db0d4a081931f35272e10185d1c0d",
+    "instruction_routes": [
+      "create_usdc_escrow",
+      "release_usdc",
+      "partial_release_usdc",
+      "cancel_usdc",
+      "resolve_dispute_usdc"
+    ],
+    "included_in_candidate": true,
+    "status": "packet_ready_for_pending_owner_gated_mainnet_redeploy_not_active",
+    "requires_separate_owner_write_approval": true,
+    "writes_performed_by_packet_preparation": false
   }
 }

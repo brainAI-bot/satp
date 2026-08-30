@@ -4,7 +4,7 @@ import { extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const manifestRelativePath = 'docs/escrow-v3-mainnet-provenance-ef7e4581.json';
+const manifestRelativePath = 'docs/escrow-v3-deployed-truth.json';
 const canonicalMainnetProgramId = 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C';
 
 const surfaceRoots = [
@@ -71,7 +71,8 @@ export function listReleaseReadinessSurfaces(repoRoot = root) {
 
 export function provenanceIsUnresolved(manifest) {
   return manifest?.status === 'provenance_gap' ||
-    manifest?.conclusion?.source_equals_deployed_binary_equals_published_idl !== true;
+    manifest?.conclusion?.published_idl_matches_canonical_repo_idl !== true ||
+    manifest?.conclusion?.consumer_escrow_unpause_ready !== true;
 }
 
 function lineNumber(text, index) {
@@ -102,6 +103,9 @@ export function findReleaseReadinessViolations(relativePath, text, manifest) {
   for (const { label, pattern } of claimPatterns) {
     const isEqualityClaim = label.includes('equality') || label.includes('certification');
     if (isEqualityClaim && !mentionsEscrowV3) continue;
+    if (label !== 'source/deployed/IDL certification claim'
+        && label.includes('equality')
+        && manifest?.conclusion?.source_equals_deployed_binary === true) continue;
     const globalPattern = new RegExp(pattern.source, `${pattern.flags}g`);
     for (const match of text.matchAll(globalPattern)) {
       if (isEqualityClaim && isFailClosedContext(text, match)) continue;
@@ -144,8 +148,9 @@ export function assertEscrowV3ReleaseReadinessSurfaces(repoRoot = root) {
       .join('\n');
     throw new Error(
       `escrow_v3 release/readiness claims must fail closed while ${manifestRelativePath} ` +
-      `records status=${manifest.status} and source/deployed/IDL certification=` +
-      `${manifest.conclusion?.source_equals_deployed_binary_equals_published_idl}\n${details}`
+      `records status=${manifest.status}, published-IDL match=` +
+      `${manifest.conclusion?.published_idl_matches_canonical_repo_idl}, and consumer unpause=` +
+      `${manifest.conclusion?.consumer_escrow_unpause_ready}\n${details}`
     );
   }
 
@@ -157,8 +162,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const { manifest, surfaceCount } = assertEscrowV3ReleaseReadinessSurfaces();
     console.log(
       `escrow_v3 release/readiness guard OK: ${surfaceCount} surfaces; ` +
-      `status=${manifest.status}; source/deployed/IDL certification=` +
-      `${manifest.conclusion.source_equals_deployed_binary_equals_published_idl}`
+      `status=${manifest.status}; source/binary match=` +
+      `${manifest.conclusion.source_equals_deployed_binary}; published-IDL match=` +
+      `${manifest.conclusion.published_idl_matches_canonical_repo_idl}; consumer unpause=` +
+      `${manifest.conclusion.consumer_escrow_unpause_ready}`
     );
   } catch (error) {
     console.error(`escrow_v3 release/readiness guard failed: ${error.message}`);

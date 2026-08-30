@@ -45,7 +45,12 @@ function buildProfile(attempt) {
 export function validateProvenanceManifest(manifest) {
   invariant(manifest.schema_version === 1, 'schema_version must be 1');
   invariant(manifest.marker === '[#ef7e4581]', 'marker must be [#ef7e4581]');
-  invariant(manifest.status === 'provenance_gap', 'status must remain provenance_gap until exact reproduction exists');
+  invariant(manifest.status === 'historical_provenance_gap_superseded',
+    'historical packet must remain explicitly superseded');
+  invariant(manifest.valid_through_upgrade_slot === manifest.runtime.upgrade_slot,
+    'historical validity boundary must equal the old deployment slot');
+  invariant(manifest.superseded_by === 'docs/escrow-v3-deployed-truth.json',
+    'historical packet must point to current deployed truth');
 
   invariant(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(manifest.recertified_at_utc || ''),
     'recertified_at_utc must be a UTC timestamp');
@@ -202,6 +207,9 @@ export async function verifyLiveMainnet(manifest) {
 async function main() {
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
   validateProvenanceManifest(manifest);
+  if (process.argv.includes('--live')) {
+    throw new Error('historical packet is superseded; run scripts/verify-escrow-v3-deployed-truth.mjs --live');
+  }
   const live = process.argv.includes('--live') ? await verifyLiveMainnet(manifest) : undefined;
   console.log(JSON.stringify({
     ok: true,

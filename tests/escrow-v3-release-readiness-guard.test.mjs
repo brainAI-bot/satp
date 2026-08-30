@@ -15,8 +15,10 @@ const gapManifest = {
 
 test('current release and consumer guidance surfaces fail closed', () => {
   const result = assertEscrowV3ReleaseReadinessSurfaces();
-  assert.equal(result.manifest.status, 'provenance_gap');
-  assert.equal(result.manifest.conclusion.source_equals_deployed_binary_equals_published_idl, false);
+  assert.equal(result.manifest.status, 'source_binary_verified_published_idl_stale');
+  assert.equal(result.manifest.conclusion.source_equals_deployed_binary, true);
+  assert.equal(result.manifest.conclusion.published_idl_matches_canonical_repo_idl, false);
+  assert.equal(result.manifest.conclusion.consumer_escrow_unpause_ready, false);
   assert.ok(result.surfaceCount > 20);
 });
 
@@ -24,8 +26,24 @@ test('treats either the gap status or failed three-way certification as unresolv
   assert.equal(provenanceIsUnresolved(gapManifest), true);
   assert.equal(provenanceIsUnresolved({
     status: 'verified',
-    conclusion: { source_equals_deployed_binary_equals_published_idl: false },
+    conclusion: {
+      published_idl_matches_canonical_repo_idl: false,
+      consumer_escrow_unpause_ready: false,
+    },
   }), true);
+});
+
+test('allows verified source/binary equality without opening consumer escrow', () => {
+  const manifest = {
+    status: 'source_binary_verified_published_idl_stale',
+    conclusion: {
+      source_equals_deployed_binary: true,
+      published_idl_matches_canonical_repo_idl: false,
+      consumer_escrow_unpause_ready: false,
+    },
+  };
+  const text = 'Escrow V3 deployed mainnet bytes match the pinned tracked source, but the published IDL remains stale.';
+  assert.deepEqual(findReleaseReadinessViolations('docs/truth.md', text, manifest), []);
 });
 
 for (const [name, claim, expectedLabel] of [

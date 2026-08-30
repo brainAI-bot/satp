@@ -2,7 +2,7 @@
 
 Schema: HQ roadmap v1
 Status: ACTIVE - PLANNING
-Last updated: 2026-08-02
+Last updated: 2026-08-30
 
 SATP is the Solana Agent Trust Protocol: an app-agnostic protocol and SDK
 surface for portable AI-agent identity, attestations, reputation, validation,
@@ -69,11 +69,13 @@ conformance, security, release, and mainnet authority gates remain open.
 - Security and key-management policy defines authority inventory rules, storage
   classes, signer boundaries, and forbidden secret handling. [shipped]
 - Committed IDLs exist for identity registry, attestations, reputation,
-  validation, reviews, and escrow. `idls/v3/escrow_v3.json` is generated from
-  `programs/escrow_v3` source and contains 14 instructions; canonical mainnet
-  program `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` has a deployed IDL
-  account (`D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn`) with 9 instructions
-  and no token surface, so the source-derived and deployed IDLs differ. [shipped]
+  validation, reviews, and escrow. `idls/v3/escrow_v3.json` is the canonical
+  14-instruction interface generated from the source commit whose pinned SBF
+  build matches mainnet program
+  `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` byte-for-byte. The published
+  Anchor IDL account (`D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn`) is stale
+  at 9 instructions and is not canonical. Current fee-routing source is kept
+  separately at `idls/source-head/escrow_v3.json`. [shipped]
 - Repository documentation must stay app-agnostic and avoid treating AgentFolio
   product logic as SATP core. [#6777112a] [shipped]
 - Apache-2.0 LICENSE file present at repo root with package.json license set to
@@ -82,10 +84,11 @@ conformance, security, release, and mainnet authority gates remain open.
   into this repo under programs/ after a secret/agent-memory scrub, so third
   parties can inspect the open-core source independently (ARCHITECTURE section
   5 mandate; approved 2026-07-06). [#3faa5445] [shipped]
-- cfg-bound source-identity gate records the reviewed source package, while
-  source-to-chain byte equality remains evidence-only and unverified:
-  src==deployed is not currently verified on any network. [#3faa5445]
-  [#6c477338] [shipped]
+- cfg-bound source-identity gates record reviewed source packages. Mainnet
+  escrow source commit `0bf088e5618f173dff7e0fba622bc2911212c52e` now has a
+  reproducible byte-for-byte match to deployed ProgramData; other program and
+  network source-to-chain claims remain evidence-only until separately proven.
+  [#3faa5445] [#6c477338] [shipped]
 
 ## Phase 2 - SDK package and consumer boundary
 
@@ -161,6 +164,13 @@ conformance, security, release, and mainnet authority gates remain open.
   production SATP dependency path. [#204cd91f] [shipped]
 - Consumer-facing SATP copy in AgentFolio must not imply mainnet or escrow
   readiness before those gates are separately verified. [#53ffa5e3] [shipped]
+- Consumer escrow remains disabled: the mainnet program bytes match pinned
+  source commit `0bf088e5618f173dff7e0fba622bc2911212c52e`, but the published
+  Anchor IDL is a stale 9-instruction interface while the verified-source
+  canonical repository IDL has 14 instructions. Fee-routing source is merged
+  but not deployed. Unpause requires the separately approved mainnet redeploy,
+  matching runtime/IDL readback, and independent consumer verification.
+  [#926b9931] [blocked] · owner-gated
 
 ## Phase 6 - RC-S6 semantic uncertainty review
 
@@ -182,12 +192,22 @@ conformance, security, release, and mainnet authority gates remain open.
 
 ## Phase 7 - On-chain program completion (open-core)
 
-- V3 IDLs generated from the extracted source are committed under idls/v3/, the
-  dead V2 escrow IDL and hand-rolled discriminators are retired, and CI runs
-  validate:idls against them. [#c5634a2c] [shipped]
+- V3 IDLs are committed under `idls/v3/`; escrow is pinned there to the verified
+  deployed-source interface while the newer source-head interface is generated
+  under `idls/source-head/`. CI validates both trees and the deployed-source
+  provenance packet. [#c5634a2c] [shipped]
 - USDC escrow support in the escrow program and dual-currency SDK builders (SPL
   vault PDA, ATAs, transfer_checked); SOL-first is fine to launch, USDC is v2.
   [#14fa5837] [shipped]
+- Escrow SOL fee-routing and the five USDC/SPL entrypoints are merged in source
+  but are not deployed. They ride the next separately approved mainnet redeploy
+  and IDL publication; consumer escrow unpause remains false until post-write
+  source/binary/IDL proof passes. [blocked] · owner-gated
+- The S7/AF18 USDC program-layer rider is included in the reproducible
+  fee-routing candidate packet at commit `3f8188bec89db0d4a081931f35272e10185d1c0d`.
+  Its five SPL routes are prepared to ride the pending mainnet redeploy, but
+  none is represented as active until a separately approved Owner write and
+  post-deploy runtime/IDL proof complete. [#926b9931] [blocked] · owner-gated
 - D1 SDK wiring: V3_MAINNET_PROGRAM_IDS populated behind the approved
   mainnet-authority decision packet. [#bd298672] [shipped]
 - Published-client V2 mainnet fence remains open until the client is

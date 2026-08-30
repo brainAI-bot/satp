@@ -14,7 +14,7 @@ const mutate = (callback) => {
   return copy;
 };
 
-test('accepts the complete fail-closed provenance gap packet', () => {
+test('accepts the superseded historical fail-closed provenance gap packet', () => {
   assert.equal(validateProvenanceManifest(manifest), true);
 });
 
