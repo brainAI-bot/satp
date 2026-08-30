@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { readAnchorIdlAuthority } from '../scripts/read-anchor-idl-authority.mjs';
-import { verifyFeeRoutingExtension } from '../scripts/verify-escrow-v3-fee-routing-extension.mjs';
+import {
+  deriveZeroExtendedPayload,
+  verifyFeeRoutingExtension,
+} from '../scripts/verify-escrow-v3-fee-routing-extension.mjs';
 import { verifyLockedBuild } from '../scripts/verify-escrow-v3-mainnet-locked.mjs';
 
 test('locked escrow_v3 mainnet inputs and 14-instruction IDL are internally consistent', () => {
@@ -34,7 +38,13 @@ test('fee-routing candidate is separate from the deployed locked-build record', 
   assert.equal(candidate.source.commit, '3f8188bec89db0d4a081931f35272e10185d1c0d');
   assert.equal(candidate.idl.commit, candidate.source.commit);
   assert.equal(candidate.build.artifact_bytes, 350304);
-  assert.equal(candidate.programdata_capacity.required_extension_bytes, 3448);
+  assert.equal(candidate.programdata_capacity.candidate_overrun_bytes, 3448);
+  assert.equal(candidate.programdata_capacity.loader_minimum_additional_bytes, 10240);
+  assert.equal(candidate.programdata_capacity.loader_minimum_feature_id, 'YbbRLkvenrocjGPGyoQE4wjnvYzTgfsk38NFmcYK7a5');
+  assert.equal(candidate.programdata_capacity.loader_minimum_feature_activation_slot, 432864000);
+  assert.equal(candidate.programdata_capacity.required_extension_bytes, 10240);
+  assert.equal(candidate.programdata_capacity.target_allocated_payload_bytes, 357096);
+  assert.equal(candidate.programdata_capacity.candidate_zero_padding_bytes, 6792);
   assert.equal(candidate.programdata_capacity.status, 'extension_required_before_buffer_write');
   assert.equal(candidate.extension_packet, 'docs/escrow-v3-fee-routing-extension-011685d4.json');
   assert.equal(candidate.candidate_head, candidate.source.commit);
@@ -63,9 +73,24 @@ test('fee-routing extension is exactly bounded and route proofs are IDL-bound', 
     'brainchain-mac-mini/darwin-arm64/macos-26.4',
     'github-actions/macos-26/run-32916499013/attempt-1',
   ]);
-  assert.equal(result.additional_program_bytes, 3448);
-  assert.equal(result.target_payload_bytes, 350304);
+  assert.equal(result.additional_program_bytes, 10240);
+  assert.equal(result.target_payload_bytes, 357096);
   assert.deepEqual(result.route_names, ['release', 'partial_release']);
+});
+
+test('local post-extension derivation preserves the prefix and appends 10240 zero bytes', () => {
+  const prefix = Buffer.from('deterministic-loader-extension-fixture');
+  const result = deriveZeroExtendedPayload(prefix, 10240);
+
+  assert.equal(result.extendedPayload.length, prefix.length + 10240);
+  assert.deepEqual(result.extendedPayload.subarray(0, prefix.length), prefix);
+  assert.equal(result.extendedPayload.subarray(prefix.length).every((byte) => byte === 0), true);
+  assert.equal(result.zeroSuffixBytes, 10240);
+  assert.equal(result.prefixSha256, createHash('sha256').update(prefix).digest('hex'));
+  assert.equal(
+    result.payloadSha256,
+    createHash('sha256').update(Buffer.concat([prefix, Buffer.alloc(10240)])).digest('hex'),
+  );
 });
 
 test('owner packet fails closed on ProgramData and IDL capacity before writes', () => {
