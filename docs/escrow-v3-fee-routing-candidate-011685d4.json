@@ -38,7 +38,11 @@
   },
   "programdata_capacity": {
     "allocated_payload_bytes": 346856,
-    "required_extension_bytes": 3448,
+    "candidate_overrun_bytes": 3448,
+    "loader_minimum_additional_bytes": 10240,
+    "required_extension_bytes": 10240,
+    "target_allocated_payload_bytes": 357096,
+    "candidate_zero_padding_bytes": 6792,
     "status": "extension_required_before_buffer_write"
   },
   "idl": {
