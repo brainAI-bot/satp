@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "captured_at_utc": "2026-08-30T14:08:00Z",
+  "status": "source_binary_verified_published_idl_stale",
+  "program": {
+    "cluster": "mainnet-beta",
+    "program_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
+    "program_data": "Fg1DJyKX9CngiMihZxJY2zjaQ8T1PK5QuiVhNvJmeTqk",
+    "upgrade_slot": 441423817,
+    "program_data_account_bytes": 346901,
+    "loader_header_bytes": 45,
+    "allocated_payload_bytes": 346856,
+    "allocated_payload_sha256": "4f21da13659cbe99a606b408a5f1d3523c0e41de20538028939bbb1b54c3cc0d",
+    "trailing_zero_bytes": 15,
+    "trimmed_payload_bytes": 346841,
+    "trimmed_payload_sha256": "2f3bb05486f39d3f61a454905048b6e5732b798643405836b62a6d9795a20a6d"
+  },
+  "verified_source": {
+    "repository": "brainAI-bot/satp",
+    "commit": "0bf088e5618f173dff7e0fba622bc2911212c52e",
+    "path": "programs/escrow_v3/src/lib.rs",
+    "sha256": "f4696cc27c5e2ff6163a90f877fd4431efa8809d2f6ae4c792c3c7cd18193c4d",
+    "cargo_lock_sha256": "d98db19e0d86ca3248376d4857b150b240be05c4bc3a409d7cb638ce4d5d2237",
+    "features": [
+      "mainnet"
+    ],
+    "build_command": "cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml --features mainnet",
+    "artifact_bytes": 346856,
+    "artifact_sha256": "4f21da13659cbe99a606b408a5f1d3523c0e41de20538028939bbb1b54c3cc0d",
+    "verdict": "MATCH"
+  },
+  "canonical_idl": {
+    "path": "idls/v3/escrow_v3.json",
+    "generated_from_source_commit": "0bf088e5618f173dff7e0fba622bc2911212c52e",
+    "recorded_at_commit": "008464206ff89f0012cbf071335dd59c3d4bd1b8",
+    "address": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
+    "sha256": "e8c142f27e225d8edc2f8f41e6fb698ebbb73f69d2fc078d5bf963234ebc8fa9",
+    "instruction_count": 14,
+    "instruction_names": [
+      "create_escrow",
+      "create_usdc_escrow",
+      "submit_work",
+      "release",
+      "release_usdc",
+      "partial_release",
+      "partial_release_usdc",
+      "cancel",
+      "cancel_usdc",
+      "raise_dispute",
+      "resolve_dispute",
+      "resolve_dispute_usdc",
+      "extend_deadline",
+      "close_escrow"
+    ]
+  },
+  "published_idl": {
+    "account": "D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn",
+    "account_bytes": 6808,
+    "inflated_json_bytes": 12172,
+    "inflated_json_sha256": "864e8af057c1b196156222ecda5853936bf4c6e0f3ae9f5c1e2ca2e53ed6c768",
+    "instruction_count": 9,
+    "instruction_names": [
+      "cancel",
+      "close_escrow",
+      "create_escrow",
+      "extend_deadline",
+      "partial_release",
+      "raise_dispute",
+      "release",
+      "resolve_dispute",
+      "submit_work"
+    ],
+    "status": "stale_not_canonical"
+  },
+  "pending_source_head": {
+    "commit": "3f8188bec89db0d4a081931f35272e10185d1c0d",
+    "path": "programs/escrow_v3/src/lib.rs",
+    "sha256": "380b20d36f18253a5c382ec1abc4a1147a08092a9a42cdae25e5d954f41acd0a",
+    "idl_path": "idls/source-head/escrow_v3.json",
+    "idl_sha256": "9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10",
+    "artifact_bytes": 350304,
+    "artifact_sha256": "27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a",
+    "programdata_extension_bytes_required": 10240,
+    "status": "fee_routing_and_usdc_source_merged_owner_gated_no_mainnet_write",
+    "rider_packet": "docs/escrow-v3-mainnet-rider-packet.md"
+  },
+  "conclusion": {
+    "source_equals_deployed_binary": true,
+    "canonical_repo_idl_generated_from_verified_source": true,
+    "published_idl_matches_canonical_repo_idl": false,
+    "fee_routing_is_deployed": false,
+    "consumer_escrow_unpause_ready": false
+  },
+  "safety": {
+    "solana_write": false,
+    "deploy": false,
+    "idl_publish": false,
+    "keypair_read_or_change": false,
+    "production_mutation": false
+  }
+}

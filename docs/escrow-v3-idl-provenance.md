@@ -1,6 +1,25 @@
 # Escrow V3 IDL Provenance and Callable Boundary
 
-Readback date: 2026-08-11 UTC.
+Readback date: 2026-08-30 UTC.
+
+## Current authoritative boundary
+
+The current machine-verifiable packet is
+`docs/escrow-v3-deployed-truth.json`. SATP commit
+`0bf088e5618f173dff7e0fba622bc2911212c52e`, built with platform-tools
+`v1.52` and the `mainnet` feature, produces a 346856-byte artifact with SHA-256
+`4f21da13659cbe99a606b408a5f1d3523c0e41de20538028939bbb1b54c3cc0d`.
+A fresh dump of mainnet program
+`HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` is byte-for-byte identical.
+
+Accordingly, `idls/v3/escrow_v3.json` is the canonical repository IDL generated
+from that verified deployed source. It has 14 instructions. The published
+Anchor IDL account remains stale at 9 instructions. Newer fee-routing source is
+not deployed and its generated interface is kept separately at
+`idls/source-head/escrow_v3.json`.
+
+The remainder of this document is historical readback and must not override the
+current packet above.
 
 This note distinguishes three artifacts that must not be treated as
 interchangeable:

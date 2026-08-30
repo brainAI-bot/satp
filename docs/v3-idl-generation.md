@@ -2,8 +2,11 @@
 
 Marker: [#c5634a2c]
 
-The committed V3 IDLs live under `idls/v3/` and are generated from the extracted
-Anchor source in `programs/*_v3`.
+The deployed-canonical V3 IDLs live under `idls/v3/`. Five IDLs are generated
+from the checked-out Anchor source in `programs/*_v3`. Escrow is the explicit
+exception: `idls/v3/escrow_v3.json` is pinned to the verified deployed-source
+commit, while the checked-out escrow source is generated to
+`idls/source-head/escrow_v3.json`.
 
 Original extraction source (lineage only; not proof of either deployed binary):
 
@@ -27,8 +30,10 @@ npm run validate:idls
 ```
 
 `validate:idls` parses every committed IDL JSON file and then runs
-`node scripts/generate-v3-idls.mjs --check`, which regenerates each V3 IDL from
-the local Anchor source and fails if any committed file under `idls/v3/` differs.
+`node scripts/generate-v3-idls.mjs --check`. The check regenerates five current
+V3 IDLs under `idls/v3/` and the current escrow source-head IDL under
+`idls/source-head/`. The separate deployed-truth verifier pins the canonical
+escrow IDL to its byte-matched source commit.
 
 ## Post-Merge Cleanup Readback
 
@@ -49,8 +54,11 @@ Current committed generated-IDL readback:
 | attestations_v3 | `idls/v3/attestations_v3.json` | `36eb0af13b51d80a8d16c09cd43e92dfcdd3212bd05cce4a54daef3456292034` |
 | reputation_v3 | `idls/v3/reputation_v3.json` | `3632cc676beacce3f8963022cc8940b543384d0b8b3ce1c6e36b3647d7de0101` |
 | validation_v3 | `idls/v3/validation_v3.json` | `29e4973d1504b4e7a273a212655d08e288b90ac7abb54f6917315e424bee6557` |
-| escrow_v3 | `idls/v3/escrow_v3.json` | `3382cd7e7e89130a132418004da23bb2edca65793f994262112168dabbc2d576` |
+| escrow_v3 deployed canonical | `idls/v3/escrow_v3.json` | `e8c142f27e225d8edc2f8f41e6fb698ebbb73f69d2fc078d5bf963234ebc8fa9` |
+| escrow_v3 current source head | `idls/source-head/escrow_v3.json` | `9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10` |
 
-This proof is offline and source-only. It does not deploy, write to Solana,
+The escrow deployed-truth proof additionally performs a read-only mainnet
+ProgramData comparison; it never submits a transaction. These checks do not
+deploy, write to Solana,
 create or move keypairs, publish npm packages, restart production, perform admin
 actions, spend funds, or announce publicly.

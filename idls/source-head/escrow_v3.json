@@ -284,6 +284,10 @@
         {
           "name": "agent",
           "writable": true
+        },
+        {
+          "name": "treasury",
+          "writable": true
         }
       ],
       "args": []
@@ -359,6 +363,10 @@
         },
         {
           "name": "agent",
+          "writable": true
+        },
+        {
+          "name": "treasury",
           "writable": true
         }
       ],

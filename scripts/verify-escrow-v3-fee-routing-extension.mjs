@@ -144,6 +144,26 @@ export function verifyFeeRoutingExtension() {
 
   const eventDiscriminator = sha256(Buffer.from('event:PlatformFeeRouted')).slice(0, 16);
   if (extension.route_proof.platform_fee_event_discriminator_hex !== eventDiscriminator) fail('fee event discriminator drift');
+  const riders = extension.owner_gated_riders;
+  if (JSON.stringify(riders.audit_items) !== JSON.stringify(['S7', 'AF18'])) fail('owner-gated rider audit items drift');
+  if (riders.candidate_source_commit !== candidate.source.commit) fail('owner-gated rider candidate drift');
+  const expectedUsdcRoutes = [
+    'create_usdc_escrow',
+    'release_usdc',
+    'partial_release_usdc',
+    'cancel_usdc',
+    'resolve_dispute_usdc',
+  ];
+  if (JSON.stringify(riders.instruction_routes) !== JSON.stringify(expectedUsdcRoutes)) fail('owner-gated USDC route set drift');
+  for (const name of expectedUsdcRoutes) {
+    if (!idl.instructions.some((instruction) => instruction.name === name)) fail(`owner-gated rider missing ${name}`);
+  }
+  if (riders.included_in_candidate !== true
+      || riders.status !== 'packet_ready_for_pending_owner_gated_mainnet_redeploy_not_active'
+      || riders.requires_separate_owner_write_approval !== true
+      || riders.writes_performed_by_packet_preparation !== false) {
+    fail('owner-gated rider status is not fail-closed');
+  }
   if (!packet.includes('ADDITIONAL_PROGRAM_BYTES="$((TARGET_PROGRAMDATA_PAYLOAD_BYTES - PROGRAMDATA_PAYLOAD_BYTES))"')) {
     fail('packet lacks calculated extension bound');
   }
@@ -164,6 +184,8 @@ export function verifyFeeRoutingExtension() {
     additional_program_bytes: allocation.additional_program_bytes,
     target_payload_bytes: allocation.target_payload_bytes,
     route_names: [...expectedRoutes.keys()],
+    owner_gated_riders: riders.audit_items,
+    owner_gated_rider_status: riders.status,
   };
 }
 
