@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { readAnchorIdlAuthority } from '../scripts/read-anchor-idl-authority.mjs';
 import {
-  simulateLoaderExtension,
+  deriveZeroExtendedPayload,
   verifyFeeRoutingExtension,
 } from '../scripts/verify-escrow-v3-fee-routing-extension.mjs';
 import { verifyLockedBuild } from '../scripts/verify-escrow-v3-mainnet-locked.mjs';
@@ -40,6 +40,8 @@ test('fee-routing candidate is separate from the deployed locked-build record', 
   assert.equal(candidate.build.artifact_bytes, 350304);
   assert.equal(candidate.programdata_capacity.candidate_overrun_bytes, 3448);
   assert.equal(candidate.programdata_capacity.loader_minimum_additional_bytes, 10240);
+  assert.equal(candidate.programdata_capacity.loader_minimum_feature_id, 'YbbRLkvenrocjGPGyoQE4wjnvYzTgfsk38NFmcYK7a5');
+  assert.equal(candidate.programdata_capacity.loader_minimum_feature_activation_slot, 432864000);
   assert.equal(candidate.programdata_capacity.required_extension_bytes, 10240);
   assert.equal(candidate.programdata_capacity.target_allocated_payload_bytes, 357096);
   assert.equal(candidate.programdata_capacity.candidate_zero_padding_bytes, 6792);
@@ -76,9 +78,9 @@ test('fee-routing extension is exactly bounded and route proofs are IDL-bound', 
   assert.deepEqual(result.route_names, ['release', 'partial_release']);
 });
 
-test('loader extension simulation preserves the prefix and appends 10240 zero bytes', () => {
+test('local post-extension derivation preserves the prefix and appends 10240 zero bytes', () => {
   const prefix = Buffer.from('deterministic-loader-extension-fixture');
-  const result = simulateLoaderExtension(prefix, 10240);
+  const result = deriveZeroExtendedPayload(prefix, 10240);
 
   assert.equal(result.extendedPayload.length, prefix.length + 10240);
   assert.deepEqual(result.extendedPayload.subarray(0, prefix.length), prefix);

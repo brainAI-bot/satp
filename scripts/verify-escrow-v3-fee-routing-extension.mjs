@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -23,18 +23,18 @@ function readPinned(commit, relativePath) {
   });
 }
 
-export function simulateLoaderExtension(currentPayload, additionalProgramBytes) {
-  if (!Buffer.isBuffer(currentPayload)) fail('simulation payload must be a Buffer');
+export function deriveZeroExtendedPayload(currentPayload, additionalProgramBytes) {
+  if (!Buffer.isBuffer(currentPayload)) fail('derivation payload must be a Buffer');
   if (!Number.isSafeInteger(additionalProgramBytes) || additionalProgramBytes <= 0) {
-    fail('simulation additional bytes must be a positive safe integer');
+    fail('derivation additional bytes must be a positive safe integer');
   }
   const zeroSuffix = Buffer.alloc(additionalProgramBytes);
   const extendedPayload = Buffer.concat([currentPayload, zeroSuffix]);
   if (!extendedPayload.subarray(0, currentPayload.length).equals(currentPayload)) {
-    fail('simulation changed the existing payload prefix');
+    fail('derivation changed the existing payload prefix');
   }
   if (extendedPayload.subarray(currentPayload.length).some((byte) => byte !== 0)) {
-    fail('simulation produced a non-zero extension suffix');
+    fail('derivation produced a non-zero extension suffix');
   }
   return {
     extendedPayload,
@@ -42,13 +42,6 @@ export function simulateLoaderExtension(currentPayload, additionalProgramBytes) 
     prefixSha256: sha256(currentPayload),
     zeroSuffixBytes: zeroSuffix.length,
   };
-}
-
-function simulateCandidateDeployment(candidateArtifact, targetPayloadBytes) {
-  if (candidateArtifact.length > targetPayloadBytes) fail('candidate exceeds target payload allocation');
-  const zeroSuffixBytes = targetPayloadBytes - candidateArtifact.length;
-  const payload = Buffer.concat([candidateArtifact, Buffer.alloc(zeroSuffixBytes)]);
-  return { payload, payloadSha256: sha256(payload), zeroSuffixBytes };
 }
 
 export function verifyFeeRoutingExtension() {
@@ -96,6 +89,14 @@ export function verifyFeeRoutingExtension() {
   if (allocation.candidate_overrun_bytes !== candidate.programdata_capacity.candidate_overrun_bytes) fail('candidate overrun drift');
   if (allocation.loader_minimum_additional_bytes !== 10240) fail('loader minimum must be 10240 bytes');
   if (allocation.loader_minimum_additional_bytes !== candidate.programdata_capacity.loader_minimum_additional_bytes) fail('loader minimum drift');
+  if (allocation.loader_minimum_feature_id !== candidate.programdata_capacity.loader_minimum_feature_id) fail('loader minimum feature id drift');
+  if (allocation.loader_minimum_feature_activation_slot !== candidate.programdata_capacity.loader_minimum_feature_activation_slot) fail('loader minimum activation slot drift');
+  if (!Number.isSafeInteger(allocation.loader_minimum_feature_observed_finalized_slot)
+      || allocation.loader_minimum_feature_observed_finalized_slot < allocation.loader_minimum_feature_activation_slot) {
+    fail('loader minimum feature observation predates activation');
+  }
+  if (allocation.loader_minimum_feature_source !== 'https://github.com/anza-xyz/agave/blob/a4144392c8ffd8d0840e312ecc3a59d35533c005/feature-set/src/lib.rs#L1471-L1473') fail('loader minimum feature source is not pinned');
+  if (allocation.loader_minimum_enforcement_source !== 'https://github.com/anza-xyz/agave/blob/a4144392c8ffd8d0840e312ecc3a59d35533c005/programs/bpf_loader/src/lib.rs#L873-L895') fail('loader minimum enforcement source is not pinned');
   if (allocation.additional_program_bytes !== Math.max(allocation.candidate_overrun_bytes, allocation.loader_minimum_additional_bytes)) fail('extension does not satisfy loader minimum');
   if (allocation.additional_program_bytes !== candidate.programdata_capacity.required_extension_bytes) fail('required extension drift');
   if (allocation.target_payload_bytes !== allocation.current_payload_bytes + allocation.additional_program_bytes) fail('target allocation math mismatch');
@@ -124,21 +125,7 @@ export function verifyFeeRoutingExtension() {
   if (allocation.post_deploy_artifact_bytes !== candidate.build.artifact_bytes
       || allocation.post_deploy_artifact_sha256 !== candidate.build.artifact_sha256) fail('post-deploy artifact drift');
   if (allocation.post_deploy_zero_suffix_bytes !== allocation.candidate_zero_padding_bytes) fail('post-deploy suffix length mismatch');
-  if (!/^[0-9a-f]{64}$/.test(allocation.post_deploy_payload_sha256)) fail('post-deploy payload hash missing');
   if (allocation.deploy_auto_extend !== false) fail('deploy must disable auto-extension');
-
-  const candidateArtifactPath = resolve(root, 'target/fee-routing-candidate/escrow_v3.so');
-  if (existsSync(candidateArtifactPath)) {
-    const candidateArtifact = readFileSync(candidateArtifactPath);
-    if (candidateArtifact.length !== candidate.build.artifact_bytes || sha256(candidateArtifact) !== candidate.build.artifact_sha256) {
-      fail('local candidate artifact mismatch');
-    }
-    const simulatedDeployment = simulateCandidateDeployment(candidateArtifact, allocation.target_payload_bytes);
-    if (simulatedDeployment.zeroSuffixBytes !== allocation.post_deploy_zero_suffix_bytes
-        || simulatedDeployment.payloadSha256 !== allocation.post_deploy_payload_sha256) {
-      fail('local candidate padded payload mismatch');
-    }
-  }
 
   const expectedRoutes = new Map(extension.route_proof.routes.map((route) => [route.name, route]));
   if (extension.route_proof.aggregate_transaction_limit !== 2 || extension.route_proof.retry_limit !== 0) {
@@ -217,11 +204,23 @@ export async function verifyLiveFeeRoutingExtension(rpcUrl = 'https://api.mainne
   const account = Buffer.from(accountResult.value.data[0], 'base64');
   if (account.length !== allocation.current_payload_bytes + allocation.programdata_header_bytes) fail('live ProgramData account length drift');
   const payload = account.subarray(allocation.programdata_header_bytes);
-  const simulation = simulateLoaderExtension(payload, allocation.additional_program_bytes);
-  if (simulation.prefixSha256 !== allocation.post_extension_prefix_sha256) fail('live current payload hash drift');
-  if (simulation.zeroSuffixBytes !== allocation.post_extension_zero_suffix_bytes) fail('live simulated suffix drift');
-  if (simulation.extendedPayload.length !== allocation.target_payload_bytes) fail('live simulated allocation drift');
-  if (simulation.payloadSha256 !== allocation.post_extension_payload_sha256) fail('live simulated payload hash drift');
+  const derivedPayload = deriveZeroExtendedPayload(payload, allocation.additional_program_bytes);
+  if (derivedPayload.prefixSha256 !== allocation.post_extension_prefix_sha256) fail('live current payload hash drift');
+  if (derivedPayload.zeroSuffixBytes !== allocation.post_extension_zero_suffix_bytes) fail('live derived suffix drift');
+  if (derivedPayload.extendedPayload.length !== allocation.target_payload_bytes) fail('live derived allocation drift');
+  if (derivedPayload.payloadSha256 !== allocation.post_extension_payload_sha256) fail('live derived payload hash drift');
+
+  const featureResult = await rpcCall(rpcUrl, 'getAccountInfo', [
+    allocation.loader_minimum_feature_id,
+    { encoding: 'base64', commitment: 'finalized' },
+  ]);
+  if (!featureResult.value) fail('loader minimum feature account missing');
+  if (featureResult.value.owner !== 'Feature111111111111111111111111111111111111') fail('loader minimum feature owner drift');
+  const featureData = Buffer.from(featureResult.value.data[0], 'base64');
+  if (featureData.length !== 9 || featureData[0] !== 1) fail('loader minimum feature is not active');
+  const featureActivationSlot = Number(featureData.readBigUInt64LE(1));
+  if (featureActivationSlot !== allocation.loader_minimum_feature_activation_slot) fail('loader minimum feature activation slot drift');
+  if (featureResult.context.slot < allocation.loader_minimum_feature_observed_finalized_slot) fail('loader minimum feature observation slot regressed');
 
   const targetRent = await rpcCall(rpcUrl, 'getMinimumBalanceForRentExemption', [
     allocation.target_account_bytes,
@@ -236,7 +235,8 @@ export async function verifyLiveFeeRoutingExtension(rpcUrl = 'https://api.mainne
     current_lamports: accountResult.value.lamports,
     target_rent_exempt_lamports: targetRent,
     rent_top_up_lamports: targetRent - accountResult.value.lamports,
-    post_extension_payload_sha256: simulation.payloadSha256,
+    loader_minimum_feature_activation_slot: featureActivationSlot,
+    locally_derived_post_extension_payload_sha256: derivedPayload.payloadSha256,
   };
 }
 

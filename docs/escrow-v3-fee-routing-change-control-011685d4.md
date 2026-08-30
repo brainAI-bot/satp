@@ -32,7 +32,7 @@ and green checks remain mandatory before any approval.
 | Candidate SBF | `350304` bytes / `27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a` |
 | Allocated payload | `346856` bytes; candidate overrun is `3448` bytes, but the loader extension minimum is `10240` bytes |
 | Loader-valid target | `357096` payload bytes / `357141` ProgramData account bytes |
-| Post-deploy padded payload | `7672bd30bf01134bc56e088013a5cafd65ff850c402a56e532be3e28a3d5b4c9` (`350304` candidate bytes + `6792` zero bytes) |
+| Post-deploy assertions | first `350304` bytes match the candidate SBF hash; trailing `6792` bytes are zero |
 | Generated IDL | `9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10` |
 | IDL compressed bytes | `3254` (within the recorded `6764`-byte payload capacity) |
 | Treasury | `FriU1FEpWbdgVrTcS49YV5mVv2oqN6poaVQjzq2BS5be` |
@@ -105,11 +105,23 @@ recipient balance.
 
 The finalized preflight must show the current `346856`-byte payload allocation.
 The candidate is `350304` bytes, an overrun of `3448` bytes. The Solana loader
-extension instruction requires at least `10240` additional bytes, so `3448` is
-not executable. The only permitted extension is the loader minimum of exactly
-`10240` bytes, producing a `357096`-byte payload allocation and a `357141`-byte
-ProgramData account including its 45-byte header. Any value other than `10240`
-is forbidden: it would change the approved rent debit and post-state.
+extension instruction requires at least `10240` additional bytes while the
+SIMD-0431 feature is active, so `3448` is not executable. This is enforced in
+the pinned Agave loader source at
+[`a4144392`, lines 873-895](https://github.com/anza-xyz/agave/blob/a4144392c8ffd8d0840e312ecc3a59d35533c005/programs/bpf_loader/src/lib.rs#L873-L895):
+requests below `MINIMUM_EXTEND_PROGRAM_BYTES` return `InvalidArgument` unless
+the account is within that amount of the maximum permitted account length. The
+mainnet-beta feature account
+[`YbbRL...K7a5`](https://explorer.solana.com/address/YbbRLkvenrocjGPGyoQE4wjnvYzTgfsk38NFmcYK7a5?cluster=mainnet-beta),
+which the same pinned Agave tree maps to
+[`loader_v3_minimum_extend_program_size`](https://github.com/anza-xyz/agave/blob/a4144392c8ffd8d0840e312ecc3a59d35533c005/feature-set/src/lib.rs#L1471-L1473),
+is owned by the feature program and encoded `Some(432864000)` at finalized
+observation slot `442785710`; this proves the gate is active. The candidate
+ProgramData is not near the maximum account length, so the exception does not
+apply. The only permitted extension is therefore exactly `10240` bytes,
+producing a `357096`-byte payload allocation and a `357141`-byte ProgramData
+account including its 45-byte header. Any other value is forbidden: it would
+either fail the loader or change the approved rent debit and post-state.
 
 A read-only mainnet-beta query at finalized slot `442774304` reconfirmed the
 ProgramData address and authority above, last deploy slot `441423817`, payload
@@ -131,9 +143,13 @@ must still hash to
 and the appended 10240-byte suffix must be all zero; the complete extended
 payload must hash to
 `ee4d6ee5220d755c846fcab7d6acffbde68b3a176dc3bd66e4ee661c1defd1fb`.
+That complete-payload hash is derived locally from the observed current payload
+plus `10240` zero bytes; it is a deterministic post-state assertion, not a loader
+execution or simulation result. Loader legality is established separately by
+the source and active feature account above.
 After deployment, the first `350304` bytes must match the candidate artifact
-hash and the trailing `6792` bytes must be zero, producing full payload hash
-`7672bd30bf01134bc56e088013a5cafd65ff850c402a56e532be3e28a3d5b4c9`.
+hash and the trailing `6792` bytes must be zero. No full padded candidate hash is
+claimed by the offline verifier; these are finalized runtime readback checks.
 Any other allocation, payload hash, prefix, suffix content, authority, rent
 debit, fee debit, or uncertain result stops the window and requires a new Owner
 decision.
@@ -259,7 +275,6 @@ test "$(shasum -a 256 post-deploy-artifact.bin | awk '{print $1}')" = '27395415b
 test "$(stat -f '%z' post-deploy-suffix.bin)" = '6792'
 LC_ALL=C tr -d '\000' < post-deploy-suffix.bin > post-deploy-nonzero-suffix.bin
 test ! -s post-deploy-nonzero-suffix.bin
-test "$(shasum -a 256 post-deploy-payload.bin | awk '{print $1}')" = '7672bd30bf01134bc56e088013a5cafd65ff850c402a56e532be3e28a3d5b4c9'
 
 anchor idl upgrade --provider.cluster mainnet \
   --provider.wallet "$OWNER_SIGNER" --filepath idls/v3/escrow_v3.json \
