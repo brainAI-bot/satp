@@ -164,6 +164,21 @@ conformance, security, release, and mainnet authority gates remain open.
   production SATP dependency path. [#204cd91f] [shipped]
 - Consumer-facing SATP copy in AgentFolio must not imply mainnet or escrow
   readiness before those gates are separately verified. [#53ffa5e3] [shipped]
+- Produce the fleet-safe locked candidate artifact and no-write preflight
+  packet, including public read-only ProgramData capacity confirmation. This
+  preparation excludes signer-path access or binding, signing, and every RPC
+  write. [#926b9931] [pending]
+- Signer-path access, binding, and signer readback require Owner-controlled
+  credential access and remain a separate Owner gate. [#926b9931] [blocked]
+  · owner-gated
+- The mainnet program deploy or redeploy and published Anchor IDL write require
+  separate explicit Owner approval and Owner signing; this roadmap authorizes
+  no chain or IDL write. [#926b9931] [blocked] · owner-gated
+- After the Owner-gated writes complete, independently verify deployed program
+  bytes, runtime and published IDL parity, fee-routing behavior, and the
+  AgentFolio consumer fence before any escrow unpause. This read-only
+  verification is fleet-safe and does not authorize the writes or unpause.
+  [#926b9931] [pending]
 - Consumer escrow remains disabled: the mainnet program bytes match pinned
   source commit `0bf088e5618f173dff7e0fba622bc2911212c52e`, but the published
   Anchor IDL is a stale 9-instruction interface while the verified-source
