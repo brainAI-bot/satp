@@ -9,9 +9,11 @@ import { inflateSync } from 'node:zlib';
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const manifestPath = resolve(root, 'docs/escrow-v3-deployed-truth.json');
 const loaderId = 'BPFLoaderUpgradeab1e11111111111111111111111';
+const metadataProgramId = 'ProgM6JCCvbYkfKqJYHePx4xxSUSqJp7rh8Lyv7nk7S';
 const programStateTag = 2;
 const programDataStateTag = 3;
 const programDataHeaderBytes = 45;
+const metadataDirectDataOffset = 96;
 
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
@@ -33,88 +35,142 @@ function gitObject(ref, path) {
   return execFileSync('git', ['show', `${ref}:${path}`], { cwd: root });
 }
 
+function instructionAccountNames(idl, name) {
+  const instruction = idl.instructions.find((entry) => entry.name === name);
+  invariant(instruction, `IDL is missing ${name}`);
+  return instruction.accounts.map((account) => account.name);
+}
+
 export function validateDeployedTruth(manifest) {
-  invariant(manifest.schema_version === 1, 'schema_version must be 1');
-  invariant(manifest.status === 'source_binary_verified_published_idl_stale', 'unexpected truth status');
+  invariant(manifest.schema_version === 2, 'schema_version must be 2');
+  invariant(manifest.status === 'source_binary_verified_published_idls_stale', 'unexpected truth status');
   const program = manifest.program;
   const source = manifest.verified_source;
   const canonical = manifest.canonical_idl;
-  const published = manifest.published_idl;
-  const pending = manifest.pending_source_head;
+  const metadata = manifest.program_metadata_idl;
+  const legacy = manifest.legacy_anchor_idl;
   const conclusion = manifest.conclusion;
 
   invariant(source.commit === canonical.generated_from_source_commit,
     'canonical IDL must name the verified deployed source commit');
-  invariant(source.artifact_sha256 === program.allocated_payload_sha256,
-    'verified source artifact hash must equal deployed allocated payload hash');
-  invariant(source.artifact_bytes === program.allocated_payload_bytes,
-    'verified source artifact length must equal deployed allocated payload length');
-  invariant(source.verdict === 'MATCH', 'verified source verdict must be MATCH');
+  invariant(source.artifact_sha256 === program.source_artifact_prefix_sha256,
+    'verified source artifact hash must equal deployed payload prefix hash');
+  invariant(source.artifact_bytes === program.source_artifact_prefix_bytes,
+    'verified source artifact length must equal deployed payload prefix length');
+  invariant(source.deployed_comparison === 'MATCH_ALLOCATED_PREFIX_WITH_ZERO_PADDING',
+    'verified source comparison must describe the allocated prefix and padding');
+  invariant(program.allocated_payload_bytes === program.source_artifact_prefix_bytes + program.allocation_padding_bytes,
+    'allocated payload length must equal source artifact plus loader padding');
+  invariant(program.allocation_padding_sha256 === sha256(Buffer.alloc(program.allocation_padding_bytes)),
+    'allocation padding hash must be the exact all-zero suffix hash');
+  invariant(program.last_non_zero_payload_bytes
+    === source.artifact_bytes - program.intrinsic_artifact_trailing_zero_bytes,
+  'last-non-zero boundary must account for zeros intrinsic to the source artifact');
+
   invariant(canonical.address === program.program_id, 'canonical IDL address must equal program id');
   invariant(canonical.instruction_count === canonical.instruction_names.length,
     'canonical instruction count must match names');
-  invariant(published.instruction_count === published.instruction_names.length,
-    'published instruction count must match names');
+  invariant(metadata.instruction_count === metadata.instruction_names.length,
+    'Program Metadata instruction count must match names');
+  invariant(legacy.instruction_count === legacy.instruction_names.length,
+    'legacy Anchor instruction count must match names');
   invariant(canonical.instruction_count === 14, 'verified-source canonical IDL must contain 14 instructions');
-  invariant(published.instruction_count === 9, 'stale published IDL must contain 9 instructions');
-  invariant(published.status === 'stale_not_canonical', 'published IDL must remain explicitly stale');
-  invariant(pending.artifact_sha256 !== program.allocated_payload_sha256,
-    'pending fee-routing artifact must not be represented as deployed');
-  invariant(pending.status === 'fee_routing_and_usdc_source_merged_owner_gated_no_mainnet_write',
-    'pending source status must remain honest');
-  invariant(pending.rider_packet === 'docs/escrow-v3-mainnet-rider-packet.md',
-    'pending source must point to the owner-gated rider packet');
-  const riderPacketPath = resolve(root, pending.rider_packet);
-  invariant(existsSync(riderPacketPath), 'owner-gated rider packet is missing');
-  const riderPacket = readFileSync(riderPacketPath, 'utf8');
-  invariant(riderPacket.includes('Status: prepared, not executed.'), 'rider packet status must remain fail-closed');
-  invariant(riderPacket.includes(source.artifact_sha256), 'rider packet must bind the deployed artifact');
-  invariant(riderPacket.includes(pending.artifact_sha256), 'rider packet must bind the pending artifact');
-  for (const route of ['create_usdc_escrow', 'release_usdc', 'partial_release_usdc', 'cancel_usdc', 'resolve_dispute_usdc']) {
-    invariant(riderPacket.includes(`\`${route}\``), `rider packet missing ${route}`);
-  }
+  invariant(metadata.instruction_count === 14, 'Program Metadata IDL must contain 14 instructions');
+  invariant(legacy.instruction_count === 9, 'legacy Anchor IDL must contain 9 instructions');
+  invariant(metadata.status === 'stale_not_canonical', 'Program Metadata IDL must remain explicitly stale');
+  invariant(legacy.status === 'stale_not_canonical', 'legacy Anchor IDL must remain explicitly stale');
+  invariant(metadata.owner === metadataProgramId, 'Program Metadata owner must stay pinned');
+
+  invariant(conclusion.source_artifact_equals_deployed_payload_prefix === true,
+    'source/deployed-prefix equality must be explicit');
   invariant(conclusion.source_equals_deployed_binary === true, 'source/binary equality must be explicit');
   invariant(conclusion.canonical_repo_idl_generated_from_verified_source === true,
     'canonical IDL provenance must be explicit');
+  invariant(conclusion.program_metadata_idl_matches_canonical_repo_idl === false,
+    'stale Program Metadata IDL must not be certified');
+  invariant(conclusion.legacy_anchor_idl_matches_canonical_repo_idl === false,
+    'stale legacy Anchor IDL must not be certified');
   invariant(conclusion.published_idl_matches_canonical_repo_idl === false,
-    'stale published IDL must not be certified');
-  invariant(conclusion.fee_routing_is_deployed === false, 'fee routing must not be marked deployed');
-  invariant(conclusion.consumer_escrow_unpause_ready === false, 'consumer escrow must remain gated');
+    'published IDLs must not be represented as canonical');
+  invariant(conclusion.fee_routing_is_deployed === true, 'deployed fee routing must remain explicit');
+  invariant(conclusion.canonical_idl_publish_reconciled === false,
+    'canonical IDL publication must remain unreconciled');
+  invariant(conclusion.consumer_escrow_unpause_ready === false,
+    'consumer escrow must remain gated');
   invariant(Object.values(manifest.safety).every((value) => value === false),
     'all mutation safety flags must remain false');
 
   const canonicalBytes = readFileSync(resolve(root, canonical.path));
   const canonicalIdl = JSON.parse(canonicalBytes);
+  invariant(canonicalBytes.length === canonical.bytes, 'canonical IDL byte length drifted');
   invariant(sha256(canonicalBytes) === canonical.sha256, 'canonical IDL file hash drifted');
   invariant(canonicalIdl.address === canonical.address, 'canonical IDL file address drifted');
   invariant(equalArray(canonicalIdl.instructions.map(({ name }) => name), canonical.instruction_names),
     'canonical IDL instruction surface drifted');
   invariant(sha256(gitObject(canonical.recorded_at_commit, canonical.path)) === canonical.sha256,
     'recorded canonical IDL commit does not reproduce the canonical file');
+  for (const [name, expectedAccounts] of Object.entries(canonical.required_fee_routing_accounts)) {
+    invariant(equalArray(instructionAccountNames(canonicalIdl, name), expectedAccounts),
+      `canonical IDL ${name} account surface drifted`);
+  }
 
   invariant(sha256(gitObject(source.commit, source.path)) === source.sha256,
     'verified source commit/path hash drifted');
   invariant(sha256(gitObject(source.commit, 'Cargo.lock')) === source.cargo_lock_sha256,
     'verified source Cargo.lock hash drifted');
-
-  const pendingIdlBytes = readFileSync(resolve(root, pending.idl_path));
-  invariant(sha256(pendingIdlBytes) === pending.idl_sha256, 'pending source-head IDL hash drifted');
-  invariant(pending.idl_sha256 !== canonical.sha256,
-    'pending source-head IDL must not silently replace deployed canonical truth');
   return true;
+}
+
+function decodeProgramMetadata(data, expected, programId, PublicKey) {
+  invariant(data.length === expected.account_bytes, 'Program Metadata account length drifted');
+  invariant(sha256(data) === expected.account_data_sha256, 'Program Metadata account hash drifted');
+  invariant(data[0] === 2, 'Program Metadata discriminator drifted');
+  invariant(new PublicKey(data.subarray(1, 33)).toBase58() === programId,
+    'Program Metadata program address drifted');
+  invariant(data[65] === 1 && data[66] === 1, 'Program Metadata mutability/canonical flags drifted');
+  invariant(data.subarray(67, 83).toString('utf8').replace(/\0+$/u, '') === expected.seed,
+    'Program Metadata seed drifted');
+  invariant(data[83] === 1, 'Program Metadata encoding must remain UTF-8');
+  invariant(data[84] === 2, 'Program Metadata compression must remain zlib');
+  invariant(data[85] === 1, 'Program Metadata format must remain JSON');
+  invariant(data[86] === 0, 'Program Metadata data source must remain direct');
+  const declaredLength = data.readUInt32LE(87);
+  invariant(declaredLength === expected.content_zlib_bytes, 'Program Metadata declared data length drifted');
+  invariant(data.subarray(92, metadataDirectDataOffset).equals(Buffer.alloc(4)),
+    'Program Metadata direct-data prefix drifted');
+  invariant(metadataDirectDataOffset + declaredLength === data.length,
+    'Program Metadata account contains unexpected trailing bytes');
+  const content = inflateSync(data.subarray(metadataDirectDataOffset));
+  const idl = JSON.parse(content.toString('utf8'));
+  const canonicalJson = Buffer.from(JSON.stringify(idl));
+  invariant(canonicalJson.length === expected.canonical_json_bytes,
+    'Program Metadata canonical JSON length drifted');
+  invariant(sha256(canonicalJson) === expected.canonical_json_sha256,
+    'Program Metadata canonical JSON hash drifted');
+  invariant(equalArray(idl.instructions.map(({ name }) => name), expected.instruction_names),
+    'Program Metadata instruction surface drifted');
+  for (const [name, expectedMissing] of Object.entries(expected.missing_required_fee_routing_accounts)) {
+    const actualAccounts = instructionAccountNames(idl, name);
+    const missing = expectedMissing.filter((account) => !actualAccounts.includes(account));
+    invariant(equalArray(missing, expectedMissing), `Program Metadata ${name} is no longer the recorded stale surface`);
+  }
+  return { idl, canonicalJson };
 }
 
 async function fetchLive(manifest) {
   const { Connection, PublicKey, clusterApiUrl } = await import('@solana/web3.js');
   const program = manifest.program;
-  const published = manifest.published_idl;
+  const legacy = manifest.legacy_anchor_idl;
+  const metadata = manifest.program_metadata_idl;
   const loader = new PublicKey(loaderId);
+  const metadataProgram = new PublicKey(metadataProgramId);
   const programId = new PublicKey(program.program_id);
-  const idlAddress = new PublicKey(published.account);
+  const legacyAddress = new PublicKey(legacy.account);
+  const metadataAddress = new PublicKey(metadata.account);
   const rpcUrl = process.env.ESCROW_V3_RPC_URL_MAINNET_BETA || clusterApiUrl('mainnet-beta');
-  const connection = new Connection(rpcUrl, 'confirmed');
+  const connection = new Connection(rpcUrl, 'finalized');
 
-  const programAccount = await connection.getAccountInfo(programId, 'confirmed');
+  const programAccount = await connection.getAccountInfo(programId, 'finalized');
   invariant(programAccount, `program account ${program.program_id} not found`);
   invariant(programAccount.owner.equals(loader), 'program owner drifted');
   invariant(programAccount.data.length === 36 && programAccount.data.readUInt32LE(0) === programStateTag,
@@ -122,51 +178,71 @@ async function fetchLive(manifest) {
   const programDataAddress = new PublicKey(programAccount.data.subarray(4, 36));
   invariant(programDataAddress.toBase58() === program.program_data, 'ProgramData address drifted');
 
-  const response = await connection.getMultipleAccountsInfoAndContext([programDataAddress, idlAddress], 'confirmed');
-  const [programDataAccount, idlAccount] = response.value;
-  invariant(programDataAccount && idlAccount, 'ProgramData or published IDL account missing');
+  const response = await connection.getMultipleAccountsInfoAndContext(
+    [programDataAddress, legacyAddress, metadataAddress],
+    'finalized',
+  );
+  const [programDataAccount, legacyAccount, metadataAccount] = response.value;
+  invariant(programDataAccount && legacyAccount && metadataAccount,
+    'ProgramData or published IDL account missing');
   invariant(programDataAccount.owner.equals(loader), 'ProgramData owner drifted');
   invariant(programDataAccount.data.readUInt32LE(0) === programDataStateTag, 'ProgramData tag drifted');
   invariant(programDataAccount.data.length === program.program_data_account_bytes, 'ProgramData length drifted');
   invariant(Number(programDataAccount.data.readBigUInt64LE(4)) === program.upgrade_slot, 'deployed slot drifted');
 
   const allocated = programDataAccount.data.subarray(programDataHeaderBytes);
-  let trailingZeroBytes = 0;
-  while (trailingZeroBytes < allocated.length && allocated[allocated.length - trailingZeroBytes - 1] === 0) {
-    trailingZeroBytes += 1;
-  }
-  const trimmed = allocated.subarray(0, allocated.length - trailingZeroBytes);
+  const sourcePrefix = allocated.subarray(0, program.source_artifact_prefix_bytes);
+  const allocationPadding = allocated.subarray(program.source_artifact_prefix_bytes);
+  let lastNonZero = allocated.length;
+  while (lastNonZero > 0 && allocated[lastNonZero - 1] === 0) lastNonZero -= 1;
   invariant(allocated.length === program.allocated_payload_bytes, 'allocated payload length drifted');
   invariant(sha256(allocated) === program.allocated_payload_sha256, 'allocated payload hash drifted');
-  invariant(trailingZeroBytes === program.trailing_zero_bytes, 'trailing zero count drifted');
-  invariant(trimmed.length === program.trimmed_payload_bytes, 'trimmed payload length drifted');
-  invariant(sha256(trimmed) === program.trimmed_payload_sha256, 'trimmed payload hash drifted');
+  invariant(sha256(sourcePrefix) === program.source_artifact_prefix_sha256,
+    'deployed source artifact prefix hash drifted');
+  invariant(allocationPadding.length === program.allocation_padding_bytes, 'allocation padding length drifted');
+  invariant(allocationPadding.every((byte) => byte === 0), 'allocation padding contains non-zero bytes');
+  invariant(sha256(allocationPadding) === program.allocation_padding_sha256,
+    'allocation padding hash drifted');
+  invariant(lastNonZero === program.last_non_zero_payload_bytes, 'last-non-zero payload boundary drifted');
+  invariant(sha256(allocated.subarray(0, lastNonZero)) === program.last_non_zero_payload_sha256,
+    'last-non-zero payload hash drifted');
 
-  invariant(idlAccount.owner.equals(programId), 'published IDL owner drifted');
-  invariant(idlAccount.data.length === published.account_bytes, 'published IDL account length drifted');
-  const compressedLength = idlAccount.data.readUInt32LE(40);
-  const inflated = inflateSync(idlAccount.data.subarray(44, 44 + compressedLength));
-  const idl = JSON.parse(inflated.toString('utf8'));
-  const instructionNames = idl.instructions.map(({ name }) => name).sort();
-  invariant(inflated.length === published.inflated_json_bytes, 'published IDL inflated length drifted');
-  invariant(sha256(inflated) === published.inflated_json_sha256, 'published IDL hash drifted');
-  invariant(equalArray(instructionNames, published.instruction_names), 'published IDL instructions drifted');
+  invariant(legacyAccount.owner.equals(programId), 'legacy Anchor IDL owner drifted');
+  invariant(legacyAccount.data.length === legacy.account_bytes, 'legacy Anchor IDL account length drifted');
+  const legacyCompressedLength = legacyAccount.data.readUInt32LE(40);
+  const legacyInflated = inflateSync(legacyAccount.data.subarray(44, 44 + legacyCompressedLength));
+  const legacyIdl = JSON.parse(legacyInflated.toString('utf8'));
+  const legacyNames = legacyIdl.instructions.map(({ name }) => name).sort();
+  invariant(legacyInflated.length === legacy.inflated_json_bytes, 'legacy Anchor IDL inflated length drifted');
+  invariant(sha256(legacyInflated) === legacy.inflated_json_sha256, 'legacy Anchor IDL hash drifted');
+  invariant(equalArray(legacyNames, legacy.instruction_names), 'legacy Anchor IDL instructions drifted');
+
+  invariant(metadataAccount.owner.equals(metadataProgram), 'Program Metadata owner drifted');
+  const decodedMetadata = decodeProgramMetadata(metadataAccount.data, metadata, program.program_id, PublicKey);
 
   const artifactPath = process.env.ESCROW_V3_DEPLOYED_SOURCE_ARTIFACT;
   if (artifactPath) {
     invariant(existsSync(artifactPath), `source artifact missing: ${artifactPath}`);
     const artifact = readFileSync(artifactPath);
-    invariant(artifact.length === allocated.length, 'source artifact length differs from deployed payload');
-    invariant(sha256(artifact) === sha256(allocated), 'source artifact differs from deployed payload');
+    invariant(artifact.length === sourcePrefix.length, 'source artifact length differs from deployed prefix');
+    invariant(artifact.equals(sourcePrefix), 'source artifact differs from deployed prefix');
   }
 
   return {
     rpc_slot: response.context.slot,
+    commitment: 'finalized',
     upgrade_slot: Number(programDataAccount.data.readBigUInt64LE(4)),
+    program_data_account_bytes: programDataAccount.data.length,
+    allocated_payload_bytes: allocated.length,
     allocated_payload_sha256: sha256(allocated),
+    source_artifact_prefix_bytes: sourcePrefix.length,
+    source_artifact_prefix_sha256: sha256(sourcePrefix),
+    allocation_padding_bytes: allocationPadding.length,
     source_artifact_compared: Boolean(artifactPath),
-    published_idl_sha256: sha256(inflated),
-    published_idl_instruction_count: instructionNames.length,
+    program_metadata_idl_sha256: sha256(decodedMetadata.canonicalJson),
+    program_metadata_idl_instruction_count: decodedMetadata.idl.instructions.length,
+    legacy_anchor_idl_sha256: sha256(legacyInflated),
+    legacy_anchor_idl_instruction_count: legacyNames.length,
     drift: false,
   };
 }
@@ -179,11 +255,12 @@ async function main() {
     ok: true,
     status: manifest.status,
     source_commit: manifest.verified_source.commit,
-    source_binary_verdict: manifest.verified_source.verdict,
+    source_binary_verdict: manifest.verified_source.deployed_comparison,
     canonical_idl_instructions: manifest.canonical_idl.instruction_count,
-    published_idl_instructions: manifest.published_idl.instruction_count,
-    fee_routing_status: manifest.pending_source_head.status,
-    rider_packet: manifest.pending_source_head.rider_packet,
+    program_metadata_idl_status: manifest.program_metadata_idl.status,
+    legacy_anchor_idl_status: manifest.legacy_anchor_idl.status,
+    fee_routing_is_deployed: manifest.conclusion.fee_routing_is_deployed,
+    consumer_escrow_unpause_ready: manifest.conclusion.consumer_escrow_unpause_ready,
     live,
   }, null, 2));
 }

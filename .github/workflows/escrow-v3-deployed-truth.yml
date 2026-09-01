@@ -1,6 +1,9 @@
 name: Escrow V3 Deployed Truth
 
 on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"
   pull_request:
     paths:
       - ".github/workflows/escrow-v3-deployed-truth.yml"
@@ -9,7 +12,6 @@ on:
       - "docs/escrow-v3-deployed-truth.json"
       - "docs/escrow-v3-mainnet-rider-packet.md"
       - "idls/v3/escrow_v3.json"
-      - "idls/source-head/escrow_v3.json"
       - "scripts/build-verify-escrow-v3-deployed-source.sh"
       - "scripts/verify-escrow-v3-deployed-truth.mjs"
       - "tests/escrow-v3-deployed-truth.test.mjs"
@@ -23,7 +25,6 @@ on:
       - "docs/escrow-v3-deployed-truth.json"
       - "docs/escrow-v3-mainnet-rider-packet.md"
       - "idls/v3/escrow_v3.json"
-      - "idls/source-head/escrow_v3.json"
       - "scripts/build-verify-escrow-v3-deployed-source.sh"
       - "scripts/verify-escrow-v3-deployed-truth.mjs"
       - "tests/escrow-v3-deployed-truth.test.mjs"
@@ -78,6 +79,5 @@ jobs:
             target/deployed-truth/proof.json
             docs/escrow-v3-deployed-truth.json
             idls/v3/escrow_v3.json
-            idls/source-head/escrow_v3.json
           if-no-files-found: error
           retention-days: 90

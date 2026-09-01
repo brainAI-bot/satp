@@ -6,17 +6,20 @@ Readback date: 2026-08-30 UTC.
 
 The current machine-verifiable packet is
 `docs/escrow-v3-deployed-truth.json`. SATP commit
-`0bf088e5618f173dff7e0fba622bc2911212c52e`, built with platform-tools
-`v1.52` and the `mainnet` feature, produces a 346856-byte artifact with SHA-256
-`4f21da13659cbe99a606b408a5f1d3523c0e41de20538028939bbb1b54c3cc0d`.
-A fresh dump of mainnet program
-`HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` is byte-for-byte identical.
+`3f8188bec89db0d4a081931f35272e10185d1c0d`, built with platform-tools
+`v1.52` and the `mainnet` feature, produces a 350304-byte artifact with SHA-256
+`27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a`.
+A finalized readback proves that artifact is the exact prefix of the 357096-byte
+mainnet ProgramData allocation and that the remaining 6792 bytes are zero
+loader padding.
 
 Accordingly, `idls/v3/escrow_v3.json` is the canonical repository IDL generated
-from that verified deployed source. It has 14 instructions. The published
-Anchor IDL account remains stale at 9 instructions. Newer fee-routing source is
-not deployed and its generated interface is kept separately at
-`idls/source-head/escrow_v3.json`.
+from that verified deployed source. It has 14 instructions and SHA-256
+`9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10`.
+The legacy Anchor IDL remains stale at 9 instructions. The canonical Program
+Metadata IDL also remains stale: it has 14 instructions but omits `treasury`
+from both SOL release routes. Consumers remain fail-closed until publication is
+reconciled and independently verified.
 
 The remainder of this document is historical readback and must not override the
 current packet above.

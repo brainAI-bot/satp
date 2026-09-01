@@ -1,14 +1,14 @@
 # Escrow V3 SOL fee-routing change control [#011685d4]
 
-Status: **NO-GO until exact-head independent review, green checks, and one
-explicit Owner approval in HQ.** Two-host candidate reproducibility is complete.
-Preparation of
-this amended packet performed no chain write, signing, keypair access, money
-movement, npm publication, production mutation, or roadmap change. Its
-machine-readable bounds are locked in
+Status: **HISTORICAL PRE-EXECUTION RECORD.** The runtime upgrade finalized at
+slot `442907465`; current evidence and the remaining fail-closed IDL publication
+boundary live in `docs/escrow-v3-deployed-truth.json`. This document preserves
+the controls and evidence used before execution and does not authorize another
+chain write, signing operation, keypair access, money movement, publication, or
+production mutation. Its historical machine-readable bounds remain locked in
 `docs/escrow-v3-fee-routing-extension-011685d4.json`.
 
-## Reworked candidate (independent review pending; not deployed)
+## Reworked candidate (historical; deployed runtime, IDL reconciliation pending)
 
 This record is intentionally separate from
 `docs/escrow-v3-mainnet-locked-build.json`. The locked-build file continues to
@@ -17,8 +17,9 @@ the reworked candidate at canonical merged source commit
 `3f8188bec89db0d4a081931f35272e10185d1c0d`. This squash-merge commit contains
 the same source, Cargo.lock, and IDL hashes as the reviewed PR source commit
 `a35568bc3926bd44d73680813bda0e8d5371705f`, while remaining reachable from a
-clean clone of `main`. Exact-head independent review
-and green checks remain mandatory before any approval.
+clean clone of `main`. The review and approval language below is retained as a
+historical record of the pre-execution gate; it is not the current runtime or
+release-readiness authority.
 
 | Field | Value |
 | --- | --- |

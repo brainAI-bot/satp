@@ -1,40 +1,45 @@
 {
-  "schema_version": 1,
-  "captured_at_utc": "2026-08-30T14:08:00Z",
-  "status": "source_binary_verified_published_idl_stale",
+  "schema_version": 2,
+  "captured_at_utc": "2026-08-30T23:12:00Z",
+  "status": "source_binary_verified_published_idls_stale",
   "program": {
     "cluster": "mainnet-beta",
     "program_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
     "program_data": "Fg1DJyKX9CngiMihZxJY2zjaQ8T1PK5QuiVhNvJmeTqk",
-    "upgrade_slot": 441423817,
-    "program_data_account_bytes": 346901,
+    "upgrade_slot": 442907465,
+    "program_data_account_bytes": 357141,
     "loader_header_bytes": 45,
-    "allocated_payload_bytes": 346856,
-    "allocated_payload_sha256": "4f21da13659cbe99a606b408a5f1d3523c0e41de20538028939bbb1b54c3cc0d",
-    "trailing_zero_bytes": 15,
-    "trimmed_payload_bytes": 346841,
-    "trimmed_payload_sha256": "2f3bb05486f39d3f61a454905048b6e5732b798643405836b62a6d9795a20a6d"
+    "allocated_payload_bytes": 357096,
+    "allocated_payload_sha256": "7672bd30bf01134bc56e088013a5cafd65ff850c402a56e532be3e28a3d5b4c9",
+    "source_artifact_prefix_bytes": 350304,
+    "source_artifact_prefix_sha256": "27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a",
+    "allocation_padding_bytes": 6792,
+    "allocation_padding_sha256": "04f30102940f974daa462466fc5aa08ecb36622da73eb8162834e768c984b61f",
+    "last_non_zero_payload_bytes": 350289,
+    "last_non_zero_payload_sha256": "85e71adf087b268b199c933918a1b8bb2b0a5f67f9e71b1467b3ca8357b8458a",
+    "intrinsic_artifact_trailing_zero_bytes": 15
   },
   "verified_source": {
     "repository": "brainAI-bot/satp",
-    "commit": "0bf088e5618f173dff7e0fba622bc2911212c52e",
+    "commit": "3f8188bec89db0d4a081931f35272e10185d1c0d",
     "path": "programs/escrow_v3/src/lib.rs",
-    "sha256": "f4696cc27c5e2ff6163a90f877fd4431efa8809d2f6ae4c792c3c7cd18193c4d",
+    "sha256": "380b20d36f18253a5c382ec1abc4a1147a08092a9a42cdae25e5d954f41acd0a",
     "cargo_lock_sha256": "d98db19e0d86ca3248376d4857b150b240be05c4bc3a409d7cb638ce4d5d2237",
     "features": [
       "mainnet"
     ],
     "build_command": "cargo build-sbf --tools-version v1.52 --manifest-path programs/escrow_v3/Cargo.toml --features mainnet",
-    "artifact_bytes": 346856,
-    "artifact_sha256": "4f21da13659cbe99a606b408a5f1d3523c0e41de20538028939bbb1b54c3cc0d",
-    "verdict": "MATCH"
+    "artifact_bytes": 350304,
+    "artifact_sha256": "27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a",
+    "deployed_comparison": "MATCH_ALLOCATED_PREFIX_WITH_ZERO_PADDING"
   },
   "canonical_idl": {
     "path": "idls/v3/escrow_v3.json",
-    "generated_from_source_commit": "0bf088e5618f173dff7e0fba622bc2911212c52e",
-    "recorded_at_commit": "008464206ff89f0012cbf071335dd59c3d4bd1b8",
+    "generated_from_source_commit": "3f8188bec89db0d4a081931f35272e10185d1c0d",
+    "recorded_at_commit": "3f8188bec89db0d4a081931f35272e10185d1c0d",
     "address": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
-    "sha256": "e8c142f27e225d8edc2f8f41e6fb698ebbb73f69d2fc078d5bf963234ebc8fa9",
+    "sha256": "9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10",
+    "bytes": 20704,
     "instruction_count": 14,
     "instruction_names": [
       "create_escrow",
@@ -51,9 +56,59 @@
       "resolve_dispute_usdc",
       "extend_deadline",
       "close_escrow"
-    ]
+    ],
+    "required_fee_routing_accounts": {
+      "release": [
+        "escrow",
+        "client",
+        "agent",
+        "treasury"
+      ],
+      "partial_release": [
+        "escrow",
+        "client",
+        "agent",
+        "treasury"
+      ]
+    }
   },
-  "published_idl": {
+  "program_metadata_idl": {
+    "account": "4zNAR5DGuWuUnEbwGb7FzEVUUCx2xKca2bmHCeVpjQCJ",
+    "owner": "ProgM6JCCvbYkfKqJYHePx4xxSUSqJp7rh8Lyv7nk7S",
+    "seed": "idl",
+    "account_bytes": 3345,
+    "account_data_sha256": "99f0e57bb32d6fa8661052ed2297923ac2cf7e5924e705922bba9827aad23fff",
+    "content_zlib_bytes": 3249,
+    "canonical_json_bytes": 10653,
+    "canonical_json_sha256": "d4d00143fdb5e755c68b484a428fc02bdf5d0a0000c7a8d7ea2712bff2da92ce",
+    "instruction_count": 14,
+    "instruction_names": [
+      "create_escrow",
+      "create_usdc_escrow",
+      "submit_work",
+      "release",
+      "release_usdc",
+      "partial_release",
+      "partial_release_usdc",
+      "cancel",
+      "cancel_usdc",
+      "raise_dispute",
+      "resolve_dispute",
+      "resolve_dispute_usdc",
+      "extend_deadline",
+      "close_escrow"
+    ],
+    "missing_required_fee_routing_accounts": {
+      "release": [
+        "treasury"
+      ],
+      "partial_release": [
+        "treasury"
+      ]
+    },
+    "status": "stale_not_canonical"
+  },
+  "legacy_anchor_idl": {
     "account": "D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn",
     "account_bytes": 6808,
     "inflated_json_bytes": 12172,
@@ -72,23 +127,21 @@
     ],
     "status": "stale_not_canonical"
   },
-  "pending_source_head": {
-    "commit": "3f8188bec89db0d4a081931f35272e10185d1c0d",
-    "path": "programs/escrow_v3/src/lib.rs",
-    "sha256": "380b20d36f18253a5c382ec1abc4a1147a08092a9a42cdae25e5d954f41acd0a",
-    "idl_path": "idls/source-head/escrow_v3.json",
-    "idl_sha256": "9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10",
-    "artifact_bytes": 350304,
-    "artifact_sha256": "27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a",
-    "programdata_extension_bytes_required": 10240,
-    "status": "fee_routing_and_usdc_source_merged_owner_gated_no_mainnet_write",
-    "rider_packet": "docs/escrow-v3-mainnet-rider-packet.md"
+  "deployment_receipts": {
+    "programdata_extension_signature": "2fyQdxkLP8aoRfBts55eoFcmUoFvhQE7o5DHsviDggKzqNSDaq4Db687RV1JpQj7eKd1zdrQexhsKTWpFVDPKrwv",
+    "programdata_extension_slot": 442904380,
+    "upgrade_signature": "3RBnKDDQuMv3VkUTSC4FHT8Qyk87xBJXUebkYCDenc1ApfTZP5PeFS32rRBsCLgQQLitBX9tYHhXprNw1C5KZd7y",
+    "upgrade_slot": 442907465
   },
   "conclusion": {
+    "source_artifact_equals_deployed_payload_prefix": true,
     "source_equals_deployed_binary": true,
     "canonical_repo_idl_generated_from_verified_source": true,
+    "program_metadata_idl_matches_canonical_repo_idl": false,
+    "legacy_anchor_idl_matches_canonical_repo_idl": false,
     "published_idl_matches_canonical_repo_idl": false,
-    "fee_routing_is_deployed": false,
+    "fee_routing_is_deployed": true,
+    "canonical_idl_publish_reconciled": false,
     "consumer_escrow_unpause_ready": false
   },
   "safety": {

@@ -6,7 +6,6 @@ import { join, relative, resolve } from 'node:path';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const canonicalOutDir = resolve(root, 'idls/v3');
-const sourceHeadOutDir = resolve(root, 'idls/source-head');
 const clientDiscriminatorPath = resolve(root, 'packages/satp-client/src/v3-idl-discriminators.js');
 const sourceRef = 'brainAI-bot/satp working tree';
 const generationCommand = 'node scripts/generate-v3-idls.mjs';
@@ -108,7 +107,6 @@ function generate(program) {
 
 if (!checkOnly) {
   mkdirSync(canonicalOutDir, { recursive: true });
-  mkdirSync(sourceHeadOutDir, { recursive: true });
 }
 
 const generated = [];
@@ -116,13 +114,7 @@ const generatedIdls = [];
 for (const program of programs) {
   const idl = generate(program);
   const body = pretty(idl);
-  // escrow_v3 has a separately verified deployed-source canonical IDL. Keep
-  // the current source-head interface visible without silently replacing the
-  // deployed contract consumed from idls/v3/escrow_v3.json.
-  const outPath = join(
-    program === 'escrow_v3' ? sourceHeadOutDir : canonicalOutDir,
-    `${program}.json`
-  );
+  const outPath = join(canonicalOutDir, `${program}.json`);
   generatedIdls.push({ program, idl });
   if (checkOnly) {
     if (!existsSync(outPath)) {
