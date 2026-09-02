@@ -167,7 +167,7 @@ conformance, security, release, and mainnet authority gates remain open.
 - Produce the fleet-safe locked candidate artifact and no-write preflight
   packet, including public read-only ProgramData capacity confirmation. This
   preparation excludes signer-path access or binding, signing, and every RPC
-  write. [#926b9931] [pending]
+  write. [#926b9931] [shipped]
 - Signer-path access, binding, and signer readback require Owner-controlled
   credential access and remain a separate Owner gate. [#926b9931] [blocked]
   · owner-gated
