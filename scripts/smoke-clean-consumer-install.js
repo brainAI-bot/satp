@@ -23,6 +23,7 @@ try {
     version: '0.0.0',
     dependencies: {},
     overrides: {
+      'stream-json': '3.6.0',
       jayson: {
         uuid: '^11.1.1',
       },

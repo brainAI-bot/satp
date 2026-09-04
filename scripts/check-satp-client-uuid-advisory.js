@@ -44,6 +44,7 @@ try {
       version: '0.0.0',
       dependencies: {},
       overrides: {
+        'stream-json': '3.6.0',
         jayson: {
           uuid: `^${fixedUuidVersion}`,
         },
@@ -76,6 +77,7 @@ try {
     `@solana/web3.js@${web3Version}`,
     `jayson@${jaysonVersion}`,
     `uuid@${uuidVersion}`,
+    'stream-json@3.6.0',
   ];
   if (isVersionBefore(uuidVersion, fixedUuidVersion)) {
     throw new Error(`consumer override failed: resolved affected uuid ${uuidVersion}`);
