@@ -42,14 +42,18 @@ Required readback for copy reviews:
 
 ## Escrow V3 read path
 
-Anchor 1.0 consumers should treat Program Metadata account
-`4zNAR5DGuWuUnEbwGb7FzEVUUCx2xKca2bmHCeVpjQCJ` as the canonical on-chain IDL
-read path for mainnet escrow program
-`HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C`. Read-only verification on
-2026-09-04 showed that Program Metadata exposes the current 14-instruction
-escrow set, while the legacy Anchor 0.31 IDL account
+Anchor 1.0 Program Metadata account
+`4zNAR5DGuWuUnEbwGb7FzEVUUCx2xKca2bmHCeVpjQCJ` is instruction-name aligned but
+not canonical for mainnet escrow consumer construction. Read-only verification
+on 2026-09-04 showed that Program Metadata exposes the current 14-instruction
+escrow set for program `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C`, but it
+omits the writable `treasury` account from both `release` and
+`partial_release`; the committed repository IDL requires `treasury` for both.
+The legacy Anchor 0.31 IDL account
 `D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn` remains stale at 9
-instructions and must not drive consumer resolution.
+instructions and must not drive consumer resolution. Consumer construction must
+fail closed until the published Program Metadata account schema matches the
+repository IDL.
 
 AgentFolio production readback remains fail-closed: `https://agentfolio.bot`
 returned HTTP 200 on 2026-09-04, its `/api/satp/programs` path advertises

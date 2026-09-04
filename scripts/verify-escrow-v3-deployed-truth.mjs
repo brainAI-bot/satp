@@ -41,9 +41,28 @@ function instructionAccountNames(idl, name) {
   return instruction.accounts.map((account) => account.name);
 }
 
+function instructionAccountSchema(idl, name) {
+  const instruction = idl.instructions.find((entry) => entry.name === name);
+  invariant(instruction, `IDL is missing ${name}`);
+  return instruction.accounts.map((account) => ({
+    name: account.name,
+    writable: Boolean(account.writable),
+    signer: Boolean(account.signer),
+  }));
+}
+
+function equalAccountSchema(actual, expected) {
+  return actual.length === expected.length && actual.every((account, index) => {
+    const expectedAccount = expected[index];
+    return account.name === expectedAccount.name &&
+      account.writable === expectedAccount.writable &&
+      account.signer === expectedAccount.signer;
+  });
+}
+
 export function validateDeployedTruth(manifest) {
   invariant(manifest.schema_version === 2, 'schema_version must be 2');
-  invariant(manifest.status === 'source_binary_verified_program_metadata_canonical_legacy_anchor_stale',
+  invariant(manifest.status === 'source_binary_verified_program_metadata_account_schema_delta_fail_closed',
     'unexpected truth status');
   const program = manifest.program;
   const source = manifest.verified_source;
@@ -80,10 +99,10 @@ export function validateDeployedTruth(manifest) {
   invariant(legacy.instruction_count === 9, 'legacy Anchor IDL must contain 9 instructions');
   invariant(equalArray(metadata.instruction_names, canonical.instruction_names),
     'Program Metadata instruction surface must match the verified-source canonical IDL');
-  invariant(metadata.status === 'canonical_anchor_1_0_program_metadata',
-    'Program Metadata IDL must be the canonical Anchor 1.0 read path');
-  invariant(metadata.canonical_read_path === true,
-    'Program Metadata IDL must advertise canonical read-path status');
+  invariant(metadata.status === 'instruction_names_match_account_schema_delta_fail_closed',
+    'Program Metadata IDL status must record account-schema fail-closed state');
+  invariant(metadata.canonical_read_path === false,
+    'Program Metadata IDL must not advertise canonical read-path status while account schemas differ');
   invariant(legacy.status === 'stale_not_canonical', 'legacy Anchor IDL must remain explicitly stale');
   invariant(metadata.owner === metadataProgramId, 'Program Metadata owner must stay pinned');
 
@@ -94,8 +113,10 @@ export function validateDeployedTruth(manifest) {
     'canonical IDL provenance must be explicit');
   invariant(conclusion.program_metadata_idl_exposes_current_instruction_set === true,
     'Program Metadata must expose the current 14-instruction set');
-  invariant(conclusion.program_metadata_idl_is_canonical_anchor_1_0_read_path === true,
-    'Program Metadata canonical Anchor 1.0 read path must be explicit');
+  invariant(conclusion.program_metadata_idl_is_canonical_anchor_1_0_read_path === false,
+    'Program Metadata canonical Anchor 1.0 read path must fail closed while account schemas differ');
+  invariant(conclusion.program_metadata_fee_routing_account_schema_matches_canonical_repo_idl === false,
+    'Program Metadata fee-routing account schema mismatch must remain explicit');
   invariant(conclusion.program_metadata_idl_matches_canonical_repo_idl_byte_for_byte === false,
     'Program Metadata/repo byte-level difference must remain explicit');
   invariant(conclusion.legacy_anchor_idl_matches_canonical_repo_idl === false,
@@ -104,11 +125,11 @@ export function validateDeployedTruth(manifest) {
     'legacy Anchor IDL must not be represented as canonical');
   invariant(conclusion.published_idl_matches_canonical_repo_idl === false,
     'published IDL surfaces must not be represented as byte-identical to the repo IDL');
-  invariant(conclusion.published_program_metadata_is_canonical === true,
-    'published Program Metadata must be canonical for Anchor 1.0 reads');
+  invariant(conclusion.published_program_metadata_is_canonical === false,
+    'published Program Metadata must not be canonical while account schemas differ');
   invariant(conclusion.fee_routing_is_deployed === true, 'deployed fee routing must remain explicit');
-  invariant(conclusion.canonical_idl_publish_reconciled === true,
-    'canonical IDL publication must be reconciled through Program Metadata');
+  invariant(conclusion.canonical_idl_publish_reconciled === false,
+    'canonical IDL publication must remain unreconciled while Program Metadata lacks fee-routing accounts');
   invariant(conclusion.consumer_escrow_unpause_ready === false,
     'consumer escrow must remain gated');
   invariant(Object.values(manifest.safety).every((value) => value === false),
@@ -126,6 +147,14 @@ export function validateDeployedTruth(manifest) {
   for (const [name, expectedAccounts] of Object.entries(canonical.required_fee_routing_accounts)) {
     invariant(equalArray(instructionAccountNames(canonicalIdl, name), expectedAccounts),
       `canonical IDL ${name} account surface drifted`);
+    const metadataSchema = metadata.fee_routing_account_schemas?.[name];
+    invariant(Array.isArray(metadataSchema), `Program Metadata ${name} account schema must be recorded`);
+    const canonicalSchema = instructionAccountSchema(canonicalIdl, name);
+    invariant(!equalAccountSchema(metadataSchema, canonicalSchema),
+      `Program Metadata ${name} must remain fail-closed until account schema matches canonical IDL`);
+    const missing = expectedAccounts.filter((account) => !metadataSchema.some((entry) => entry.name === account));
+    invariant(equalArray(missing, metadata.repo_idl_account_surface_delta[name] || []),
+      `Program Metadata ${name} recorded account delta drifted`);
   }
 
   invariant(sha256(gitObject(source.commit, source.path)) === source.sha256,
@@ -164,7 +193,10 @@ function decodeProgramMetadata(data, expected, programId, PublicKey) {
   invariant(equalArray(idl.instructions.map(({ name }) => name), expected.instruction_names),
     'Program Metadata instruction surface drifted');
   for (const [name, expectedMissing] of Object.entries(expected.repo_idl_account_surface_delta)) {
-    const actualAccounts = instructionAccountNames(idl, name);
+    const actualSchema = instructionAccountSchema(idl, name);
+    invariant(equalAccountSchema(actualSchema, expected.fee_routing_account_schemas[name]),
+      `Program Metadata ${name} account schema drifted`);
+    const actualAccounts = actualSchema.map((account) => account.name);
     const missing = expectedMissing.filter((account) => !actualAccounts.includes(account));
     invariant(equalArray(missing, expectedMissing),
       `Program Metadata ${name} no longer has the recorded repo-IDL account delta`);
@@ -275,6 +307,8 @@ async function main() {
     program_metadata_idl_status: manifest.program_metadata_idl.status,
     legacy_anchor_idl_status: manifest.legacy_anchor_idl.status,
     program_metadata_canonical_read_path: manifest.program_metadata_idl.canonical_read_path,
+    program_metadata_fee_routing_account_schema_matches_canonical_repo_idl:
+      manifest.conclusion.program_metadata_fee_routing_account_schema_matches_canonical_repo_idl,
     fee_routing_is_deployed: manifest.conclusion.fee_routing_is_deployed,
     consumer_escrow_unpause_ready: manifest.conclusion.consumer_escrow_unpause_ready,
     live,

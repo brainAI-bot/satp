@@ -34,8 +34,9 @@ current V3 IDLs under `idls/v3/` and fails if any committed file differs.
 program metadata against `Anchor.toml` and the SDK consumer program ID exports
 without contacting Solana or writing chain state. The separate deployed-truth
 verifier pins the canonical escrow IDL to its byte-matched source commit,
-treats the Anchor 1.0 Program Metadata account as the canonical on-chain read
-path, and keeps the legacy Anchor 0.31 IDL account fail-closed as stale.
+checks the Anchor 1.0 Program Metadata instruction names and fee-routing account
+schemas, and keeps both published IDL surfaces fail-closed until they match the
+repository IDL construction surface.
 
 ## Post-Merge Cleanup Readback
 

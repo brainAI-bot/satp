@@ -15,21 +15,25 @@ loader padding.
 
 Accordingly, `idls/v3/escrow_v3.json` is the canonical repository IDL generated
 from that verified deployed source. It has 14 instructions and SHA-256
-`9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10`.
+`ef9622a6d07bd818d3a74ba6c61f3b3f447f61167e82aadc65ecbce4fb307829`.
 
-Anchor 1.0 consumers must use the Program Metadata account
-`4zNAR5DGuWuUnEbwGb7FzEVUUCx2xKca2bmHCeVpjQCJ` as the canonical on-chain IDL
-read path. Finalized readback proves it is owned by
+Anchor 1.0 Program Metadata account
+`4zNAR5DGuWuUnEbwGb7FzEVUUCx2xKca2bmHCeVpjQCJ` is instruction-name aligned but
+not canonical for fee-routing consumer construction. Finalized readback proves
+it is owned by
 `ProgM6JCCvbYkfKqJYHePx4xxSUSqJp7rh8Lyv7nk7S`, names
 `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C`, and exposes the current
-14-instruction escrow set.
+14-instruction escrow set. It omits the writable `treasury` account from both
+`release` and `partial_release`, while the committed repository IDL requires
+that account for both instructions. Consumers must fail closed until that
+published account schema matches the repository IDL.
 
 The legacy Anchor 0.31 IDL account
 `D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn` remains stale at 9 instructions.
 Legacy readers must fail closed or label that account stale/non-canonical
 instead of treating it as the escrow V3 interface. AgentFolio product unpause
 remains gated until a separate AgentFolio-owned readiness task verifies product
-behavior against the canonical Program Metadata read path.
+behavior against a canonical published IDL account schema.
 
 The remainder of this document is historical readback and must not override the
 current packet above.
