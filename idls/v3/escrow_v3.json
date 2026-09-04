@@ -4,7 +4,12 @@
     "name": "escrow_v3",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "SATP V3 Escrow — Identity-verified on-chain escrow for agent transactions"
+    "description": "SATP V3 Escrow — Identity-verified on-chain escrow for agent transactions",
+    "deployments": {
+      "devnet": "B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg",
+      "localnet": "B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg",
+      "mainnet": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C"
+    }
   },
   "docs": [
     "SATP V3 Escrow Program",

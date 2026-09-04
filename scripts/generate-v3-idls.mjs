@@ -12,17 +12,61 @@ const generationCommand = 'node scripts/generate-v3-idls.mjs';
 const checkOnly = process.argv.includes('--check');
 
 const programs = [
-  'identity_v3',
-  'reviews_v3',
-  'attestations_v3',
-  'reputation_v3',
-  'validation_v3',
-  'escrow_v3',
+  {
+    name: 'identity_v3',
+    address: '7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ',
+    deployments: {
+      devnet: '7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ',
+      localnet: '7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ',
+      mainnet: 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG',
+    },
+  },
+  {
+    name: 'reviews_v3',
+    address: '3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk',
+    deployments: {
+      devnet: '3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk',
+      localnet: '3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk',
+      mainnet: 'r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4',
+    },
+  },
+  {
+    name: 'attestations_v3',
+    address: '55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw',
+    deployments: {
+      devnet: '55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw',
+      localnet: '55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw',
+      mainnet: '6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD',
+    },
+  },
+  {
+    name: 'reputation_v3',
+    address: 'CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9',
+    deployments: {
+      devnet: 'CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9',
+      localnet: 'CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9',
+      mainnet: '2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ',
+    },
+  },
+  {
+    name: 'validation_v3',
+    address: 'DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj',
+    deployments: {
+      devnet: 'DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj',
+      localnet: 'DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj',
+      mainnet: '6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV',
+    },
+  },
+  {
+    name: 'escrow_v3',
+    address: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
+    deployments: {
+      devnet: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
+      localnet: 'B1Se8SPx7GLUisa4LYeXY1tDZy5TviJrsV2yMLgqUXmg',
+      mainnet: 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C',
+    },
+  },
 ];
-
-const canonicalProgramAddresses = new Map([
-  ['escrow_v3', 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C'],
-]);
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -79,12 +123,12 @@ function extractIdl(output, program) {
 }
 
 function generate(program) {
-  const features = program === 'escrow_v3' ? 'idl-build,mainnet' : 'idl-build';
+  const features = program.name === 'escrow_v3' ? 'idl-build,mainnet' : 'idl-build';
   const output = execFileSync('cargo', [
     '+1.89.0',
     'test',
     '-p',
-    program,
+    program.name,
     '--features',
     features,
     '__anchor_private_print_idl',
@@ -96,12 +140,15 @@ function generate(program) {
     env: { ...process.env, CARGO_TERM_COLOR: 'never' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
-  const idl = extractIdl(output, program);
-  if (idl.metadata?.name !== program) {
-    throw new Error(`${program}: metadata.name mismatch: ${idl.metadata?.name}`);
+  const idl = extractIdl(output, program.name);
+  if (idl.metadata?.name !== program.name) {
+    throw new Error(`${program.name}: metadata.name mismatch: ${idl.metadata?.name}`);
   }
-  const canonicalAddress = canonicalProgramAddresses.get(program);
-  if (canonicalAddress) idl.address = canonicalAddress;
+  idl.address = program.address;
+  idl.metadata = {
+    ...idl.metadata,
+    deployments: program.deployments,
+  };
   return idl;
 }
 
@@ -114,8 +161,8 @@ const generatedIdls = [];
 for (const program of programs) {
   const idl = generate(program);
   const body = pretty(idl);
-  const outPath = join(canonicalOutDir, `${program}.json`);
-  generatedIdls.push({ program, idl });
+  const outPath = join(canonicalOutDir, `${program.name}.json`);
+  generatedIdls.push({ program: program.name, idl });
   if (checkOnly) {
     if (!existsSync(outPath)) {
       throw new Error(`missing generated IDL ${relative(root, outPath)}`);
@@ -128,7 +175,9 @@ for (const program of programs) {
     writeFileSync(outPath, body);
   }
   generated.push({
-    program,
+    program: program.name,
+    address: idl.address,
+    deployments: idl.metadata.deployments,
     idl: relative(root, outPath),
     sha256: sha256(body),
     stable_sha256: sha256(pretty(stable(idl))),
