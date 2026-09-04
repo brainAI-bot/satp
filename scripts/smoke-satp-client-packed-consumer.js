@@ -49,6 +49,7 @@ try {
       dependencies: {},
       overrides: {
         jayson: {
+          'stream-json': '^3.6.0',
           uuid: `^${fixedUuidVersion}`,
         },
       },
@@ -63,7 +64,7 @@ try {
     cwd: tempRoot,
     stdio: 'pipe',
   });
-  console.log('clean consumer with documented uuid override: npm audit --omit=dev --audit-level=moderate OK');
+  console.log('clean consumer with documented transitive overrides: npm audit --omit=dev --audit-level=moderate OK');
 
   const installedPackageRoot = path.join(
     tempRoot,

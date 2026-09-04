@@ -24,6 +24,7 @@ try {
     dependencies: {},
     overrides: {
       jayson: {
+        'stream-json': '^3.6.0',
         uuid: '^11.1.1',
       },
     },
