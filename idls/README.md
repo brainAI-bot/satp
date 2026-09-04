@@ -8,10 +8,15 @@ the loader allocation suffix is separately proven to be all zeroes. The current
 escrow source and the deployed source are the same interface, so generation now
 writes escrow directly to `idls/v3/escrow_v3.json`.
 
-Both mainnet publication surfaces remain non-canonical: the legacy Anchor IDL is
-stale at 9 instructions, and the 14-instruction Program Metadata IDL omits the
-required `treasury` account from `release` and `partial_release`. They are
-readback evidence, not the canonical repository reference. See
+The Anchor 1.0 on-chain read path is the Program Metadata IDL at
+`4zNAR5DGuWuUnEbwGb7FzEVUUCx2xKca2bmHCeVpjQCJ`. It is the canonical published
+IDL surface for Anchor 1.0 consumers and exposes the current 14-instruction
+escrow set for `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C`.
+
+The legacy Anchor 0.31 IDL account
+`D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn` remains stale at 9 instructions
+and is non-canonical. Consumers that still read that account must fail closed or
+label the result stale instead of treating it as the escrow V3 interface. See
 `docs/escrow-v3-deployed-truth.json`.
 
 `identity_registry.json`, `agentfolio-current/`, `devnet-backup/`, and the

@@ -31,8 +31,9 @@ npm run validate:idls
 `validate:idls` parses every committed IDL JSON file and then runs
 `node scripts/generate-v3-idls.mjs --check`. The check regenerates all six
 current V3 IDLs under `idls/v3/`. The separate deployed-truth verifier pins the
-canonical escrow IDL to its byte-matched source commit and keeps both stale
-on-chain IDL publication surfaces fail-closed.
+canonical escrow IDL to its byte-matched source commit, treats the Anchor 1.0
+Program Metadata account as the canonical on-chain read path, and keeps the
+legacy Anchor 0.31 IDL account fail-closed as stale.
 
 ## Post-Merge Cleanup Readback
 
