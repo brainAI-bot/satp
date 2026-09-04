@@ -184,7 +184,7 @@ The repo also carries a repeatable clean-consumer smoke:
 npm run smoke:consumer-install
 ```
 
-## Consumer override for the uuid advisory
+## Consumer override for transitive advisories
 
 The package in a clean consumer without a root override reports a moderate
 advisory chain through
@@ -193,6 +193,11 @@ advisory chain through
 The affected `uuid` range is `<11.1.1`; the upstream dependency path is owned
 by `@solana/web3.js` and `jayson`.
 
+The same upstream path can also report
+`@solana/web3.js -> jayson -> stream-json` for
+[`GHSA-528h-pc64-c93x`](https://github.com/advisories/GHSA-528h-pc64-c93x).
+The affected `stream-json` range is `<=3.4.0`.
+
 The SATP source tree pins the same transitive path with an npm override at the
 repository root and in `packages/satp-client/package.json`:
 
@@ -200,6 +205,7 @@ repository root and in `packages/satp-client/package.json`:
 {
   "overrides": {
     "jayson": {
+      "stream-json": "^3.6.0",
       "uuid": "^11.1.1"
     }
   }
@@ -207,8 +213,8 @@ repository root and in `packages/satp-client/package.json`:
 ```
 
 An npm override in a dependency package is not inherited by its consumers.
-Until upstream widens the `jayson` uuid range, applications that require a
-zero-finding production audit must repeat the override in their root
+Until upstream widens the `jayson` transitive ranges, applications that require
+a zero-finding production audit must repeat the override in their root
 `package.json`. The release does not bundle `@solana/web3.js` or any other
 dependency; npm installs the dependency tree normally in the consumer.
 
@@ -225,9 +231,10 @@ npm run check:satp-client-uuid-advisory
 ```
 
 That check fails if the normal `@solana/web3.js -> jayson -> uuid` path
-resolves below `11.1.1`,
-if `GHSA-w5hq-g745-h8pq` remains in the audited tree, or if any production
-vulnerability is reported. It does not pin the local SATP client version.
+resolves below `11.1.1`, if the normal
+`@solana/web3.js -> jayson -> stream-json` path resolves below `3.5.0`, if
+either advisory remains in the audited tree, or if any production vulnerability
+is reported. It does not pin the local SATP client version.
 Registry-dependent packed-consumer and advisory checks are excluded from
 `ci:offline` and `ci:offline-with-examples`. Upstream dependency updates should
 still trigger review of the repository and consumer overrides and issue #134 so

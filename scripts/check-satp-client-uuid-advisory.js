@@ -10,6 +10,7 @@ const repoRoot = path.resolve(__dirname, '..');
 const clientRoot = path.join(repoRoot, 'packages/satp-client');
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'satp-client-uuid-advisory-'));
 const fixedUuidVersion = '11.1.1';
+const fixedStreamJsonVersion = '3.5.0';
 
 function isVersionBefore(version, boundary) {
   const parse = (value) => {
@@ -26,6 +27,16 @@ function isVersionBefore(version, boundary) {
     if (current.parts[i] !== limit.parts[i]) return current.parts[i] < limit.parts[i];
   }
   return current.prerelease && !limit.prerelease;
+}
+
+function resolvePackageManifest(packageName, options) {
+  let current = path.dirname(require.resolve(packageName, options));
+  while (current !== path.dirname(current)) {
+    const candidate = path.join(current, 'package.json');
+    if (fs.existsSync(candidate)) return candidate;
+    current = path.dirname(current);
+  }
+  throw new Error(`could not locate package manifest for ${packageName}`);
 }
 
 try {
@@ -45,6 +56,7 @@ try {
       dependencies: {},
       overrides: {
         jayson: {
+          'stream-json': '^3.6.0',
           uuid: `^${fixedUuidVersion}`,
         },
       },
@@ -69,16 +81,24 @@ try {
   const uuidManifestPath = require.resolve('uuid/package.json', {
     paths: [path.dirname(jaysonManifestPath)],
   });
+  const streamJsonManifestPath = resolvePackageManifest('stream-json', {
+    paths: [path.dirname(jaysonManifestPath)],
+  });
   const web3Version = JSON.parse(fs.readFileSync(web3ManifestPath, 'utf8')).version;
   const jaysonVersion = JSON.parse(fs.readFileSync(jaysonManifestPath, 'utf8')).version;
   const uuidVersion = JSON.parse(fs.readFileSync(uuidManifestPath, 'utf8')).version;
+  const streamJsonVersion = JSON.parse(fs.readFileSync(streamJsonManifestPath, 'utf8')).version;
   const resolvedPath = [
     `@solana/web3.js@${web3Version}`,
     `jayson@${jaysonVersion}`,
     `uuid@${uuidVersion}`,
+    `stream-json@${streamJsonVersion}`,
   ];
   if (isVersionBefore(uuidVersion, fixedUuidVersion)) {
     throw new Error(`consumer override failed: resolved affected uuid ${uuidVersion}`);
+  }
+  if (isVersionBefore(streamJsonVersion, fixedStreamJsonVersion)) {
+    throw new Error(`consumer override failed: resolved affected stream-json ${streamJsonVersion}`);
   }
 
   const auditResult = spawnSync('npm', ['audit', '--omit=dev', '--json'], {
@@ -110,6 +130,16 @@ try {
       `consumer override failed: GHSA-w5hq-g745-h8pq remains at uuid ${uuidVersion}`,
     );
   }
+  const streamJsonFinding = audit.vulnerabilities?.['stream-json'];
+  const streamJsonAdvisory = streamJsonFinding?.via?.find(
+    (finding) => typeof finding === 'object'
+      && finding.url === 'https://github.com/advisories/GHSA-528h-pc64-c93x',
+  );
+  if (streamJsonAdvisory) {
+    throw new Error(
+      `consumer override failed: GHSA-528h-pc64-c93x remains at stream-json ${streamJsonVersion}`,
+    );
+  }
   if (auditResult.status !== 0) {
     const vulnerabilityCount = audit.metadata?.vulnerabilities?.total;
     throw new Error(
@@ -118,7 +148,7 @@ try {
   }
 
   console.log(
-    `consumer uuid advisory remediated: ${resolvedPath.join(' -> ')}; npm audit vulnerabilities=0`,
+    `consumer transitive advisories remediated: ${resolvedPath.join(' -> ')}; npm audit vulnerabilities=0`,
   );
 } finally {
   fs.rmSync(tempRoot, { recursive: true, force: true });
