@@ -95,7 +95,7 @@
     "packages/satp-client/src/"
   ],
   "engines": {
-    "node": ">=20.18"
+    "node": ">=22"
   },
   "dependencies": {
     "@solana/web3.js": "^1.98.4",
