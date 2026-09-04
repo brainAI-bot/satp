@@ -1,6 +1,6 @@
 # Escrow V3 IDL Provenance and Callable Boundary
 
-Readback date: 2026-08-30 UTC.
+Readback date: 2026-09-04 UTC.
 
 ## Current authoritative boundary
 
@@ -16,10 +16,20 @@ loader padding.
 Accordingly, `idls/v3/escrow_v3.json` is the canonical repository IDL generated
 from that verified deployed source. It has 14 instructions and SHA-256
 `9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10`.
-The legacy Anchor IDL remains stale at 9 instructions. The canonical Program
-Metadata IDL also remains stale: it has 14 instructions but omits `treasury`
-from both SOL release routes. Consumers remain fail-closed until publication is
-reconciled and independently verified.
+
+Anchor 1.0 consumers must use the Program Metadata account
+`4zNAR5DGuWuUnEbwGb7FzEVUUCx2xKca2bmHCeVpjQCJ` as the canonical on-chain IDL
+read path. Finalized readback proves it is owned by
+`ProgM6JCCvbYkfKqJYHePx4xxSUSqJp7rh8Lyv7nk7S`, names
+`HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C`, and exposes the current
+14-instruction escrow set.
+
+The legacy Anchor 0.31 IDL account
+`D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn` remains stale at 9 instructions.
+Legacy readers must fail closed or label that account stale/non-canonical
+instead of treating it as the escrow V3 interface. AgentFolio product unpause
+remains gated until a separate AgentFolio-owned readiness task verifies product
+behavior against the canonical Program Metadata read path.
 
 The remainder of this document is historical readback and must not override the
 current packet above.

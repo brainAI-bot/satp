@@ -32,10 +32,10 @@ npm run validate:idls
 current V3 IDLs under `idls/v3/` and fails if any committed file differs.
 `npm run check:v3-idl-program-metadata` verifies the committed Anchor 1.0 IDL
 program metadata against `Anchor.toml` and the SDK consumer program ID exports
-without contacting Solana or writing chain state.
-The separate deployed-truth verifier pins the canonical escrow IDL to its
-byte-matched source commit and keeps stale on-chain IDL publication surfaces
-fail-closed.
+without contacting Solana or writing chain state. The separate deployed-truth
+verifier pins the canonical escrow IDL to its byte-matched source commit,
+treats the Anchor 1.0 Program Metadata account as the canonical on-chain read
+path, and keeps the legacy Anchor 0.31 IDL account fail-closed as stale.
 
 ## Post-Merge Cleanup Readback
 

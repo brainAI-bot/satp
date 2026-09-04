@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
-  "captured_at_utc": "2026-08-30T23:12:00Z",
-  "status": "source_binary_verified_published_idls_stale",
+  "captured_at_utc": "2026-09-04T21:30:50Z",
+  "status": "source_binary_verified_program_metadata_canonical_legacy_anchor_stale",
   "program": {
     "cluster": "mainnet-beta",
     "program_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
@@ -98,7 +98,7 @@
       "extend_deadline",
       "close_escrow"
     ],
-    "missing_required_fee_routing_accounts": {
+    "repo_idl_account_surface_delta": {
       "release": [
         "treasury"
       ],
@@ -106,7 +106,8 @@
         "treasury"
       ]
     },
-    "status": "stale_not_canonical"
+    "status": "canonical_anchor_1_0_program_metadata",
+    "canonical_read_path": true
   },
   "legacy_anchor_idl": {
     "account": "D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn",
@@ -137,11 +138,15 @@
     "source_artifact_equals_deployed_payload_prefix": true,
     "source_equals_deployed_binary": true,
     "canonical_repo_idl_generated_from_verified_source": true,
-    "program_metadata_idl_matches_canonical_repo_idl": false,
+    "program_metadata_idl_exposes_current_instruction_set": true,
+    "program_metadata_idl_is_canonical_anchor_1_0_read_path": true,
+    "program_metadata_idl_matches_canonical_repo_idl_byte_for_byte": false,
     "legacy_anchor_idl_matches_canonical_repo_idl": false,
+    "legacy_anchor_idl_is_canonical_read_path": false,
     "published_idl_matches_canonical_repo_idl": false,
+    "published_program_metadata_is_canonical": true,
     "fee_routing_is_deployed": true,
-    "canonical_idl_publish_reconciled": false,
+    "canonical_idl_publish_reconciled": true,
     "consumer_escrow_unpause_ready": false
   },
   "safety": {

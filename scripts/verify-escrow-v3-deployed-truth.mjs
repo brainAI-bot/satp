@@ -43,7 +43,8 @@ function instructionAccountNames(idl, name) {
 
 export function validateDeployedTruth(manifest) {
   invariant(manifest.schema_version === 2, 'schema_version must be 2');
-  invariant(manifest.status === 'source_binary_verified_published_idls_stale', 'unexpected truth status');
+  invariant(manifest.status === 'source_binary_verified_program_metadata_canonical_legacy_anchor_stale',
+    'unexpected truth status');
   const program = manifest.program;
   const source = manifest.verified_source;
   const canonical = manifest.canonical_idl;
@@ -77,7 +78,12 @@ export function validateDeployedTruth(manifest) {
   invariant(canonical.instruction_count === 14, 'verified-source canonical IDL must contain 14 instructions');
   invariant(metadata.instruction_count === 14, 'Program Metadata IDL must contain 14 instructions');
   invariant(legacy.instruction_count === 9, 'legacy Anchor IDL must contain 9 instructions');
-  invariant(metadata.status === 'stale_not_canonical', 'Program Metadata IDL must remain explicitly stale');
+  invariant(equalArray(metadata.instruction_names, canonical.instruction_names),
+    'Program Metadata instruction surface must match the verified-source canonical IDL');
+  invariant(metadata.status === 'canonical_anchor_1_0_program_metadata',
+    'Program Metadata IDL must be the canonical Anchor 1.0 read path');
+  invariant(metadata.canonical_read_path === true,
+    'Program Metadata IDL must advertise canonical read-path status');
   invariant(legacy.status === 'stale_not_canonical', 'legacy Anchor IDL must remain explicitly stale');
   invariant(metadata.owner === metadataProgramId, 'Program Metadata owner must stay pinned');
 
@@ -86,15 +92,23 @@ export function validateDeployedTruth(manifest) {
   invariant(conclusion.source_equals_deployed_binary === true, 'source/binary equality must be explicit');
   invariant(conclusion.canonical_repo_idl_generated_from_verified_source === true,
     'canonical IDL provenance must be explicit');
-  invariant(conclusion.program_metadata_idl_matches_canonical_repo_idl === false,
-    'stale Program Metadata IDL must not be certified');
+  invariant(conclusion.program_metadata_idl_exposes_current_instruction_set === true,
+    'Program Metadata must expose the current 14-instruction set');
+  invariant(conclusion.program_metadata_idl_is_canonical_anchor_1_0_read_path === true,
+    'Program Metadata canonical Anchor 1.0 read path must be explicit');
+  invariant(conclusion.program_metadata_idl_matches_canonical_repo_idl_byte_for_byte === false,
+    'Program Metadata/repo byte-level difference must remain explicit');
   invariant(conclusion.legacy_anchor_idl_matches_canonical_repo_idl === false,
     'stale legacy Anchor IDL must not be certified');
+  invariant(conclusion.legacy_anchor_idl_is_canonical_read_path === false,
+    'legacy Anchor IDL must not be represented as canonical');
   invariant(conclusion.published_idl_matches_canonical_repo_idl === false,
-    'published IDLs must not be represented as canonical');
+    'published IDL surfaces must not be represented as byte-identical to the repo IDL');
+  invariant(conclusion.published_program_metadata_is_canonical === true,
+    'published Program Metadata must be canonical for Anchor 1.0 reads');
   invariant(conclusion.fee_routing_is_deployed === true, 'deployed fee routing must remain explicit');
-  invariant(conclusion.canonical_idl_publish_reconciled === false,
-    'canonical IDL publication must remain unreconciled');
+  invariant(conclusion.canonical_idl_publish_reconciled === true,
+    'canonical IDL publication must be reconciled through Program Metadata');
   invariant(conclusion.consumer_escrow_unpause_ready === false,
     'consumer escrow must remain gated');
   invariant(Object.values(manifest.safety).every((value) => value === false),
@@ -149,10 +163,11 @@ function decodeProgramMetadata(data, expected, programId, PublicKey) {
     'Program Metadata canonical JSON hash drifted');
   invariant(equalArray(idl.instructions.map(({ name }) => name), expected.instruction_names),
     'Program Metadata instruction surface drifted');
-  for (const [name, expectedMissing] of Object.entries(expected.missing_required_fee_routing_accounts)) {
+  for (const [name, expectedMissing] of Object.entries(expected.repo_idl_account_surface_delta)) {
     const actualAccounts = instructionAccountNames(idl, name);
     const missing = expectedMissing.filter((account) => !actualAccounts.includes(account));
-    invariant(equalArray(missing, expectedMissing), `Program Metadata ${name} is no longer the recorded stale surface`);
+    invariant(equalArray(missing, expectedMissing),
+      `Program Metadata ${name} no longer has the recorded repo-IDL account delta`);
   }
   return { idl, canonicalJson };
 }
@@ -259,6 +274,7 @@ async function main() {
     canonical_idl_instructions: manifest.canonical_idl.instruction_count,
     program_metadata_idl_status: manifest.program_metadata_idl.status,
     legacy_anchor_idl_status: manifest.legacy_anchor_idl.status,
+    program_metadata_canonical_read_path: manifest.program_metadata_idl.canonical_read_path,
     fee_routing_is_deployed: manifest.conclusion.fee_routing_is_deployed,
     consumer_escrow_unpause_ready: manifest.conclusion.consumer_escrow_unpause_ready,
     live,
