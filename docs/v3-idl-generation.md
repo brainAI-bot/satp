@@ -28,11 +28,15 @@ Verification command:
 npm run validate:idls
 ```
 
-`validate:idls` parses every committed IDL JSON file and then runs
 `node scripts/generate-v3-idls.mjs --check`. The check regenerates all six
-current V3 IDLs under `idls/v3/`. The separate deployed-truth verifier pins the
-canonical escrow IDL to its byte-matched source commit and keeps both stale
-on-chain IDL publication surfaces fail-closed.
+current V3 IDLs under `idls/v3/` and fails if any committed file differs.
+`npm run check:v3-idl-program-metadata` verifies the committed Anchor 1.0 IDL
+program metadata against `Anchor.toml` and the SDK consumer program ID exports
+without contacting Solana or writing chain state. The separate deployed-truth
+verifier pins the canonical escrow IDL to its byte-matched source commit,
+checks the Anchor 1.0 Program Metadata instruction names and fee-routing account
+schemas, and keeps both published IDL surfaces fail-closed until they match the
+repository IDL construction surface.
 
 ## Post-Merge Cleanup Readback
 
@@ -48,12 +52,12 @@ Current committed generated-IDL readback:
 
 | Program | Generated IDL | Stable SHA-256 |
 | --- | --- | --- |
-| identity_v3 | `idls/v3/identity_v3.json` | `07f1328cb1a751214f7f08953604d6259bd8e840c4a9512a2a31bd933ac129c0` |
-| reviews_v3 | `idls/v3/reviews_v3.json` | `efa488f403224c89322461d20795047c166a51f8c2ae7766930636981d0e4f1a` |
-| attestations_v3 | `idls/v3/attestations_v3.json` | `36eb0af13b51d80a8d16c09cd43e92dfcdd3212bd05cce4a54daef3456292034` |
-| reputation_v3 | `idls/v3/reputation_v3.json` | `3632cc676beacce3f8963022cc8940b543384d0b8b3ce1c6e36b3647d7de0101` |
-| validation_v3 | `idls/v3/validation_v3.json` | `29e4973d1504b4e7a273a212655d08e288b90ac7abb54f6917315e424bee6557` |
-| escrow_v3 deployed canonical | `idls/v3/escrow_v3.json` | `9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10` |
+| identity_v3 | `idls/v3/identity_v3.json` | `9b8dcf2abe2ff35c022ef7d843b2fd76d39371966e39d01e1910cba8a6598536` |
+| reviews_v3 | `idls/v3/reviews_v3.json` | `973637173bde464cce8065bbf915bc471ca9af34ba7d4c7c3d1942293bc1ad3e` |
+| attestations_v3 | `idls/v3/attestations_v3.json` | `7238bf3762b391cebb797a9ed87fcfb581f1d5a3b1663b116f4089ea6ea16b52` |
+| reputation_v3 | `idls/v3/reputation_v3.json` | `f693ef8eb55d1317f4befe6a1a968123d15a95a3c9087cf2b75b3da9c143a98e` |
+| validation_v3 | `idls/v3/validation_v3.json` | `2d74392aae4b0bd1bcde8cfd0e4fafebb49728c2851f9372c493a7a9d1f47315` |
+| escrow_v3 | `idls/v3/escrow_v3.json` | `bbaf387212fdbd2171469761a0f80c65f7aa8fedf1cbe93ac275efe545fc6dd6` |
 
 The escrow deployed-truth proof additionally performs a read-only mainnet
 ProgramData comparison; it never submits a transaction. These checks do not

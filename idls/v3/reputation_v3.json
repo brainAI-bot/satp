@@ -1,10 +1,15 @@
 {
-  "address": "",
+  "address": "CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9",
   "metadata": {
     "name": "reputation_v3",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "SATP Reputation V3 — computes reputation from V3 reviews, CPI to V3 identity"
+    "description": "SATP Reputation V3 — computes reputation from V3 reviews, CPI to V3 identity",
+    "deployments": {
+      "devnet": "CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9",
+      "localnet": "CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9",
+      "mainnet": "2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ"
+    }
   },
   "instructions": [
     {

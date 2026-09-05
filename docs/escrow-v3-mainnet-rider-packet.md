@@ -1,6 +1,8 @@
 # Escrow V3 Mainnet Rider Outcome
 
-Status: runtime upgrade finalized; canonical IDL publication is not reconciled.
+Status: runtime upgrade finalized; Anchor 1.0 Program Metadata IDL publication
+is instruction-name aligned but not canonical for consumer construction because
+the published fee-routing account schemas omit `treasury`.
 This record authorizes no Solana write, deploy, IDL publish, signer access,
 authority change, AgentFolio product change, or retry.
 
@@ -20,7 +22,7 @@ authority change, AgentFolio product change, or retry.
   `7672bd30bf01134bc56e088013a5cafd65ff850c402a56e532be3e28a3d5b4c9`.
   The deployed artifact is its exact prefix; the 6792-byte suffix is all zeroes.
 - Canonical repository IDL: `idls/v3/escrow_v3.json`, 14 instructions,
-  SHA-256 `9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10`.
+  SHA-256 `ef9622a6d07bd818d3a74ba6c61f3b3f447f61167e82aadc65ecbce4fb307829`.
 
 ## Fail-closed publication boundary
 
@@ -28,14 +30,18 @@ The runtime contains SOL fee routing and the five SPL/USDC entrypoints:
 `create_usdc_escrow`, `release_usdc`, `partial_release_usdc`, `cancel_usdc`,
 and `resolve_dispute_usdc`.
 
-Publication is not reconciled:
+Published IDL truth is split by reader generation:
 
-- the legacy Anchor IDL remains stale at 9 instructions; and
-- the Program Metadata IDL has 14 instructions but omits the required
-  `treasury` account from `release` and `partial_release`.
+- Anchor 1.0 Program Metadata account
+  `4zNAR5DGuWuUnEbwGb7FzEVUUCx2xKca2bmHCeVpjQCJ` exposes the current
+  14-instruction escrow set but omits writable `treasury` from `release` and
+  `partial_release`, so consumers must fail closed for instruction construction.
+- Legacy Anchor 0.31 IDL account
+  `D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn` remains stale at 9
+  instructions and must be labeled stale or fail closed.
 
-Therefore consumer escrow unpause remains false and AgentFolio money-moving
-routes remain gated. Any future IDL publication requires a separate HQ task and
-exact Owner approval. After such a write, CI must show the published canonical
-IDL equals `idls/v3/escrow_v3.json` at finalized commitment before consumers can
-be considered for independent unpause verification.
+The Program Metadata JSON is not byte-identical to `idls/v3/escrow_v3.json`, so
+consumers and tests compare the resolved program address, instruction names, and
+fee-routing account schemas before treating any published IDL as authoritative.
+Consumer escrow unpause remains false and AgentFolio money-moving routes remain
+gated until a separate AgentFolio-owned unpause gate verifies product behavior.

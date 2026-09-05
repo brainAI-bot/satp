@@ -1,10 +1,15 @@
 {
-  "address": "",
+  "address": "DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj",
   "metadata": {
     "name": "validation_v3",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "SATP Validation V3 — verification level computation via CPI to Identity V3"
+    "description": "SATP Validation V3 — verification level computation via CPI to Identity V3",
+    "deployments": {
+      "devnet": "DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj",
+      "localnet": "DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj",
+      "mainnet": "6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV"
+    }
   },
   "instructions": [
     {

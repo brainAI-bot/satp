@@ -40,6 +40,29 @@ Required readback for copy reviews:
 | [`scripts/check-exports.js`](../scripts/check-exports.js) | Offline export smoke requires the AgentFolio-facing public surface, including `SATPSDK`, `SATPV3SDK`, `createSATPClient`, `getV3ProgramIds`, `hashAgentId`, `getGenesisPDA`, `prepareIdentityAttestationRequest`, trust-packet helpers, runtime-policy helpers, wallet-control helpers, and x402 discovery helpers. |
 | [`examples/agentfolio-consumer-readonly`](../examples/agentfolio-consumer-readonly) | AgentFolio stays a read-only consumer of SATP helpers. The example builds unsigned trust packets from app-owned profile data and does not sign, send transactions, call RPC, publish packages, deploy programs, or mutate AgentFolio production data. |
 
+## Escrow V3 read path
+
+Anchor 1.0 Program Metadata account
+`4zNAR5DGuWuUnEbwGb7FzEVUUCx2xKca2bmHCeVpjQCJ` is instruction-name aligned but
+not canonical for mainnet escrow consumer construction. Read-only verification
+on 2026-09-04 showed that Program Metadata exposes the current 14-instruction
+escrow set for program `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C`, but it
+omits the writable `treasury` account from both `release` and
+`partial_release`; the committed repository IDL requires `treasury` for both.
+The legacy Anchor 0.31 IDL account
+`D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn` remains stale at 9
+instructions and must not drive consumer resolution. Consumer construction must
+fail closed until the published Program Metadata account schema matches the
+repository IDL.
+
+AgentFolio production readback remains fail-closed: `https://agentfolio.bot`
+returned HTTP 200 on 2026-09-04, its `/api/satp/programs` path advertises
+escrow `HXCUWKR2...`, and its `/api/v3/escrow/health` path reports Program
+Metadata `4zNAR5...` plus stale legacy Anchor IDL `D2TVC...`, with live escrow
+writes still disabled. That readback verifies resolution and safety only; it
+does not authorize AgentFolio product unpause, live escrow, payment handling, or
+a dependency change.
+
 Live npm metadata was verified with `npm view @brainai/satp-client name version dist-tags --json` on 2026-08-02: package `@brainai/satp-client`, `latest` version `2.0.6`, and `rc` dist-tag `2.0.2`.
 
 ## Allowed AgentFolio install forms

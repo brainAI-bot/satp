@@ -21,6 +21,12 @@ const REQUIRED_READBACK = [
   /offline\/read-only/i,
   /must not\s+sign,\s+send transactions,\s+call Solana RPC,\s+deploy programs,\s+publish packages/i,
   /must not replace\s+AgentFolio product code,\s+production dependency policy,\s+launch state,\s+or\s+marketplace escrow policy/i,
+  /Program Metadata account\s+`4zNAR5DGuWuUnEbwGb7FzEVUUCx2xKca2bmHCeVpjQCJ`/i,
+  /not canonical for mainnet escrow consumer construction/i,
+  /omits the writable\s+`treasury`\s+account from both\s+`release`\s+and\s+`partial_release`/i,
+  /legacy Anchor 0\.31 IDL account\s+`D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn`[\s\S]*remains stale at 9\s+instructions/i,
+  /Consumer construction must\s+fail closed until the published Program Metadata account schema matches the\s+repository IDL/i,
+  /live escrow\s+writes\s+still\s+disabled/i,
 ];
 
 const BANNED_CLAIMS = [

@@ -1,10 +1,15 @@
 {
-  "address": "",
+  "address": "55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw",
   "metadata": {
     "name": "attestations_v3",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "SATP Attestations V3 — agent_id-based attestations with CPI from Reviews"
+    "description": "SATP Attestations V3 — agent_id-based attestations with CPI from Reviews",
+    "deployments": {
+      "devnet": "55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw",
+      "localnet": "55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw",
+      "mainnet": "6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD"
+    }
   },
   "instructions": [
     {

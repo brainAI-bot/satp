@@ -1,10 +1,15 @@
 {
-  "address": "",
+  "address": "3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk",
   "metadata": {
     "name": "reviews_v3",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "SATP Reviews V3 — agent_id-based reviews with attestation CPI"
+    "description": "SATP Reviews V3 — agent_id-based reviews with attestation CPI",
+    "deployments": {
+      "devnet": "3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk",
+      "localnet": "3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk",
+      "mainnet": "r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4"
+    }
   },
   "instructions": [
     {

@@ -55,6 +55,7 @@ function readPackageMetadata() {
     'version',
     'main',
     'types',
+    'engines',
     'exports',
     'files',
     'bundleDependencies',
@@ -68,6 +69,7 @@ function readPackageMetadata() {
   assert(metadata.private === false, 'satp-client package must not be private');
   assert(metadata.main === 'src/index.js', 'main must point at src/index.js');
   assert(metadata.types === 'src/index.d.ts', 'types must point at src/index.d.ts');
+  assert(metadata.engines && metadata.engines.node === '>=22', 'node engine floor must remain >=22');
   assert(metadata.exports && metadata.exports['.'], 'root export must be declared');
   assert(metadata.exports['./wallet-control-challenge'], 'wallet-control subpath export must be declared');
   assert(metadata.exports['./attestation-evidence'], 'attestation-evidence subpath export must be declared');

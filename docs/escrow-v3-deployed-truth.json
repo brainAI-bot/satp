@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
-  "captured_at_utc": "2026-08-30T23:12:00Z",
-  "status": "source_binary_verified_published_idls_stale",
+  "captured_at_utc": "2026-09-04T21:30:50Z",
+  "status": "source_binary_verified_program_metadata_account_schema_delta_fail_closed",
   "program": {
     "cluster": "mainnet-beta",
     "program_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
@@ -36,10 +36,10 @@
   "canonical_idl": {
     "path": "idls/v3/escrow_v3.json",
     "generated_from_source_commit": "3f8188bec89db0d4a081931f35272e10185d1c0d",
-    "recorded_at_commit": "3f8188bec89db0d4a081931f35272e10185d1c0d",
+    "recorded_at_commit": "0e7cd8a705ce7da8b7e8742dd58f17fb85665be4",
     "address": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
-    "sha256": "9bb7e2a441af653108b21360a8aa14daa9bd8d54eebbc5eef88e7f3de881ba10",
-    "bytes": 20704,
+    "sha256": "ef9622a6d07bd818d3a74ba6c61f3b3f447f61167e82aadc65ecbce4fb307829",
+    "bytes": 20926,
     "instruction_count": 14,
     "instruction_names": [
       "create_escrow",
@@ -98,7 +98,43 @@
       "extend_deadline",
       "close_escrow"
     ],
-    "missing_required_fee_routing_accounts": {
+    "fee_routing_account_schemas": {
+      "release": [
+        {
+          "name": "escrow",
+          "writable": true,
+          "signer": false
+        },
+        {
+          "name": "client",
+          "writable": false,
+          "signer": true
+        },
+        {
+          "name": "agent",
+          "writable": true,
+          "signer": false
+        }
+      ],
+      "partial_release": [
+        {
+          "name": "escrow",
+          "writable": true,
+          "signer": false
+        },
+        {
+          "name": "client",
+          "writable": false,
+          "signer": true
+        },
+        {
+          "name": "agent",
+          "writable": true,
+          "signer": false
+        }
+      ]
+    },
+    "repo_idl_account_surface_delta": {
       "release": [
         "treasury"
       ],
@@ -106,7 +142,8 @@
         "treasury"
       ]
     },
-    "status": "stale_not_canonical"
+    "status": "instruction_names_match_account_schema_delta_fail_closed",
+    "canonical_read_path": false
   },
   "legacy_anchor_idl": {
     "account": "D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn",
@@ -137,9 +174,14 @@
     "source_artifact_equals_deployed_payload_prefix": true,
     "source_equals_deployed_binary": true,
     "canonical_repo_idl_generated_from_verified_source": true,
-    "program_metadata_idl_matches_canonical_repo_idl": false,
+    "program_metadata_idl_exposes_current_instruction_set": true,
+    "program_metadata_idl_is_canonical_anchor_1_0_read_path": false,
+    "program_metadata_fee_routing_account_schema_matches_canonical_repo_idl": false,
+    "program_metadata_idl_matches_canonical_repo_idl_byte_for_byte": false,
     "legacy_anchor_idl_matches_canonical_repo_idl": false,
+    "legacy_anchor_idl_is_canonical_read_path": false,
     "published_idl_matches_canonical_repo_idl": false,
+    "published_program_metadata_is_canonical": false,
     "fee_routing_is_deployed": true,
     "canonical_idl_publish_reconciled": false,
     "consumer_escrow_unpause_ready": false

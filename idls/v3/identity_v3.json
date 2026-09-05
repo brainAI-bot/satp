@@ -1,10 +1,15 @@
 {
-  "address": "",
+  "address": "7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ",
   "metadata": {
     "name": "identity_v3",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "SATP Identity Registry V3 — agent_id-seeded, wallet-independent identity"
+    "description": "SATP Identity Registry V3 — agent_id-seeded, wallet-independent identity",
+    "deployments": {
+      "devnet": "7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ",
+      "localnet": "7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ",
+      "mainnet": "GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG"
+    }
   },
   "instructions": [
     {
