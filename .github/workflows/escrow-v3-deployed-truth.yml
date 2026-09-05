@@ -10,7 +10,6 @@ on:
       - "Cargo.lock"
       - "programs/escrow_v3/**"
       - "docs/escrow-v3-deployed-truth.json"
-      - "docs/fixtures/escrow-v3-canonical-idl.json"
       - "docs/escrow-v3-mainnet-rider-packet.md"
       - "idls/v3/escrow_v3.json"
       - "scripts/build-verify-escrow-v3-deployed-source.sh"
@@ -24,7 +23,6 @@ on:
       - "Cargo.lock"
       - "programs/escrow_v3/**"
       - "docs/escrow-v3-deployed-truth.json"
-      - "docs/fixtures/escrow-v3-canonical-idl.json"
       - "docs/escrow-v3-mainnet-rider-packet.md"
       - "idls/v3/escrow_v3.json"
       - "scripts/build-verify-escrow-v3-deployed-source.sh"
@@ -80,7 +78,6 @@ jobs:
             target/deployed-truth/escrow_v3.so
             target/deployed-truth/proof.json
             docs/escrow-v3-deployed-truth.json
-            docs/fixtures/escrow-v3-canonical-idl.json
             idls/v3/escrow_v3.json
           if-no-files-found: error
           retention-days: 90

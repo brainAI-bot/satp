@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -21,37 +22,35 @@ test('accepts verified deployed source with Program Metadata account-schema fail
   assert.equal(validateDeployedTruth(manifest), true);
 });
 
-test('keeps the canonical IDL proof in a squash-safe committed fixture', () => {
+test('keeps the canonical IDL proof pinned to a reachable external commit', () => {
   assert.equal(
     manifest.canonical_idl.recorded_commit_reachability,
-    'historical_squashed_not_required'
+    'reachable_mainline_ancestor'
   );
   assert.equal(
-    manifest.canonical_idl.recorded_fixture_model,
-    'squash_safe_current_tree_fixture'
+    manifest.canonical_idl.recorded_at_commit,
+    '614881a2971c924cd06cde9d9dfadaaf292f233d'
   );
-  const fixtureBytes = readFileSync(new URL(
-    `../${manifest.canonical_idl.recorded_fixture_path}`,
-    import.meta.url
-  ));
+  const recordedBytes = execFileSync('git', [
+    'show',
+    `${manifest.canonical_idl.recorded_at_commit}:${manifest.canonical_idl.path}`,
+  ]);
   const canonicalBytes = readFileSync(new URL(`../${manifest.canonical_idl.path}`, import.meta.url));
-  assert.equal(sha256(fixtureBytes), manifest.canonical_idl.sha256);
-  assert.deepEqual(fixtureBytes, canonicalBytes);
-  assert.equal(validateDeployedTruth(mutate((copy) => {
+  assert.equal(sha256(recordedBytes), manifest.canonical_idl.sha256);
+  assert.deepEqual(recordedBytes, canonicalBytes);
+});
+
+test('rejects a fake canonical IDL provenance commit', () => {
+  assert.throws(() => validateDeployedTruth(mutate((copy) => {
     copy.canonical_idl.recorded_at_commit = 'f'.repeat(40);
-  })), true);
+  })), /recorded_at_commit must resolve to a commit/);
 });
 
-test('rejects a missing squash-safe canonical IDL fixture', () => {
+test('rejects the current tree as the canonical IDL provenance commit', () => {
+  const head = execFileSync('git', ['rev-parse', 'HEAD']).toString('utf8').trim();
   assert.throws(() => validateDeployedTruth(mutate((copy) => {
-    delete copy.canonical_idl.recorded_fixture_path;
-  })), /recorded fixture path is required/);
-});
-
-test('rejects a canonical IDL fixture that does not match the repo IDL', () => {
-  assert.throws(() => validateDeployedTruth(mutate((copy) => {
-    copy.canonical_idl.recorded_fixture_path = 'package.json';
-  })), /canonical IDL fixture byte length drifted/);
+    copy.canonical_idl.recorded_at_commit = head;
+  })), /must be an external commit/);
 });
 
 test('rejects a source artifact hash that differs from deployed payload', () => {

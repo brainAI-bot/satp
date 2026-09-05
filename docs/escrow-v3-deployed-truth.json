@@ -36,10 +36,8 @@
   "canonical_idl": {
     "path": "idls/v3/escrow_v3.json",
     "generated_from_source_commit": "3f8188bec89db0d4a081931f35272e10185d1c0d",
-    "recorded_at_commit": "0e7cd8a705ce7da8b7e8742dd58f17fb85665be4",
-    "recorded_commit_reachability": "historical_squashed_not_required",
-    "recorded_fixture_path": "docs/fixtures/escrow-v3-canonical-idl.json",
-    "recorded_fixture_model": "squash_safe_current_tree_fixture",
+    "recorded_at_commit": "614881a2971c924cd06cde9d9dfadaaf292f233d",
+    "recorded_commit_reachability": "reachable_mainline_ancestor",
     "address": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
     "sha256": "ef9622a6d07bd818d3a74ba6c61f3b3f447f61167e82aadc65ecbce4fb307829",
     "bytes": 20926,
