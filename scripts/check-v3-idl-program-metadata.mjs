@@ -2,9 +2,10 @@
 import { readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const root = resolve(new URL('..', import.meta.url).pathname);
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const anchorPath = resolve(root, 'Anchor.toml');
 const {
   V3_DEVNET_PROGRAM_IDS,

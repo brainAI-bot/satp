@@ -30,6 +30,8 @@ product approval.
 Version 2.0.8 is the clean replacement for the oversized 2.0.7 artifact. Its
 tarball excludes `node_modules`; `@solana/web3.js` remains a normal runtime
 dependency resolved by the consuming application.
+Packages built from the current SATP source declare Node `>=22`; clean
+consumers enforcing package engines must run Node 22 or newer.
 
 ## RC-S6 semantic uncertainty compatibility
 
@@ -71,6 +73,9 @@ npm install @brainai/satp-client@2.0.8
   }
 }
 ```
+
+Consumers that enforce package engines must use Node `>=22` for SATP client
+packages built from the current source tree.
 
 ## Historical release-candidate dependency path
 
@@ -197,6 +202,9 @@ The same upstream path can also report
 `@solana/web3.js -> jayson -> stream-json` for
 [`GHSA-528h-pc64-c93x`](https://github.com/advisories/GHSA-528h-pc64-c93x).
 The affected `stream-json` range is `<=3.4.0`.
+The current `stream-json@3.x` advisory pin resolves through a dependency chain
+that requires Node `>=22`, so this remediation also raises the SATP client
+package engine floor from Node `>=20.18` to Node `>=22`.
 
 The SATP source tree pins the same transitive path with an npm override at the
 repository root and in `packages/satp-client/package.json`:

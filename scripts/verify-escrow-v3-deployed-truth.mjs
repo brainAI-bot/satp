@@ -151,7 +151,7 @@ export function validateDeployedTruth(manifest) {
     invariant(Array.isArray(metadataSchema), `Program Metadata ${name} account schema must be recorded`);
     const canonicalSchema = instructionAccountSchema(canonicalIdl, name);
     invariant(!equalAccountSchema(metadataSchema, canonicalSchema),
-      `Program Metadata ${name} must remain fail-closed until account schema matches canonical IDL`);
+      `recorded fail-closed delta is stale: Program Metadata ${name} now matches the canonical IDL; update the manifest and publication conclusion`);
     const missing = expectedAccounts.filter((account) => !metadataSchema.some((entry) => entry.name === account));
     invariant(equalArray(missing, metadata.repo_idl_account_surface_delta[name] || []),
       `Program Metadata ${name} recorded account delta drifted`);
