@@ -88,6 +88,10 @@ export function validateDeployedTruth(manifest) {
   'last-non-zero boundary must account for zeros intrinsic to the source artifact');
 
   invariant(canonical.address === program.program_id, 'canonical IDL address must equal program id');
+  invariant(/^[0-9a-f]{40}$/u.test(canonical.recorded_at_commit),
+    'canonical IDL historical recording commit must remain recorded');
+  invariant(canonical.recorded_commit_reachability === 'historical_squashed_not_required',
+    'canonical IDL historical commit reachability must be explicitly squash-safe');
   invariant(canonical.instruction_count === canonical.instruction_names.length,
     'canonical instruction count must match names');
   invariant(metadata.instruction_count === metadata.instruction_names.length,
@@ -136,14 +140,21 @@ export function validateDeployedTruth(manifest) {
     'all mutation safety flags must remain false');
 
   const canonicalBytes = readFileSync(resolve(root, canonical.path));
+  invariant(typeof canonical.recorded_fixture_path === 'string' && canonical.recorded_fixture_path.length > 0,
+    'canonical IDL recorded fixture path is required');
+  invariant(canonical.recorded_fixture_model === 'squash_safe_current_tree_fixture',
+    'canonical IDL recorded fixture model must be squash-safe');
+  const recordedCanonicalBytes = readFileSync(resolve(root, canonical.recorded_fixture_path));
   const canonicalIdl = JSON.parse(canonicalBytes);
   invariant(canonicalBytes.length === canonical.bytes, 'canonical IDL byte length drifted');
   invariant(sha256(canonicalBytes) === canonical.sha256, 'canonical IDL file hash drifted');
+  invariant(recordedCanonicalBytes.length === canonical.bytes, 'canonical IDL fixture byte length drifted');
+  invariant(sha256(recordedCanonicalBytes) === canonical.sha256, 'recorded canonical IDL fixture hash drifted');
+  invariant(recordedCanonicalBytes.equals(canonicalBytes),
+    'recorded canonical IDL fixture must match the committed canonical file');
   invariant(canonicalIdl.address === canonical.address, 'canonical IDL file address drifted');
   invariant(equalArray(canonicalIdl.instructions.map(({ name }) => name), canonical.instruction_names),
     'canonical IDL instruction surface drifted');
-  invariant(sha256(gitObject(canonical.recorded_at_commit, canonical.path)) === canonical.sha256,
-    'recorded canonical IDL commit does not reproduce the canonical file');
   for (const [name, expectedAccounts] of Object.entries(canonical.required_fee_routing_accounts)) {
     invariant(equalArray(instructionAccountNames(canonicalIdl, name), expectedAccounts),
       `canonical IDL ${name} account surface drifted`);
