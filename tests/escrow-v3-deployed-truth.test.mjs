@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { validateDeployedTruth } from '../scripts/verify-escrow-v3-deployed-truth.mjs';
@@ -14,8 +15,43 @@ const mutate = (callback) => {
   return copy;
 };
 
+const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+
 test('accepts verified deployed source with Program Metadata account-schema fail closed', () => {
   assert.equal(validateDeployedTruth(manifest), true);
+});
+
+test('keeps the canonical IDL proof in a squash-safe committed fixture', () => {
+  assert.equal(
+    manifest.canonical_idl.recorded_commit_reachability,
+    'historical_squashed_not_required'
+  );
+  assert.equal(
+    manifest.canonical_idl.recorded_fixture_model,
+    'squash_safe_current_tree_fixture'
+  );
+  const fixtureBytes = readFileSync(new URL(
+    `../${manifest.canonical_idl.recorded_fixture_path}`,
+    import.meta.url
+  ));
+  const canonicalBytes = readFileSync(new URL(`../${manifest.canonical_idl.path}`, import.meta.url));
+  assert.equal(sha256(fixtureBytes), manifest.canonical_idl.sha256);
+  assert.deepEqual(fixtureBytes, canonicalBytes);
+  assert.equal(validateDeployedTruth(mutate((copy) => {
+    copy.canonical_idl.recorded_at_commit = 'f'.repeat(40);
+  })), true);
+});
+
+test('rejects a missing squash-safe canonical IDL fixture', () => {
+  assert.throws(() => validateDeployedTruth(mutate((copy) => {
+    delete copy.canonical_idl.recorded_fixture_path;
+  })), /recorded fixture path is required/);
+});
+
+test('rejects a canonical IDL fixture that does not match the repo IDL', () => {
+  assert.throws(() => validateDeployedTruth(mutate((copy) => {
+    copy.canonical_idl.recorded_fixture_path = 'package.json';
+  })), /canonical IDL fixture byte length drifted/);
 });
 
 test('rejects a source artifact hash that differs from deployed payload', () => {
