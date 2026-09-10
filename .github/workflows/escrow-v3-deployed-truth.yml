@@ -66,6 +66,7 @@ jobs:
 
       - name: Rebuild recorded source and compare live ProgramData
         run: |
+          set -euo pipefail
           mkdir -p target/deployed-truth
           scripts/build-verify-escrow-v3-deployed-source.sh \
             | tee target/deployed-truth/proof.json
