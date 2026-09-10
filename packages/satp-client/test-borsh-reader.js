@@ -3,11 +3,12 @@
  * BorshReader Test Suite — SATP V3 Borsh Deserialization Helpers
  *
  * Tests all 8 account type deserializers + auto-detect + batch + utilities.
- * Zero RPC — all tests use synthetic buffers matching exact Rust struct layouts.
+ * Zero RPC — tests use synthetic buffers plus a checked-in public mainnet dump.
  */
 
 const crypto = require('crypto');
 const { PublicKey, Keypair } = require('@solana/web3.js');
+const genesisRecordMainnetFixture = require('./fixtures/genesis-record-mainnet.json');
 const {
   BorshReader,
   deserializeGenesisRecord,
@@ -274,6 +275,28 @@ console.log('\n=== BorshReader Primitives ===');
 // ═══════════════════════════════════════════════════
 
 console.log('\n=== GenesisRecord ===');
+
+{
+  // Public mainnet account snapshot: protects against synthetic fixtures agreeing
+  // with an incorrect decoder layout by construction (the satp#121 regression).
+  const data = Buffer.from(genesisRecordMainnetFixture.data, genesisRecordMainnetFixture.encoding);
+  const parsed = deserializeGenesisRecord(data);
+  const expected = genesisRecordMainnetFixture.expected;
+
+  assertEqual(data.length, 1384, 'genesis mainnet fixture: allocated account size');
+  assertEqual(parsed.agentIdHash, expected.agentIdHash, 'genesis mainnet fixture: agentIdHash');
+  assertEqual(parsed.agentName, expected.agentName, 'genesis mainnet fixture: agentName');
+  assertEqual(parsed.description, expected.description, 'genesis mainnet fixture: description');
+  assertEqual(parsed.category, expected.category, 'genesis mainnet fixture: category');
+  assertEqual(parsed.metadataUri, expected.metadataUri, 'genesis mainnet fixture: metadataUri');
+  assertEqual(parsed.genesisRecord, expected.genesisRecord, 'genesis mainnet fixture: genesisRecord');
+  assertEqual(parsed.isActive, expected.isActive, 'genesis mainnet fixture: isActive');
+  assertEqual(parsed.authority, expected.authority, 'genesis mainnet fixture: authority');
+  assertEqual(parsed.reputationScore, expected.reputationScore, 'genesis mainnet fixture: reputationScore');
+  assertEqual(parsed.verificationLevel, expected.verificationLevel, 'genesis mainnet fixture: verificationLevel');
+  assertEqual(parsed.bump, expected.bump, 'genesis mainnet fixture: bump');
+  assertEqual(parsed.layout, expected.layout, 'genesis mainnet fixture: IDL layout');
+}
 
 {
   const disc = anchorAccountDisc('GenesisRecord');
