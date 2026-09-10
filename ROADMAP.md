@@ -169,9 +169,19 @@ conformance, security, release, and mainnet authority gates remain open.
   canonical V3 IDL Program Metadata checks shipped in PR #172. This preparation
   excludes signer-path access or binding, signing, and every RPC write.
   [#926b9931] [shipped]
-- Signer-path access, binding, and signer readback require Owner-controlled
-  credential access and remain a separate Owner gate. [#926b9931] [blocked]
-  · owner-gated
+- Signer-path gate reassessment after REQ-dbf91c96: the operational signer
+  public identity and signer-separation boundary are already present in
+  `config/satp-operational-signer.public.json`, and the checked-in config is
+  public-key-only with no keypair path, secret reference, deploy permission, or
+  Solana write authorization. [#926b9931] [shipped]
+- Credential-bearing signer binding and readback are not an Owner gate now;
+  they require an internal HQ/OpenClaw protected route for the operational
+  signer, such as a task-scoped signing runner or SecretRef-backed gateway
+  injection that exposes only public-key readback and approved low-privilege
+  signing. Current read-only probe found no protected secret-store entry and no
+  SATP/Solana signer environment route for brainChain, so this remains fleet
+  provisioning work before any signer readback can be recorded. [#926b9931]
+  [pending]
 - The mainnet program deploy or redeploy and published Anchor IDL write require
   separate explicit Owner approval and Owner signing; this roadmap authorizes
   no chain or IDL write. [#926b9931] [blocked] · owner-gated
