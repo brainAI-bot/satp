@@ -9,6 +9,14 @@ const manifest = JSON.parse(readFileSync(
   new URL('../docs/escrow-v3-deployed-truth.json', import.meta.url),
   'utf8'
 ));
+const deployedTruthWorkflow = readFileSync(
+  new URL('../.github/workflows/escrow-v3-deployed-truth.yml', import.meta.url),
+  'utf8'
+);
+const deployedSourceBuildScript = readFileSync(
+  new URL('../scripts/build-verify-escrow-v3-deployed-source.sh', import.meta.url),
+  'utf8'
+);
 
 const mutate = (callback) => {
   const copy = structuredClone(manifest);
@@ -17,6 +25,22 @@ const mutate = (callback) => {
 };
 
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+
+test('scheduled deployed-source proof propagates a failed build through tee', () => {
+  const proofStep = deployedTruthWorkflow.slice(
+    deployedTruthWorkflow.indexOf('- name: Rebuild recorded source and compare live ProgramData'),
+    deployedTruthWorkflow.indexOf('- name: Upload comparison artifact')
+  );
+  assert.match(proofStep, /set -euo pipefail/u);
+  assert.match(proofStep, /build-verify-escrow-v3-deployed-source\.sh[\s\\]*\| tee/u);
+});
+
+test('deployed-source build prepares the Solana platform-tools cache before build-sbf', () => {
+  const cachePreparation = deployedSourceBuildScript.indexOf('mkdir -p "$HOME/.cache/solana"');
+  const build = deployedSourceBuildScript.indexOf('cargo build-sbf');
+  assert.notEqual(cachePreparation, -1);
+  assert.ok(cachePreparation < build);
+});
 
 test('accepts verified deployed source with Program Metadata account-schema fail closed', () => {
   assert.equal(validateDeployedTruth(manifest), true);

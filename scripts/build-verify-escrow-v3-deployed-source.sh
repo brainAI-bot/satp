@@ -15,6 +15,10 @@ artifact_out="${ESCROW_V3_DEPLOYED_ARTIFACT_OUT:-$root/target/deployed-truth/esc
 mkdir -p "$source_root" "$(dirname "$artifact_out")"
 git -C "$root" archive "$source_commit" | tar -x -C "$source_root"
 
+# Solana 2.1.21 enumerates this directory before its platform-tools installer
+# creates it and panics on a fresh macOS runner when it is absent.
+mkdir -p "$HOME/.cache/solana"
+
 (
   cd "$source_root"
   cargo build-sbf \
