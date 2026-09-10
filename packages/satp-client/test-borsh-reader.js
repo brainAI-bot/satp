@@ -3,11 +3,12 @@
  * BorshReader Test Suite — SATP V3 Borsh Deserialization Helpers
  *
  * Tests all 8 account type deserializers + auto-detect + batch + utilities.
- * Zero RPC — all tests use synthetic buffers matching exact Rust struct layouts.
+ * Zero RPC — tests use synthetic buffers plus a checked-in public mainnet dump.
  */
 
 const crypto = require('crypto');
 const { PublicKey, Keypair } = require('@solana/web3.js');
+const genesisRecordMainnetFixture = require('./fixtures/genesis-record-mainnet.json');
 const {
   BorshReader,
   deserializeGenesisRecord,
@@ -276,8 +277,30 @@ console.log('\n=== BorshReader Primitives ===');
 console.log('\n=== GenesisRecord ===');
 
 {
+  // Public mainnet account snapshot: protects against synthetic fixtures agreeing
+  // with an incorrect decoder layout by construction (the satp#121 regression).
+  const data = Buffer.from(genesisRecordMainnetFixture.data, genesisRecordMainnetFixture.encoding);
+  const parsed = deserializeGenesisRecord(data);
+  const expected = genesisRecordMainnetFixture.expected;
+
+  assertEqual(data.length, 1384, 'genesis mainnet fixture: allocated account size');
+  assertEqual(parsed.agentIdHash, expected.agentIdHash, 'genesis mainnet fixture: agentIdHash');
+  assertEqual(parsed.agentName, expected.agentName, 'genesis mainnet fixture: agentName');
+  assertEqual(parsed.description, expected.description, 'genesis mainnet fixture: description');
+  assertEqual(parsed.category, expected.category, 'genesis mainnet fixture: category');
+  assertEqual(parsed.metadataUri, expected.metadataUri, 'genesis mainnet fixture: metadataUri');
+  assertEqual(parsed.genesisRecord, expected.genesisRecord, 'genesis mainnet fixture: genesisRecord');
+  assertEqual(parsed.isActive, expected.isActive, 'genesis mainnet fixture: isActive');
+  assertEqual(parsed.authority, expected.authority, 'genesis mainnet fixture: authority');
+  assertEqual(parsed.reputationScore, expected.reputationScore, 'genesis mainnet fixture: reputationScore');
+  assertEqual(parsed.verificationLevel, expected.verificationLevel, 'genesis mainnet fixture: verificationLevel');
+  assertEqual(parsed.bump, expected.bump, 'genesis mainnet fixture: bump');
+  assertEqual(parsed.layout, expected.layout, 'genesis mainnet fixture: IDL layout');
+}
+
+{
   const disc = anchorAccountDisc('GenesisRecord');
-  const data = Buffer.concat([
+  const serialized = Buffer.concat([
     disc,
     writeBytes32(TEST_HASH),                     // agent_id_hash
     writeString('TestAgent'),                     // agent_name
@@ -300,6 +323,9 @@ console.log('\n=== GenesisRecord ===');
     writeI64(NOW - 100),                          // updated_at
     writeU8(255),                                 // bump
   ]);
+  // Anchor allocates GenesisRecord::SPACE at its maximum size, so shorter
+  // strings leave zero-filled account padding after the serialized fields.
+  const data = Buffer.concat([serialized, Buffer.alloc(1384 - serialized.length)]);
 
   const parsed = deserializeGenesisRecord(data);
   assertEqual(parsed.agentIdHash, TEST_HASH, 'genesis: agentIdHash');
@@ -325,7 +351,7 @@ console.log('\n=== GenesisRecord ===');
 {
   // GenesisRecord deployed-layout decoder path without the historical is_active byte.
   const disc = anchorAccountDisc('GenesisRecord');
-  const data = Buffer.concat([
+  const serialized = Buffer.concat([
     disc,
     writeBytes32(TEST_HASH),
     writeString('NoActiveByteAgent'),
@@ -347,6 +373,7 @@ console.log('\n=== GenesisRecord ===');
     writeI64(NOW),
     writeU8(201),
   ]);
+  const data = Buffer.concat([serialized, Buffer.alloc(1384 - serialized.length)]);
 
   const parsed = deserializeGenesisRecord(data);
   assertEqual(parsed.agentName, 'NoActiveByteAgent', 'genesis deployed: agentName');
@@ -355,6 +382,14 @@ console.log('\n=== GenesisRecord ===');
   assertEqual(parsed.isActive, null, 'genesis deployed: isActive unknown');
   assertEqual(parsed.authority, TEST_PUBKEY_2, 'genesis deployed: authority aligned');
   assertEqual(parsed.reputationScore, 100, 'genesis deployed: reputation aligned');
+
+  let rejectedNonPadding = false;
+  try {
+    deserializeGenesisRecord(Buffer.concat([serialized, Buffer.from([7])]));
+  } catch (e) {
+    rejectedNonPadding = /non-padding bytes/.test(e.message);
+  }
+  assert(rejectedNonPadding, 'genesis deployed: rejects non-zero trailing bytes');
 }
 
 {

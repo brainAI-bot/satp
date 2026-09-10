@@ -99,9 +99,12 @@ class BorshReader {
 
   /** Read bool (1 byte, 0x01 = true) */
   readBool() {
-    const val = this.buf[this.offset] === 1;
+    const byte = this.buf[this.offset];
+    if (byte !== 0 && byte !== 1) {
+      throw new Error(`Invalid Borsh bool tag ${byte} at offset ${this.offset}`);
+    }
     this.offset += 1;
-    return val;
+    return byte === 1;
   }
 
   /** Read [u8; 32] as Buffer */
@@ -141,6 +144,9 @@ class BorshReader {
   readOption(readerFn) {
     const tag = this.readU8();
     if (tag === 0) return null;
+    if (tag !== 1) {
+      throw new Error(`Invalid Borsh option tag ${tag} at offset ${this.offset - 1}`);
+    }
     return readerFn.call(this);
   }
 
@@ -210,8 +216,11 @@ function parseGenesisRecordLayout(data, includeIsActive) {
   const updatedAt = r.readI64();
   const bump = r.readU8();
 
-  if (r.remaining() !== 0) {
-    throw new Error(`GenesisRecord layout left ${r.remaining()} unread bytes`);
+  // Anchor accounts retain zero-filled bytes up to GenesisRecord::SPACE when
+  // variable-length fields use less than their maximum allocation.
+  const trailing = data.subarray(r.offset);
+  if (trailing.some((byte) => byte !== 0)) {
+    throw new Error(`GenesisRecord layout left ${trailing.length} non-padding bytes`);
   }
 
   return {
