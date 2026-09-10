@@ -277,7 +277,7 @@ console.log('\n=== GenesisRecord ===');
 
 {
   const disc = anchorAccountDisc('GenesisRecord');
-  const data = Buffer.concat([
+  const serialized = Buffer.concat([
     disc,
     writeBytes32(TEST_HASH),                     // agent_id_hash
     writeString('TestAgent'),                     // agent_name
@@ -300,6 +300,9 @@ console.log('\n=== GenesisRecord ===');
     writeI64(NOW - 100),                          // updated_at
     writeU8(255),                                 // bump
   ]);
+  // Anchor allocates GenesisRecord::SPACE at its maximum size, so shorter
+  // strings leave zero-filled account padding after the serialized fields.
+  const data = Buffer.concat([serialized, Buffer.alloc(1384 - serialized.length)]);
 
   const parsed = deserializeGenesisRecord(data);
   assertEqual(parsed.agentIdHash, TEST_HASH, 'genesis: agentIdHash');
@@ -325,7 +328,7 @@ console.log('\n=== GenesisRecord ===');
 {
   // GenesisRecord deployed-layout decoder path without the historical is_active byte.
   const disc = anchorAccountDisc('GenesisRecord');
-  const data = Buffer.concat([
+  const serialized = Buffer.concat([
     disc,
     writeBytes32(TEST_HASH),
     writeString('NoActiveByteAgent'),
@@ -347,6 +350,7 @@ console.log('\n=== GenesisRecord ===');
     writeI64(NOW),
     writeU8(201),
   ]);
+  const data = Buffer.concat([serialized, Buffer.alloc(1384 - serialized.length)]);
 
   const parsed = deserializeGenesisRecord(data);
   assertEqual(parsed.agentName, 'NoActiveByteAgent', 'genesis deployed: agentName');
@@ -355,6 +359,14 @@ console.log('\n=== GenesisRecord ===');
   assertEqual(parsed.isActive, null, 'genesis deployed: isActive unknown');
   assertEqual(parsed.authority, TEST_PUBKEY_2, 'genesis deployed: authority aligned');
   assertEqual(parsed.reputationScore, 100, 'genesis deployed: reputation aligned');
+
+  let rejectedNonPadding = false;
+  try {
+    deserializeGenesisRecord(Buffer.concat([serialized, Buffer.from([7])]));
+  } catch (e) {
+    rejectedNonPadding = /non-padding bytes/.test(e.message);
+  }
+  assert(rejectedNonPadding, 'genesis deployed: rejects non-zero trailing bytes');
 }
 
 {
