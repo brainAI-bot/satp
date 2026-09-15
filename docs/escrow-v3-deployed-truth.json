@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
-  "captured_at_utc": "2026-09-04T21:30:50Z",
-  "status": "source_binary_verified_program_metadata_account_schema_delta_fail_closed",
+  "captured_at_utc": "2026-09-15T15:52:28Z",
+  "status": "source_binary_verified_program_metadata_canonical_legacy_anchor_stale",
   "program": {
     "cluster": "mainnet-beta",
     "program_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
@@ -77,11 +77,13 @@
     "account": "4zNAR5DGuWuUnEbwGb7FzEVUUCx2xKca2bmHCeVpjQCJ",
     "owner": "ProgM6JCCvbYkfKqJYHePx4xxSUSqJp7rh8Lyv7nk7S",
     "seed": "idl",
-    "account_bytes": 3345,
-    "account_data_sha256": "99f0e57bb32d6fa8661052ed2297923ac2cf7e5924e705922bba9827aad23fff",
-    "content_zlib_bytes": 3249,
-    "canonical_json_bytes": 10653,
-    "canonical_json_sha256": "d4d00143fdb5e755c68b484a428fc02bdf5d0a0000c7a8d7ea2712bff2da92ce",
+    "published_at_finalized_slot": 447286344,
+    "observed_at_finalized_slot": 447288607,
+    "observed_account_bytes": 3434,
+    "observed_account_data_sha256": "b8885b11fc866b6ef805e64a8fb89101e7aba61e1895e10a4c295e580afb7582",
+    "observed_content_zlib_bytes": 3338,
+    "decoded_idl_bytes": 20926,
+    "decoded_idl_sha256": "ef9622a6d07bd818d3a74ba6c61f3b3f447f61167e82aadc65ecbce4fb307829",
     "instruction_count": 14,
     "instruction_names": [
       "create_escrow",
@@ -115,6 +117,11 @@
           "name": "agent",
           "writable": true,
           "signer": false
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "signer": false
         }
       ],
       "partial_release": [
@@ -132,19 +139,20 @@
           "name": "agent",
           "writable": true,
           "signer": false
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "signer": false
         }
       ]
     },
     "repo_idl_account_surface_delta": {
-      "release": [
-        "treasury"
-      ],
-      "partial_release": [
-        "treasury"
-      ]
+      "release": [],
+      "partial_release": []
     },
-    "status": "instruction_names_match_account_schema_delta_fail_closed",
-    "canonical_read_path": false
+    "status": "canonical_content_match",
+    "canonical_read_path": true
   },
   "legacy_anchor_idl": {
     "account": "D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn",
@@ -176,16 +184,16 @@
     "source_equals_deployed_binary": true,
     "canonical_repo_idl_generated_from_verified_source": true,
     "program_metadata_idl_exposes_current_instruction_set": true,
-    "program_metadata_idl_is_canonical_anchor_1_0_read_path": false,
-    "program_metadata_fee_routing_account_schema_matches_canonical_repo_idl": false,
-    "program_metadata_idl_matches_canonical_repo_idl_byte_for_byte": false,
+    "program_metadata_idl_is_canonical_anchor_1_0_read_path": true,
+    "program_metadata_fee_routing_account_schema_matches_canonical_repo_idl": true,
+    "program_metadata_idl_matches_canonical_repo_idl_byte_for_byte": true,
     "legacy_anchor_idl_matches_canonical_repo_idl": false,
     "legacy_anchor_idl_is_canonical_read_path": false,
-    "published_idl_matches_canonical_repo_idl": false,
-    "published_program_metadata_is_canonical": false,
+    "published_idl_matches_canonical_repo_idl": true,
+    "published_program_metadata_is_canonical": true,
     "fee_routing_is_deployed": true,
-    "canonical_idl_publish_reconciled": false,
-    "consumer_escrow_unpause_ready": false
+    "canonical_idl_publish_reconciled": true,
+    "consumer_escrow_unpause_ready": true
   },
   "safety": {
     "solana_write": false,

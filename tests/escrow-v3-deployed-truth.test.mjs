@@ -3,7 +3,12 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { validateDeployedTruth } from '../scripts/verify-escrow-v3-deployed-truth.mjs';
+import { deflateSync } from 'node:zlib';
+import { PublicKey } from '@solana/web3.js';
+import {
+  decodeProgramMetadata,
+  validateDeployedTruth,
+} from '../scripts/verify-escrow-v3-deployed-truth.mjs';
 
 const manifest = JSON.parse(readFileSync(
   new URL('../docs/escrow-v3-deployed-truth.json', import.meta.url),
@@ -26,6 +31,25 @@ const mutate = (callback) => {
 
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 
+const canonicalIdlBytes = readFileSync(new URL('../idls/v3/escrow_v3.json', import.meta.url));
+
+function programMetadataAccount(content, paddingBytes = 0) {
+  const compressed = deflateSync(content);
+  const data = Buffer.alloc(96 + compressed.length + paddingBytes);
+  data[0] = 2;
+  new PublicKey(manifest.program.program_id).toBuffer().copy(data, 1);
+  data[65] = 1;
+  data[66] = 1;
+  data.write(manifest.program_metadata_idl.seed, 67, 'utf8');
+  data[83] = 1;
+  data[84] = 2;
+  data[85] = 1;
+  data[86] = 0;
+  data.writeUInt32LE(compressed.length, 87);
+  compressed.copy(data, 96);
+  return data;
+}
+
 test('scheduled deployed-source proof propagates a failed build through tee', () => {
   const proofStep = deployedTruthWorkflow.slice(
     deployedTruthWorkflow.indexOf('- name: Rebuild recorded source and compare live ProgramData'),
@@ -42,8 +66,44 @@ test('deployed-source build prepares the Solana platform-tools cache before buil
   assert.ok(cachePreparation < build);
 });
 
-test('accepts verified deployed source with Program Metadata account-schema fail closed', () => {
+test('accepts verified source with canonical Program Metadata and stale legacy Anchor IDL', () => {
   assert.equal(validateDeployedTruth(manifest), true);
+});
+
+test('accepts variable Program Metadata allocation when decoded content is canonical', () => {
+  const decoded = decodeProgramMetadata(
+    programMetadataAccount(canonicalIdlBytes, 256),
+    manifest.program_metadata_idl,
+    canonicalIdlBytes,
+    manifest.program.program_id,
+    PublicKey,
+  );
+  assert.equal(decoded.allocationPaddingBytes, 256);
+  assert.equal(decoded.content.equals(canonicalIdlBytes), true);
+});
+
+test('rejects Program Metadata allocation whose decoded content differs from canonical', () => {
+  const drifted = Buffer.from(canonicalIdlBytes);
+  drifted[drifted.indexOf(Buffer.from('escrow_v3'))] = 'E'.charCodeAt(0);
+  assert.throws(() => decodeProgramMetadata(
+    programMetadataAccount(drifted, 256),
+    manifest.program_metadata_idl,
+    canonicalIdlBytes,
+    manifest.program.program_id,
+    PublicKey,
+  ), /decoded IDL differs from the canonical repo IDL/);
+});
+
+test('rejects non-zero bytes after declared Program Metadata content', () => {
+  const account = programMetadataAccount(canonicalIdlBytes, 8);
+  account[account.length - 1] = 1;
+  assert.throws(() => decodeProgramMetadata(
+    account,
+    manifest.program_metadata_idl,
+    canonicalIdlBytes,
+    manifest.program.program_id,
+    PublicKey,
+  ), /allocation contains non-zero bytes/);
 });
 
 test('keeps the canonical IDL proof pinned to a reachable external commit', () => {
@@ -83,13 +143,10 @@ test('rejects a source artifact hash that differs from deployed payload', () => 
   })), /artifact hash must equal deployed/);
 });
 
-test('rejects treating Program Metadata as canonical while fee-routing accounts differ', () => {
+test('rejects hiding a Program Metadata canonical-content mismatch behind status', () => {
   assert.throws(() => validateDeployedTruth(mutate((copy) => {
-    copy.program_metadata_idl.status = 'canonical_anchor_1_0_program_metadata';
-    copy.program_metadata_idl.canonical_read_path = true;
-    copy.conclusion.program_metadata_idl_is_canonical_anchor_1_0_read_path = true;
-    copy.conclusion.published_program_metadata_is_canonical = true;
-  })), /account-schema fail-closed state/);
+    copy.program_metadata_idl.status = 'instruction_names_match_account_schema_delta_fail_closed';
+  })), /canonical decoded content/);
 });
 
 test('rejects Program Metadata instruction drift from the verified-source IDL', () => {
@@ -100,16 +157,16 @@ test('rejects Program Metadata instruction drift from the verified-source IDL', 
   })), /Program Metadata IDL must contain 14 instructions/);
 });
 
-test('rejects hiding the Program Metadata release treasury account delta', () => {
+test('rejects inventing a Program Metadata release treasury account delta', () => {
   assert.throws(() => validateDeployedTruth(mutate((copy) => {
-    copy.program_metadata_idl.repo_idl_account_surface_delta.release = [];
+    copy.program_metadata_idl.repo_idl_account_surface_delta.release = ['treasury'];
   })), /recorded account delta drifted/);
 });
 
-test('rejects claiming Program Metadata fee-routing schemas match the repo IDL', () => {
+test('rejects claiming Program Metadata fee-routing schemas do not match the repo IDL', () => {
   assert.throws(() => validateDeployedTruth(mutate((copy) => {
-    copy.conclusion.program_metadata_fee_routing_account_schema_matches_canonical_repo_idl = true;
-  })), /account schema mismatch must remain explicit/);
+    copy.conclusion.program_metadata_fee_routing_account_schema_matches_canonical_repo_idl = false;
+  })), /account schema match must be explicit/);
 });
 
 test('rejects treating the legacy Anchor IDL as canonical', () => {
@@ -130,10 +187,10 @@ test('rejects non-zero allocation padding claims', () => {
   })), /all-zero suffix hash/);
 });
 
-test('rejects opening consumers while product unpause remains gated', () => {
+test('rejects keeping consumers gated after canonical Program Metadata reconciliation', () => {
   assert.throws(() => validateDeployedTruth(mutate((copy) => {
-    copy.conclusion.consumer_escrow_unpause_ready = true;
-  })), /consumer escrow must remain gated/);
+    copy.conclusion.consumer_escrow_unpause_ready = false;
+  })), /readiness must reflect canonical Program Metadata content/);
 });
 
 test('rejects a mutation-authorizing packet', () => {
