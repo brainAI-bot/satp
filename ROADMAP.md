@@ -167,11 +167,19 @@ conformance, security, release, and mainnet authority gates remain open.
 - Produce the fleet-safe locked candidate artifact and no-write preflight
   packet, including public read-only ProgramData capacity confirmation and the
   canonical V3 IDL Program Metadata checks shipped in PR #172. This preparation
-  excludes signer-path access or binding, signing, and every RPC write.
+  excludes signing, keypair reads, transactions, and every RPC write.
   [#926b9931] [shipped]
-- Signer-path access, binding, and signer readback require Owner-controlled
-  credential access and remain a separate Owner gate. [#926b9931] [blocked]
-  · owner-gated
+- Signer-path readiness is split from Owner-controlled key use. Hani's response
+  on `REQ-dbf91c96` confirms SATP credential provisioning is not an Owner gate.
+  Fleet-safe, value-free checks may prove that a configured path exists and is
+  readable, and public RPC readback may prove the deployed program authority;
+  these checks must not print the path or read private key bytes. [#926b9931]
+  [shipped]
+- The remaining binding check is internal protected-operations work: expose a
+  value-free readback of the configured signer's public identifier and compare
+  it with the deployed authority. Do not request credentials from the Owner.
+  Direct keypair access/use, signing, authority mutation, and any chain or IDL
+  write still require their own explicit authorization. [#926b9931] [pending]
 - The mainnet program deploy or redeploy and published Anchor IDL write require
   separate explicit Owner approval and Owner signing; this roadmap authorizes
   no chain or IDL write. [#926b9931] [blocked] · owner-gated
