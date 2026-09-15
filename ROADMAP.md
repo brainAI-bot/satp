@@ -179,7 +179,7 @@ conformance, security, release, and mainnet authority gates remain open.
   value-free readback of the configured signer's public identifier and compare
   it with the deployed authority. Do not request credentials from the Owner.
   Direct keypair access/use, signing, authority mutation, and any chain or IDL
-  write still require their own explicit authorization. [#926b9931] [pending]
+  write still require their own explicit authorization. [#926b9931] [shipped]
 - The mainnet program deploy or redeploy and published Anchor IDL write require
   separate explicit Owner approval and Owner signing; this roadmap authorizes
   no chain or IDL write. [#926b9931] [blocked] · owner-gated
