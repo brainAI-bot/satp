@@ -34,6 +34,7 @@ if ! command -v solana >/dev/null 2>&1; then
 fi
 solana --version | grep -q 'solana-cli 2.1.21 ' || fail "Solana CLI must be 2.1.21"
 cargo-build-sbf --version | grep -q 'solana-cargo-build-sbf 2.1.21' || fail "cargo-build-sbf must be 2.1.21"
+scripts/prepare-sbf-platform-tools.sh
 mkdir -p "$HOME/.cache/solana"
 
 temp_parent="${TMPDIR:-/tmp}"
