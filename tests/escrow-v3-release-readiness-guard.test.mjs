@@ -13,14 +13,14 @@ const gapManifest = {
   },
 };
 
-test('current release and consumer guidance surfaces fail closed', () => {
+test('current release and consumer guidance surfaces accept canonical Program Metadata', () => {
   const result = assertEscrowV3ReleaseReadinessSurfaces();
-  assert.equal(result.manifest.status, 'source_binary_verified_program_metadata_account_schema_delta_fail_closed');
+  assert.equal(result.manifest.status, 'source_binary_verified_program_metadata_canonical_legacy_anchor_stale');
   assert.equal(result.manifest.conclusion.source_equals_deployed_binary, true);
-  assert.equal(result.manifest.conclusion.published_idl_matches_canonical_repo_idl, false);
-  assert.equal(result.manifest.conclusion.published_program_metadata_is_canonical, false);
-  assert.equal(result.manifest.conclusion.program_metadata_fee_routing_account_schema_matches_canonical_repo_idl, false);
-  assert.equal(result.manifest.conclusion.consumer_escrow_unpause_ready, false);
+  assert.equal(result.manifest.conclusion.published_idl_matches_canonical_repo_idl, true);
+  assert.equal(result.manifest.conclusion.published_program_metadata_is_canonical, true);
+  assert.equal(result.manifest.conclusion.program_metadata_fee_routing_account_schema_matches_canonical_repo_idl, true);
+  assert.equal(result.manifest.conclusion.consumer_escrow_unpause_ready, true);
   assert.ok(result.surfaceCount > 20);
 });
 

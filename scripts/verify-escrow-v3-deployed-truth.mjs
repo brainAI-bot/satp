@@ -85,7 +85,7 @@ function equalAccountSchema(actual, expected) {
 
 export function validateDeployedTruth(manifest) {
   invariant(manifest.schema_version === 2, 'schema_version must be 2');
-  invariant(manifest.status === 'source_binary_verified_program_metadata_account_schema_delta_fail_closed',
+  invariant(manifest.status === 'source_binary_verified_program_metadata_canonical_legacy_anchor_stale',
     'unexpected truth status');
   const program = manifest.program;
   const source = manifest.verified_source;
@@ -132,10 +132,10 @@ export function validateDeployedTruth(manifest) {
   invariant(legacy.instruction_count === 9, 'legacy Anchor IDL must contain 9 instructions');
   invariant(equalArray(metadata.instruction_names, canonical.instruction_names),
     'Program Metadata instruction surface must match the verified-source canonical IDL');
-  invariant(metadata.status === 'instruction_names_match_account_schema_delta_fail_closed',
-    'Program Metadata IDL status must record account-schema fail-closed state');
-  invariant(metadata.canonical_read_path === false,
-    'Program Metadata IDL must not advertise canonical read-path status while account schemas differ');
+  invariant(metadata.status === 'canonical_content_match',
+    'Program Metadata IDL status must record canonical decoded content');
+  invariant(metadata.canonical_read_path === true,
+    'Program Metadata IDL must advertise the canonical read path after content reconciliation');
   invariant(legacy.status === 'stale_not_canonical', 'legacy Anchor IDL must remain explicitly stale');
   invariant(metadata.owner === metadataProgramId, 'Program Metadata owner must stay pinned');
 
@@ -146,25 +146,25 @@ export function validateDeployedTruth(manifest) {
     'canonical IDL provenance must be explicit');
   invariant(conclusion.program_metadata_idl_exposes_current_instruction_set === true,
     'Program Metadata must expose the current 14-instruction set');
-  invariant(conclusion.program_metadata_idl_is_canonical_anchor_1_0_read_path === false,
-    'Program Metadata canonical Anchor 1.0 read path must fail closed while account schemas differ');
-  invariant(conclusion.program_metadata_fee_routing_account_schema_matches_canonical_repo_idl === false,
-    'Program Metadata fee-routing account schema mismatch must remain explicit');
-  invariant(conclusion.program_metadata_idl_matches_canonical_repo_idl_byte_for_byte === false,
-    'Program Metadata/repo byte-level difference must remain explicit');
+  invariant(conclusion.program_metadata_idl_is_canonical_anchor_1_0_read_path === true,
+    'Program Metadata canonical Anchor 1.0 read path must be explicit');
+  invariant(conclusion.program_metadata_fee_routing_account_schema_matches_canonical_repo_idl === true,
+    'Program Metadata fee-routing account schema match must be explicit');
+  invariant(conclusion.program_metadata_idl_matches_canonical_repo_idl_byte_for_byte === true,
+    'Program Metadata/repo decoded byte equality must be explicit');
   invariant(conclusion.legacy_anchor_idl_matches_canonical_repo_idl === false,
     'stale legacy Anchor IDL must not be certified');
   invariant(conclusion.legacy_anchor_idl_is_canonical_read_path === false,
     'legacy Anchor IDL must not be represented as canonical');
-  invariant(conclusion.published_idl_matches_canonical_repo_idl === false,
-    'published IDL surfaces must not be represented as byte-identical to the repo IDL');
-  invariant(conclusion.published_program_metadata_is_canonical === false,
-    'published Program Metadata must not be canonical while account schemas differ');
+  invariant(conclusion.published_idl_matches_canonical_repo_idl === true,
+    'published Program Metadata must match the canonical repo IDL');
+  invariant(conclusion.published_program_metadata_is_canonical === true,
+    'published Program Metadata canonical status must be explicit');
   invariant(conclusion.fee_routing_is_deployed === true, 'deployed fee routing must remain explicit');
-  invariant(conclusion.canonical_idl_publish_reconciled === false,
-    'canonical IDL publication must remain unreconciled while Program Metadata lacks fee-routing accounts');
-  invariant(conclusion.consumer_escrow_unpause_ready === false,
-    'consumer escrow must remain gated');
+  invariant(conclusion.canonical_idl_publish_reconciled === true,
+    'canonical IDL publication reconciliation must be explicit');
+  invariant(conclusion.consumer_escrow_unpause_ready === true,
+    'consumer escrow readiness must reflect canonical Program Metadata content');
   invariant(Object.values(manifest.safety).every((value) => value === false),
     'all mutation safety flags must remain false');
 
@@ -187,8 +187,8 @@ export function validateDeployedTruth(manifest) {
     const metadataSchema = metadata.fee_routing_account_schemas?.[name];
     invariant(Array.isArray(metadataSchema), `Program Metadata ${name} account schema must be recorded`);
     const canonicalSchema = instructionAccountSchema(canonicalIdl, name);
-    invariant(!equalAccountSchema(metadataSchema, canonicalSchema),
-      `recorded fail-closed delta is stale: Program Metadata ${name} now matches the canonical IDL; update the manifest and publication conclusion`);
+    invariant(equalAccountSchema(metadataSchema, canonicalSchema),
+      `Program Metadata ${name} account schema differs from the canonical IDL`);
     const missing = expectedAccounts.filter((account) => !metadataSchema.some((entry) => entry.name === account));
     invariant(equalArray(missing, metadata.repo_idl_account_surface_delta[name] || []),
       `Program Metadata ${name} recorded account delta drifted`);
@@ -201,9 +201,8 @@ export function validateDeployedTruth(manifest) {
   return true;
 }
 
-function decodeProgramMetadata(data, expected, programId, PublicKey) {
-  invariant(data.length === expected.account_bytes, 'Program Metadata account length drifted');
-  invariant(sha256(data) === expected.account_data_sha256, 'Program Metadata account hash drifted');
+export function decodeProgramMetadata(data, expected, canonicalBytes, programId, PublicKey) {
+  invariant(data.length >= metadataDirectDataOffset, 'Program Metadata account is shorter than its header');
   invariant(data[0] === 2, 'Program Metadata discriminator drifted');
   invariant(new PublicKey(data.subarray(1, 33)).toBase58() === programId,
     'Program Metadata program address drifted');
@@ -215,18 +214,21 @@ function decodeProgramMetadata(data, expected, programId, PublicKey) {
   invariant(data[85] === 1, 'Program Metadata format must remain JSON');
   invariant(data[86] === 0, 'Program Metadata data source must remain direct');
   const declaredLength = data.readUInt32LE(87);
-  invariant(declaredLength === expected.content_zlib_bytes, 'Program Metadata declared data length drifted');
+  invariant(declaredLength > 0, 'Program Metadata declared data length must be positive');
   invariant(data.subarray(92, metadataDirectDataOffset).equals(Buffer.alloc(4)),
     'Program Metadata direct-data prefix drifted');
-  invariant(metadataDirectDataOffset + declaredLength === data.length,
-    'Program Metadata account contains unexpected trailing bytes');
-  const content = inflateSync(data.subarray(metadataDirectDataOffset));
+  const contentEnd = metadataDirectDataOffset + declaredLength;
+  invariant(contentEnd <= data.length, 'Program Metadata declared data exceeds account allocation');
+  invariant(data.subarray(contentEnd).every((byte) => byte === 0),
+    'Program Metadata allocation contains non-zero bytes after declared data');
+  const content = inflateSync(data.subarray(metadataDirectDataOffset, contentEnd));
+  invariant(content.length === canonicalBytes.length,
+    'Program Metadata decoded IDL length differs from the canonical repo IDL');
+  invariant(content.equals(canonicalBytes),
+    'Program Metadata decoded IDL differs from the canonical repo IDL');
   const idl = JSON.parse(content.toString('utf8'));
-  const canonicalJson = Buffer.from(JSON.stringify(idl));
-  invariant(canonicalJson.length === expected.canonical_json_bytes,
-    'Program Metadata canonical JSON length drifted');
-  invariant(sha256(canonicalJson) === expected.canonical_json_sha256,
-    'Program Metadata canonical JSON hash drifted');
+  invariant(sha256(content) === expected.decoded_idl_sha256,
+    'Program Metadata decoded IDL hash drifted');
   invariant(equalArray(idl.instructions.map(({ name }) => name), expected.instruction_names),
     'Program Metadata instruction surface drifted');
   for (const [name, expectedMissing] of Object.entries(expected.repo_idl_account_surface_delta)) {
@@ -236,9 +238,15 @@ function decodeProgramMetadata(data, expected, programId, PublicKey) {
     const actualAccounts = actualSchema.map((account) => account.name);
     const missing = expectedMissing.filter((account) => !actualAccounts.includes(account));
     invariant(equalArray(missing, expectedMissing),
-      `Program Metadata ${name} no longer has the recorded repo-IDL account delta`);
+      `Program Metadata ${name} recorded repo-IDL account delta drifted`);
   }
-  return { idl, canonicalJson };
+  return {
+    idl,
+    content,
+    accountBytes: data.length,
+    declaredContentBytes: declaredLength,
+    allocationPaddingBytes: data.length - contentEnd,
+  };
 }
 
 async function fetchLive(manifest) {
@@ -302,7 +310,14 @@ async function fetchLive(manifest) {
   invariant(equalArray(legacyNames, legacy.instruction_names), 'legacy Anchor IDL instructions drifted');
 
   invariant(metadataAccount.owner.equals(metadataProgram), 'Program Metadata owner drifted');
-  const decodedMetadata = decodeProgramMetadata(metadataAccount.data, metadata, program.program_id, PublicKey);
+  const canonicalBytes = readFileSync(resolve(root, manifest.canonical_idl.path));
+  const decodedMetadata = decodeProgramMetadata(
+    metadataAccount.data,
+    metadata,
+    canonicalBytes,
+    program.program_id,
+    PublicKey,
+  );
 
   const artifactPath = process.env.ESCROW_V3_DEPLOYED_SOURCE_ARTIFACT;
   if (artifactPath) {
@@ -323,7 +338,10 @@ async function fetchLive(manifest) {
     source_artifact_prefix_sha256: sha256(sourcePrefix),
     allocation_padding_bytes: allocationPadding.length,
     source_artifact_compared: Boolean(artifactPath),
-    program_metadata_idl_sha256: sha256(decodedMetadata.canonicalJson),
+    program_metadata_account_bytes: decodedMetadata.accountBytes,
+    program_metadata_declared_content_bytes: decodedMetadata.declaredContentBytes,
+    program_metadata_allocation_padding_bytes: decodedMetadata.allocationPaddingBytes,
+    program_metadata_idl_sha256: sha256(decodedMetadata.content),
     program_metadata_idl_instruction_count: decodedMetadata.idl.instructions.length,
     legacy_anchor_idl_sha256: sha256(legacyInflated),
     legacy_anchor_idl_instruction_count: legacyNames.length,
