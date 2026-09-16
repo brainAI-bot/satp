@@ -185,16 +185,21 @@ conformance, security, release, and mainnet authority gates remain open.
   no chain or IDL write. [#926b9931] [blocked] · owner-gated
 - After the Owner-gated writes complete, independently verify deployed program
   bytes, runtime and published IDL parity, fee-routing behavior, and the
-  AgentFolio consumer fence before any escrow unpause. This read-only
-  verification is fleet-safe and does not authorize the writes or unpause.
-  [#926b9931] [pending]
-- Consumer escrow remains disabled: the mainnet program bytes match pinned
-  source commit `0bf088e5618f173dff7e0fba622bc2911212c52e`, but the published
-  Anchor IDL is a stale 9-instruction interface while the verified-source
-  canonical repository IDL has 14 instructions. Fee-routing source is merged
-  but not deployed. Unpause requires the separately approved mainnet redeploy,
-  matching runtime/IDL readback, and independent consumer verification.
-  [#926b9931] [blocked] · owner-gated
+  AgentFolio consumer fence before any escrow unpause. Read-only mainnet
+  readback now binds the deployed runtime prefix to fee-routing candidate commit
+  `3f8188bec89db0d4a081931f35272e10185d1c0d` and the 14-instruction Program
+  Metadata IDL; SATP consumer commit
+  `91455b6824798c9993c29816acca7d394ae39365` and AgentFolio PR #315 supply the
+  matching consumer provenance and preserve the fail-closed release fence. This
+  verification authorized no writes or unpause. [#926b9931] [shipped]
+- Consumer escrow remains disabled. The canonical Program Metadata IDL SHA-256
+  is `ef9622a6d07bd818d3a74ba6c61f3b3f447f61167e82aadc65ecbce4fb307829`;
+  both `release` and `partial_release` expose writable treasury routing, while
+  live AgentFolio readback keeps `enabled=false`, `ownerAuthorized=false`, and
+  `liveEscrowWritesAllowed=false`. The production consumer currently uses the
+  repository-checked canonical fallback because its installed SATP package does
+  not expose the IDL, so the authority status remains fail-closed pending a
+  separately authorized unpause decision. [#926b9931] [blocked] · owner-gated
 
 ## Phase 6 - RC-S6 semantic uncertainty review
 
