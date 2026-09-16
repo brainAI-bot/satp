@@ -187,7 +187,7 @@ conformance, security, release, and mainnet authority gates remain open.
   bytes, runtime and published IDL parity, fee-routing behavior, and the
   AgentFolio consumer fence before any escrow unpause. This read-only
   verification is fleet-safe and does not authorize the writes or unpause.
-  [#926b9931] [pending]
+  [#926b9931] [shipped]
 - Consumer escrow remains disabled: the mainnet program bytes match pinned
   source commit `0bf088e5618f173dff7e0fba622bc2911212c52e`, but the published
   Anchor IDL is a stale 9-instruction interface while the verified-source
