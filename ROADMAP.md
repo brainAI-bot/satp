@@ -42,10 +42,12 @@ conformance, security, release, and mainnet authority gates remain open.
   requires a reviewed SATP Git commit or release-candidate package.
 - Issue #14 npm consume correction: npm registry readback shows
   `@brainai/satp-client@2.0.8` is the current stable `latest` package, published
-  at `2026-08-29T18:06:11.408Z`. AgentFolio and stable consumers should verify
-  against `@brainai/satp-client` or exact `@brainai/satp-client@2.0.8` under the
-  stable-channel behavior recorded in package-boundary docs, unless HQ assigns
-  historical release-candidate evidence or reviewed Git commit work. PR #164
+  at `2026-08-29T18:06:11.408Z`. AgentFolio and any escrow or fee-routing
+  consumer should continue using the reviewed Git commit
+  `91455b6824798c9993c29816acca7d394ae39365` already selected for those
+  surfaces. npm 2.0.8 is appropriate only for consumers that need neither
+  `attestation-evidence` nor the fee-routing treasury binding, until a
+  main-compatible version is separately approved and published. PR #164
   merged as `250f59c792ff50e185163e4454f4d6982468151b`, and HQ task
   `TASK-09243114` records the Owner-approved 2.0.8 publish/readback. PR #183 is
   the canonical provenance record and keeps the source divergence open: npm
