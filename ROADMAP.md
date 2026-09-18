@@ -40,21 +40,23 @@ conformance, security, release, and mainnet authority gates remain open.
 - The current repo package root is private and review-oriented. Stable consumers
   should continue using the published npm package unless a task explicitly
   requires a reviewed SATP Git commit or release-candidate package.
-- Issue #14 npm consume correction: npm registry readback on 2026-08-02 shows
-  `@brainai/satp-client@2.0.6` is the current stable `latest` package, published
-  at `2026-08-02T13:17:15.867Z` and modified at `2026-08-02T13:17:16.039Z`.
-  AgentFolio and stable consumers should verify against `@brainai/satp-client`
-  or exact `@brainai/satp-client@2.0.6` under the stable-channel behavior
-  recorded in package-boundary docs, unless HQ assigns historical rc evidence or
-  reviewed Git commit work. Owner-approved `REQ-6b35eb58` is the 2.0.6
-  roadmap-gate approval authority; HQ task
-  `SATP-NPM-PUBLISH-APPROVAL-EFFECTIVE-20260802` records the 2.0.6
-  publish/readback execution. Owner-approved `REQ-cc84fa3a` and PR #115 remain
-  the historical stable-line / 2.0.2 public provenance. This supersedes older
-  roadmap wording that named `2.0.1`, `2.0.2`, `2.0.3`, or `2.0.5` as current
-  stable/latest state, without authorizing Solana writes, keypair movement, npm
-  dist-tag changes, new npm publishing, AgentFolio product changes, or public
-  launch.
+- Issue #14 npm consume correction: npm registry readback shows
+  `@brainai/satp-client@2.0.8` is the current stable `latest` package, published
+  at `2026-08-29T18:06:11.408Z`. AgentFolio and stable consumers should verify
+  against `@brainai/satp-client` or exact `@brainai/satp-client@2.0.8` under the
+  stable-channel behavior recorded in package-boundary docs, unless HQ assigns
+  historical release-candidate evidence or reviewed Git commit work. PR #164
+  merged as `250f59c792ff50e185163e4454f4d6982468151b`, and HQ task
+  `TASK-09243114` records the Owner-approved 2.0.8 publish/readback. PR #183 is
+  the canonical provenance record and keeps the source divergence open: npm
+  2.0.8 came from pre-rebase commit
+  `25aa48ca646f628e186692e567d048d1027ba7df`, which is not on `main`, is not
+  ancestral to the PR #164 merge, and differs from the reviewed/merged package
+  tree. Therefore npm `latest=2.0.8` must not be described as equivalent to the
+  current `main` package. This supersedes older roadmap wording that named
+  `2.0.1` through `2.0.6` as current stable/latest state, without authorizing
+  Solana writes, keypair movement, npm dist-tag changes, a new npm publish,
+  AgentFolio product changes, or public launch.
 - No mainnet deploy, program extraction, keypair movement, npm publish,
   AgentFolio product change, public launch, or token work is authorized by this
   roadmap.
@@ -148,9 +150,13 @@ conformance, security, release, and mainnet authority gates remain open.
   production key actions still require separate explicit approval. [#e0556f1f] [shipped]
 - Verify npm publish readiness with evidence in the release packet: CI proof,
   package metadata, release notes, ownership, and dist-tag strategy. [#d7b0e5f9] [shipped]
-- Npm publish itself: executed for `@brainai/satp-client@2.0.6` under
-  Owner-approved `REQ-6b35eb58`; any future package publish action still waits
-  on separate Owner npm publish approval. [#9291bc59] [shipped]
+- Npm publish itself: `@brainai/satp-client@2.0.8` is the current registry
+  `latest`, published under Owner-approved HQ task `TASK-09243114`; PR #183
+  records that npm 2.0.8 and current `main` are not equivalent source trees.
+  Closing that open divergence requires either a separately approved future
+  package version from reviewed, main-compatible source or explicit documented
+  acceptance. Any future package publish still waits on separate Owner npm
+  publish approval. [#9291bc59] [shipped]
 - Release packet must include CI proof, package contents, secret-scan proof,
   consumer install proof, compatibility notes, and open risk list. [#3611a94d] [shipped]
 
