@@ -190,7 +190,7 @@ conformance, security, release, and mainnet authority gates remain open.
   write still require their own explicit authorization. [#926b9931] [shipped]
 - The mainnet program deploy or redeploy and published Anchor IDL write require
   separate explicit Owner approval and Owner signing; this roadmap authorizes
-  no chain or IDL write. [#926b9931] [blocked] · owner-gated
+  no chain or IDL write. [#926b9931] [shipped]
 - After the Owner-gated writes complete, independently verify deployed program
   bytes, runtime and published IDL parity, fee-routing behavior, and the
   AgentFolio consumer fence before any escrow unpause. Read-only mainnet
