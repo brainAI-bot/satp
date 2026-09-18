@@ -42,6 +42,12 @@ const local = parseVersion(pkg.version);
 const stable = parseVersion(fixture.stableLatest);
 const releaseTarget = fixture.nextReleaseCandidate || fixture.stableLatest;
 
+assert.match(fixture.checkedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/, 'release metadata checkedAt must be an ISO UTC timestamp');
+assert.equal(fixture.releasePullRequest, 164, 'SATP client 2.0.8 provenance must name release PR #164');
+assert.equal(fixture.releaseMergeCommit, '250f59c792ff50e185163e4454f4d6982468151b', 'SATP client 2.0.8 provenance must name the reviewed merge commit');
+assert.equal(fixture.publishedAt, '2026-08-29T18:06:11.408Z', 'SATP client 2.0.8 provenance must preserve the registry publish timestamp');
+assert.equal(fixture.publishTask, 'TASK-09243114', 'SATP client 2.0.8 provenance must name the passed HQ publish task');
+
 assert.equal(pkg.name, fixture.package, 'release metadata package name mismatch');
 assert.equal(pkg.private, false, 'SATP client stable package must be publishable');
 assert.equal(pkg.publishConfig && pkg.publishConfig.access, 'public', 'stable package must keep public package access');
