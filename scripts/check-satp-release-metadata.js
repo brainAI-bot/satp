@@ -43,10 +43,24 @@ const stable = parseVersion(fixture.stableLatest);
 const releaseTarget = fixture.nextReleaseCandidate || fixture.stableLatest;
 
 assert.match(fixture.checkedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/, 'release metadata checkedAt must be an ISO UTC timestamp');
-assert.equal(fixture.releasePullRequest, 164, 'SATP client 2.0.8 provenance must name release PR #164');
-assert.equal(fixture.releaseMergeCommit, '250f59c792ff50e185163e4454f4d6982468151b', 'SATP client 2.0.8 provenance must name the reviewed merge commit');
-assert.equal(fixture.publishedAt, '2026-08-29T18:06:11.408Z', 'SATP client 2.0.8 provenance must preserve the registry publish timestamp');
-assert.equal(fixture.publishTask, 'TASK-09243114', 'SATP client 2.0.8 provenance must name the passed HQ publish task');
+assert.match(fixture.releaseSourceCommit, /^[0-9a-f]{40}$/, 'release source commit must be a full SHA');
+assert.match(fixture.releaseSourceTree, /^[0-9a-f]{40}$/, 'release source tree must be a full SHA');
+assert.match(fixture.releaseSourcePackageTree, /^[0-9a-f]{40}$/, 'release source package tree must be a full SHA');
+assert.match(fixture.reviewedHead, /^[0-9a-f]{40}$/, 'reviewed head must be a full SHA');
+assert.match(fixture.reviewedMergedPackageTree, /^[0-9a-f]{40}$/, 'reviewed package tree must be a full SHA');
+assert.match(fixture.releaseMergeCommit, /^[0-9a-f]{40}$/, 'release merge commit must be a full SHA');
+assert.match(fixture.publishedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/, 'publishedAt must be an ISO UTC timestamp');
+assert.equal(fixture.releaseSourceIsAncestorOfMerge, false, 'divergent release source must not be represented as merge ancestry');
+assert.equal(fixture.releaseSourceDirectlyReviewed, false, 'indirect tree review must not be represented as direct source-head review');
+assert.match(fixture.releaseSourceReviewAnchor, /^https:\/\/github\.com\/brainAI-bot\/satp\/pull\/164#pullrequestreview-\d+$/, 'release source review anchor must identify the independent PR review');
+assert.notEqual(fixture.releaseSourcePackageTree, fixture.reviewedMergedPackageTree, 'published and reviewed package trees must remain explicitly distinct');
+assert.equal(fixture.publishedSourceMatchesMergedPackage, false, 'published source must not be represented as the merged package');
+assert.deepEqual(
+  fixture.publishedPackageMissing,
+  ['./attestation-evidence export', 'V3_ESCROW_PLATFORM_TREASURY'],
+  'open divergence must name the material missing package surfaces'
+);
+assert.equal(fixture.sourceDivergenceStatus, 'open', 'source divergence must remain open pending a separately authorized resolution');
 
 assert.equal(pkg.name, fixture.package, 'release metadata package name mismatch');
 assert.equal(pkg.private, false, 'SATP client stable package must be publishable');
@@ -76,5 +90,8 @@ for (const relativePath of dependentWorkspacePaths) {
 if (fixture.nextReleaseCandidate) {
   console.log(`SATP release metadata OK: ${pkg.name}@${pkg.version} is next source candidate above npm latest ${fixture.stableLatest}; publishConfig.access=public`);
 } else {
-  console.log(`SATP release metadata OK: ${pkg.name}@${pkg.version} matches npm latest ${fixture.stableLatest}; publishConfig.access=public`);
+  console.log(
+    `SATP release metadata OK: local metadata version ${pkg.version} equals npm latest version ${fixture.stableLatest}; ` +
+    `sourceDivergence=${fixture.sourceDivergenceStatus}; publishConfig.access=public`
+  );
 }
