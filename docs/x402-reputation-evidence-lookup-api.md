@@ -1,19 +1,23 @@
 # SATP x402 Reputation Evidence Lookup API
 
-Issue #14 Track C defines this as a PR-scoped specification and offline
-prototype for third-party consumers. It does not launch a paid endpoint, set
-production pricing, select treasury addresses, approve x402 spend, publish npm
-packages, deploy Solana programs, write devnet/mainnet state, or authorize
-agent actions.
+Issue #14 Track C defines this as a PR-scoped proposed contract plus offline
+prototype for third-party consumers. The SATP repository currently provides
+discovery-metadata parsing and a mock verifier only: it does not implement or
+host this route, a payment gateway, or a live payment verifier. It also does not
+launch a paid endpoint, set production pricing, select treasury addresses,
+approve x402 spend, publish npm packages, deploy Solana programs, write
+devnet/mainnet state, or authorize agent actions.
 
 ## Endpoint
 
 `GET /v1/satp/evidence/reputation`
 
-The endpoint returns SATP-backed reputation and supporting evidence for a single
-agent or wallet. It is a read-only lookup surface that a host runtime can call
-before deciding whether to show trust data, ask for operator approval, or deny a
-protected action.
+A future provider implementation of this proposed endpoint would return
+SATP-backed reputation and supporting evidence for a single agent or wallet. It
+would be a read-only lookup surface that a host runtime could call before
+deciding whether to show trust data, ask for operator approval, or deny a
+protected action. The examples below are contract fixtures, not live-response
+evidence.
 
 ### Query Parameters
 
