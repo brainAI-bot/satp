@@ -244,11 +244,12 @@ conformance, security, release, and mainnet authority gates remain open.
   [#14fa5837] [shipped]
 - Escrow SOL fee routing and the five USDC/SPL entrypoints are deployed in the
   verified 14-instruction mainnet program and canonical Program Metadata IDL.
-  The source/binary/IDL packet records
-  `docs/escrow-v3-deployed-truth.json#conclusion.fee_routing_is_deployed=true`.
-  This primary truth-reconciliation PR deliberately leaves the roadmap shell
-  in flight; a later markdown-only PR may mark it shipped after this PR is
-  merged and verified. [in flight]
+  The deployed-truth packet records
+  `docs/escrow-v3-deployed-truth.json#conclusion.fee_routing_is_deployed=true`,
+  `published_program_metadata_is_canonical=true`, and
+  `canonical_idl_publish_reconciled=true`; PR #186 merged that verified packet
+  at head `ab14baaca861f8595f9eb04534c07f5bc63b8061` as merge
+  `5650fd8df4dee28643620be9443791699bc6c681`. [#19b11c47] [shipped]
 - The S7/AF18 USDC program-layer rider is present in verified source commit
   `3f8188bec89db0d4a081931f35272e10185d1c0d` and in the canonical deployed
   14-instruction IDL. Stablecoin release uses the SPL vault/account instructions;
