@@ -255,7 +255,7 @@ conformance, security, release, and mainnet authority gates remain open.
   14-instruction IDL. Stablecoin release uses the SPL vault/account instructions;
   unlike SOL `release` and `partial_release`, the current USDC release account
   surfaces do not include the SOL treasury fee-routing account. Consumer use
-  remains a separate package/product decision. [#926b9931] [in flight]
+  remains a separate package/product decision. [#926b9931] [shipped]
 - D1 SDK wiring: V3_MAINNET_PROGRAM_IDS populated behind the approved
   mainnet-authority decision packet. [#bd298672] [shipped]
 - Published-client V2 mainnet fence remains open until the client is
