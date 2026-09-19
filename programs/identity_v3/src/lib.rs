@@ -13,9 +13,6 @@ declare_id!("7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ");
 #[cfg(not(feature = "devnet"))]
 declare_id!("GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG");
 
-/// Maximum agent_id length
-const MAX_AGENT_ID_LEN: usize = 64;
-
 /// Authorized CPI program IDs (compile-time constants for security)
 /// Replaces runtime .parse().unwrap() — zero panic risk.
 #[cfg(feature = "devnet")]
