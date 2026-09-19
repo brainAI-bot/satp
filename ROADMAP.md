@@ -2,7 +2,7 @@
 
 Schema: HQ roadmap v1
 Status: ACTIVE - PLANNING
-Last updated: 2026-08-30
+Last updated: 2026-09-19
 
 SATP is the Solana Agent Trust Protocol: an app-agnostic protocol and SDK
 surface for portable AI-agent identity, attestations, reputation, validation,
@@ -76,10 +76,12 @@ conformance, security, release, and mainnet authority gates remain open.
   validation, reviews, and escrow. `idls/v3/escrow_v3.json` is the canonical
   14-instruction interface generated from the source commit whose pinned SBF
   build matches mainnet program
-  `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` byte-for-byte. The published
-  Anchor IDL account (`D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn`) is stale
-  at 9 instructions and is not canonical. Current fee-routing source is kept
-  separately at `idls/source-head/escrow_v3.json`. [shipped]
+  `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` byte-for-byte. The canonical
+  Program Metadata IDL matches that repository IDL; the legacy Anchor IDL
+  account (`D2TVCWarEDQ3w3YFMpackzymm9MGQKeWd1p1pCeZmBcn`) is stale at 9
+  instructions and is not canonical. Truth marker:
+  `docs/escrow-v3-deployed-truth.json#conclusion.published_program_metadata_is_canonical=true`.
+  [shipped]
 - Repository documentation must stay app-agnostic and avoid treating AgentFolio
   product logic as SATP core. [#6777112a] [shipped]
 - Apache-2.0 LICENSE file present at repo root with package.json license set to
@@ -191,23 +193,28 @@ conformance, security, release, and mainnet authority gates remain open.
 - The mainnet program deploy or redeploy and published Anchor IDL write require
   separate explicit Owner approval and Owner signing; this roadmap authorizes
   no chain or IDL write. [#926b9931] [shipped]
-- After the Owner-gated writes complete, independently verify deployed program
-  bytes, runtime and published IDL parity, fee-routing behavior, and the
-  AgentFolio consumer fence before any escrow unpause. Read-only mainnet
-  readback now binds the deployed runtime prefix to fee-routing candidate commit
+- Independent read-only verification now confirms deployed program bytes,
+  runtime and canonical Program Metadata IDL parity, fee-routing behavior, and
+  the protocol-side consumer readiness conclusion. AgentFolio's separate
+  consumer fence must still remain closed until its product precursors and
+  unpause authority pass. Mainnet readback binds the deployed runtime prefix to
+  fee-routing source commit
   `3f8188bec89db0d4a081931f35272e10185d1c0d` and the 14-instruction Program
   Metadata IDL; SATP consumer commit
   `91455b6824798c9993c29816acca7d394ae39365` and AgentFolio PR #315 supply the
   matching consumer provenance and preserve the fail-closed release fence. This
   verification authorized no writes or unpause. [#926b9931] [shipped]
-- Consumer escrow remains disabled. The canonical Program Metadata IDL SHA-256
-  is `ef9622a6d07bd818d3a74ba6c61f3b3f447f61167e82aadc65ecbce4fb307829`;
-  both `release` and `partial_release` expose writable treasury routing, while
-  live AgentFolio readback keeps `enabled=false`, `ownerAuthorized=false`, and
-  `liveEscrowWritesAllowed=false`. The production consumer currently uses the
-  repository-checked canonical fallback because its installed SATP package does
-  not expose the IDL, so the authority status remains fail-closed pending a
-  separately authorized unpause decision. [#926b9931] [blocked] · owner-gated
+- Consumer escrow remains disabled as an AgentFolio product/authority decision,
+  not because SATP fee routing or the canonical IDL is undeployed. The canonical
+  Program Metadata IDL SHA-256 is
+  `ef9622a6d07bd818d3a74ba6c61f3b3f447f61167e82aadc65ecbce4fb307829`;
+  both SOL `release` and `partial_release` expose writable treasury routing, and
+  the protocol proof concludes
+  `docs/escrow-v3-deployed-truth.json#conclusion.consumer_escrow_unpause_ready=true`.
+  Live AgentFolio readback still keeps `enabled=false`, `ownerAuthorized=false`,
+  and `liveEscrowWritesAllowed=false`; changing those product/value-bearing
+  controls requires a separately authorized unpause after its consumer
+  precursors pass. [#926b9931] [blocked] · owner-gated
 
 ## Phase 6 - RC-S6 semantic uncertainty review
 
@@ -230,21 +237,24 @@ conformance, security, release, and mainnet authority gates remain open.
 ## Phase 7 - On-chain program completion (open-core)
 
 - V3 IDLs are committed under `idls/v3/`; escrow is pinned there to the verified
-  deployed-source interface while the newer source-head interface is generated
-  under `idls/source-head/`. CI validates both trees and the deployed-source
+  deployed-source interface. CI validates that tree and the deployed-source
   provenance packet. [#c5634a2c] [shipped]
 - USDC escrow support in the escrow program and dual-currency SDK builders (SPL
   vault PDA, ATAs, transfer_checked); SOL-first is fine to launch, USDC is v2.
   [#14fa5837] [shipped]
-- Escrow SOL fee-routing and the five USDC/SPL entrypoints are merged in source
-  but are not deployed. They ride the next separately approved mainnet redeploy
-  and IDL publication; consumer escrow unpause remains false until post-write
-  source/binary/IDL proof passes. [blocked] · owner-gated
-- The S7/AF18 USDC program-layer rider is included in the reproducible
-  fee-routing candidate packet at commit `3f8188bec89db0d4a081931f35272e10185d1c0d`.
-  Its five SPL routes are prepared to ride the pending mainnet redeploy, but
-  none is represented as active until a separately approved Owner write and
-  post-deploy runtime/IDL proof complete. [#926b9931] [blocked] · owner-gated
+- Escrow SOL fee routing and the five USDC/SPL entrypoints are deployed in the
+  verified 14-instruction mainnet program and canonical Program Metadata IDL.
+  The source/binary/IDL packet records
+  `docs/escrow-v3-deployed-truth.json#conclusion.fee_routing_is_deployed=true`.
+  This primary truth-reconciliation PR deliberately leaves the roadmap shell
+  in flight; a later markdown-only PR may mark it shipped after this PR is
+  merged and verified. [in flight]
+- The S7/AF18 USDC program-layer rider is present in verified source commit
+  `3f8188bec89db0d4a081931f35272e10185d1c0d` and in the canonical deployed
+  14-instruction IDL. Stablecoin release uses the SPL vault/account instructions;
+  unlike SOL `release` and `partial_release`, the current USDC release account
+  surfaces do not include the SOL treasury fee-routing account. Consumer use
+  remains a separate package/product decision. [#926b9931] [in flight]
 - D1 SDK wiring: V3_MAINNET_PROGRAM_IDS populated behind the approved
   mainnet-authority decision packet. [#bd298672] [shipped]
 - Published-client V2 mainnet fence remains open until the client is

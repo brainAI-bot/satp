@@ -4,11 +4,13 @@ These quickstarts are for external builders who want copy-paste starting points
 for SATP adoption without taking a dependency on AgentFolio internals.
 
 SATP package usage is free/open for local SDK use, MCP tools, agent runtimes,
-and private reputation endpoints. brainAI monetizes only when a caller uses a
-brainAI, AgentFolio, or SATP-hosted reputation/evidence lookup endpoint that is
-x402-gated. There are no SATP royalties, protocol tolls, automatic SDK usage
-fees, launch approvals, partnership claims, or live endpoint activation in
-these examples.
+and private reputation endpoints. The repository does not currently operate a
+brainAI-, AgentFolio-, or SATP-hosted paid reputation/evidence lookup endpoint;
+its x402 surface is discovery metadata, policy helpers, proposed contracts, and
+offline/mock examples. A future provider may separately choose to monetize a
+lookup. There are no SATP royalties, protocol tolls, automatic SDK usage fees,
+launch approvals, partnership claims, or live endpoint activation in these
+examples.
 
 All examples below are offline by default. They do not publish npm packages,
 write to Solana devnet or mainnet, read or move keypairs, deploy programs,
@@ -154,9 +156,11 @@ AgentFolio infrastructure.
 
 ## x402 paid-endpoint builders
 
-Use x402 only around reputation, trust, or evidence lookup endpoints. Payment
-can grant lookup access, but it is not authorization for an agent action, a
-Solana write, or a production mutation.
+The following code demonstrates metadata and policy handling for a hypothetical
+provider-owned x402 reputation, trust, or evidence lookup. It does not call a
+live SATP gateway or perform a paid read. Payment could grant lookup access in a
+future provider implementation, but it is not authorization for an agent
+action, a Solana write, or a production mutation.
 
 ```js
 const {

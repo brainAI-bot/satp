@@ -3,18 +3,22 @@
 Issue #14 Track C defines this as the SATP-side contract for a public
 payment-info route that replaces callers probing `/api/x402/info`, which is not
 part of the SATP public API and can return `404`. This document is a
-specification only. It does not activate a paid endpoint, set production
-pricing, choose a payment network, choose an asset, choose a treasury or
-recipient address, approve spend, deploy Solana programs, write devnet/mainnet
-state, publish npm packages, or authorize agent actions.
+specification only. SATP does not currently host either documented route or a
+payment gateway; the repository has metadata parsing and offline/mock examples,
+not live payment handling. This contract does not activate a paid endpoint, set
+production pricing, choose a payment network, choose an asset, choose a treasury
+or recipient address, approve spend, deploy Solana programs, write
+devnet/mainnet state, publish npm packages, or authorize agent actions.
 
 ## Endpoint
 
 `GET /.well-known/x402/satp/payment-info`
 
-The route is public and read-only. It returns the provider's advertised x402
-payment terms for SATP lookup surfaces so third-party callers can decide whether
-to attempt a paid lookup. The route itself must not require x402 payment.
+A future provider implementation of the route would be public and read-only. It
+would return provider-owned advertised x402 payment terms so third-party callers
+could decide whether to attempt a paid lookup. The route itself must not require
+x402 payment. The response below is a proposed contract fixture, not a live SATP
+service response.
 
 Providers that need an application API path may also expose:
 

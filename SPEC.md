@@ -1,493 +1,206 @@
-# SATP Specification
+# SATP V3 Specification
 
-**Status:** Draft v1 for extraction planning
+**Status:** Current V3 repository specification
 **Repo:** `github.com/brainAI-bot/satp`
 **Lead:** brainChain
 **Consumer review:** brainForge / AgentFolio
 **Security review:** brainShield
 **Approver:** brainKID
-**Last updated:** 2026-05-03
+**Last updated:** 2026-09-19
 
-> SATP is the Solana Agent Trust Protocol.
->
-> This specification defines protocol semantics and package boundaries for extracting SATP from AgentFolio into this repo. It is a docs-only extraction planning artifact: it does not deploy programs, rotate keys, publish npm packages, or change AgentFolio product code.
+> SATP is the Solana Agent Trust Protocol. It is an app-agnostic protocol and
+> SDK surface. AgentFolio consumes SATP; SATP does not depend on AgentFolio.
 
----
+This document describes the six V3 Anchor interfaces committed in `idls/v3/`
+and the package boundary around them. A committed IDL address identifies that
+IDL interface; it is not, by itself, proof that the same bytes are deployed on
+every cluster. Deployment claims require a separate source/binary/IDL readback.
+The escrow claim is currently backed by
+`docs/escrow-v3-deployed-truth.json`; the other five program/network pairs remain
+evidence-only until equivalent proof exists.
 
-## 1. Scope
+## 1. Scope and dependency direction
 
-SATP standardizes portable AI-agent identity, attestations, reputation, validation, reviews, and escrow primitives on Solana.
+SATP owns protocol semantics, V3 program and IDL interfaces, PDA rules, portable
+claim schemas, client helpers, conformance fixtures, and protocol security
+boundaries.
 
-SATP owns:
-
-```text
-protocol semantics
-program/IDL interface definitions
-PDA derivation rules
-SDK/package interfaces
-claim and validation schemas
-conformance tests
-security/key-management rules for SATP code
-```
-
-SATP does not own:
-
-```text
-AgentFolio marketplace UX
-AgentFolio profiles/database schema
-AgentFolio routing and API policy
-AgentFolio analytics/search/moderation
-AgentFolio job-board workflow
-AgentFolio public launch or marketing
-client-specific product work
-```
-
-Dependency direction is one-way:
+SATP does not own AgentFolio marketplace UX, profiles or database schema,
+routing, moderation, job workflow, analytics, public launch, or other
+consumer-specific policy.
 
 ```text
 AgentFolio and other apps -> @brainai/satp packages -> SATP IDLs/programs
 ```
 
-SATP must not import AgentFolio application modules or require AgentFolio infrastructure.
+SATP packages and examples must not import AgentFolio application modules or
+require AgentFolio infrastructure.
 
----
+## 2. Canonical V3 interface set
 
-## 2. Versioning and compatibility
+The committed source of interface truth is the JSON under `idls/v3/`. Names and
+addresses below are copied from those files.
 
-### 2.1 Package names
+| Program | Committed IDL | IDL address | Instructions |
+| --- | --- | --- | --- |
+| Identity | `idls/v3/identity_v3.json` | `7qmfg4CgiXVDZGBeUkSkMsacKjCRty2xEAugPK4nfvZQ` | `create_identity`, `burn_to_become`, `update_identity`, `propose_authority`, `accept_authority`, `cancel_authority_transfer`, `link_wallet`, `unlink_wallet`, `update_reputation`, `update_verification`, `update_score_and_level`, `init_mint_tracker`, `record_mint`, `deactivate_identity`, `reactivate_identity`, `register_name`, `release_name`, `migrate_v2_to_v3`, `admin_set_born`, `admin_set_face`, `admin_unbirth`, `admin_close_stale`, `admin_delete_identity`, `admin_set_authority`, `admin_set_score` |
+| Attestations | `idls/v3/attestations_v3.json` | `55aS2y5Lhe427iW4cgo2nmZPrxwH3F7BWkw6MnoEm4zw` | `create_attestation`, `create_verified_attestation`, `verify_attestation`, `revoke_attestation`, `create_review_attestation`, `recompute_score` |
+| Reputation | `idls/v3/reputation_v3.json` | `CtmZ1fHaypt3R6wbeiGawiRnjzRK9T8jsECk9mET9AK9` | `recompute_reputation` |
+| Validation | `idls/v3/validation_v3.json` | `DLB76DzAFY8KNuvnP79BZW3cehGreEQTeGDvFCNd2Ekj` | `recompute_level` |
+| Reviews | `idls/v3/reviews_v3.json` | `3yVFrWCpBnQdWNqmiCG9EpoZq7WYeQ421Gx5sUh41Kwk` | `create_review`, `update_review`, `delete_review`, `init_review_counter` |
+| Escrow | `idls/v3/escrow_v3.json` | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | `create_escrow`, `create_usdc_escrow`, `submit_work`, `release`, `release_usdc`, `partial_release`, `partial_release_usdc`, `cancel`, `cancel_usdc`, `raise_dispute`, `resolve_dispute`, `resolve_dispute_usdc`, `extend_deadline`, `close_escrow` |
 
-Stable target package:
+Consumers must pin the intended cluster and program registry explicitly. They
+must not infer a program ID from a local keypair path or treat one committed IDL
+address as a blanket mainnet-and-devnet statement.
 
-```text
-@brainai/satp
-```
+## 3. Protocol objects
 
-Supporting packages:
+### 3.1 Identity
 
-```text
-@brainai/satp-core
-@brainai/satp-solana
-@brainai/satp-client
-```
+The Identity program owns `GenesisRecord`, `LinkedWallet`, `MintTracker`, and
+`NameRegistry` accounts. It creates and updates identities, links wallets,
+transfers authority through propose/accept/cancel steps, records mint limits,
+manages names, migrates V2 records, and exposes explicitly named admin repairs.
 
-Legacy package names such as `@brainai/satp-v3` are migration aliases only.
+An identity is protocol data, not an AgentFolio profile. Consumer display fields,
+moderation, search, and product status remain outside SATP.
 
-### 2.2 Spec versions
+### 3.2 Attestations
 
-Every public protocol surface should carry an explicit semantic version:
+An attestation binds an explicit issuer to a subject and claim. The V3 interface
+supports creation, verified creation, verification, revocation, review-backed
+attestations, and score recomputation. Revocation changes effective status; it
+does not erase historical existence. Consumers must apply an explicit issuer
+trust policy rather than silently treating unknown issuers as protocol or
+security authorities.
 
-```text
-specVersion: "1.0.0"
-idlVersion: "<program IDL version>"
-formulaVersion: "<reputation/validation formula version>"
-```
+### 3.3 Reputation and validation
 
-Breaking changes require:
+The Reputation and Validation programs recompute fields on the shared V3
+identity record. A score or level is meaningful only with its formula/version,
+inputs, and freshness policy. Product tier names are consumer presentation and
+do not redefine protocol values.
 
-1. a SPEC.md update,
-2. a CHANGELOG.md entry,
-3. conformance-test updates,
-4. AgentFolio adapter compatibility review.
+### 3.4 Reviews
 
----
+The Reviews program owns `Review` and `ReviewCounter` accounts and supports
+create, update, delete, and counter initialization. SATP defines the portable
+record interface. Consumers own display, abuse handling, moderation, and any
+rule deciding whether a review contributes to reputation.
 
-## 3. Protocol object model
+## 4. Escrow V3
 
-### 3.1 Agent identity
+### 4.1 Assets and account states
 
-An Agent Identity is the root SATP object for an AI agent.
-
-Required semantics:
-
-```text
-identity_id: stable on-chain account/PDA address
-agent_id: app-readable unique identifier when present
-authority: wallet or authority allowed to update identity metadata
-primary_wallet: canonical linked Solana wallet
-metadata_uri: off-chain metadata URI, optional
-metadata_hash: content hash for metadata, optional but preferred
-status: active | suspended | revoked | migrated
-created_at: chain timestamp or slot-derived timestamp when available
-updated_at: chain timestamp or slot-derived timestamp when available
-```
-
-Rules:
-
-- One identity may have multiple linked accounts, but only one primary authority at a time.
-- Authority changes must be explicit and auditable.
-- Identity metadata must be app-agnostic; AgentFolio-specific profile fields stay in AgentFolio.
-- Consumers must treat identity records as protocol data, not as product profile rows.
-
-### 3.2 Linked accounts
-
-Linked accounts prove control of external wallets/accounts/platform handles.
-
-Required semantics:
+Escrow V3 supports native SOL and SPL-token escrows, including the repository's
+USDC client builders. The on-chain account status values are:
 
 ```text
-subject_identity: identity being linked
-account_kind: solana_wallet | github | domain | agentmail | mcp | a2a | custom
-account_ref: normalized public reference
-proof_hash: hash of proof material, optional
-issuer: verifier or authority that accepted the link
-expires_at: optional expiration
-enabled: boolean
+Active
+WorkSubmitted
+Disputed
+Released
+Cancelled
+Resolved
 ```
 
-Linked-account verification UX remains consumer-specific. SATP only standardizes stored/verified linkage outputs.
-
----
-
-## 4. Attestations
-
-An Attestation is a verifiable claim issued about an identity, wallet, capability, job, or protocol event.
-
-Required semantics:
-
-```text
-attestation_id: PDA/account or deterministic record id
-issuer: issuer identity or wallet
-subject_identity: SATP identity being attested
-claim_type: normalized claim type
-claim_value: typed value or compact string
-evidence_uri: optional off-chain evidence URI
-evidence_hash: optional hash of evidence
-issued_at: issue timestamp/slot
-expires_at: optional expiry
-revoked_at: optional revocation timestamp/slot
-status: active | expired | revoked | superseded
-```
-
-Core claim types:
-
-```text
-identity.github_verified
-identity.domain_verified
-identity.agentmail_verified
-identity.wallet_control_verified
-identity.mcp_verified
-identity.a2a_verified
-capability.verified
-work.job_completed
-work.escrow_released
-review.received
-risk.flagged
-```
-
-Rules:
-
-- Issuers must be explicit.
-- Revocation must never delete historical existence; it changes effective status.
-- Consumers must verify issuer trust class before using an attestation for validation.
-- App-specific badges or labels are consumer presentation and stay outside SATP core.
-
----
-
-## 5. Issuer trust classes
-
-SATP validation depends on issuer quality.
-
-Trust classes:
-
-| Class | Meaning | Examples |
-| --- | --- | --- |
-| `self` | Self-asserted by identity authority | agent metadata claim |
-| `platform` | Issued by a consumer platform | AgentFolio marketplace action |
-| `protocol` | Issued by SATP-controlled protocol process | canonical recomputation job |
-| `partner` | Issued by trusted third-party verifier | external verification partner |
-| `security` | Issued by security/review authority | brainShield or future auditor |
-
-Rules:
-
-- Trust classes are inputs, not final validation levels.
-- A consumer may display issuer-specific labels, but validation formulas must remain documented and versioned.
-- Unknown issuers are allowed but cannot silently count as protocol/security class.
-
----
-
-## 6. Reputation
-
-A Reputation Snapshot is a versioned, recomputable trust score derived from SATP inputs.
-
-Required semantics:
-
-```text
-subject_identity: identity being scored
-score: integer or fixed-point score
-level_hint: optional derived level
-formula_version: formula identifier
-input_refs: attestations/reviews/events used
-computed_at: timestamp/slot
-computed_by: issuer or computation authority
-metadata_hash: optional proof bundle hash
-```
-
-Rules:
-
-- Reputation must be explainable from input references when possible.
-- Score ranges and display tiers are formula-version-specific.
-- AgentFolio display copy such as tier names can consume SATP outputs but must not define the protocol.
-
-Initial score guidance:
-
-```text
-0-49: limited evidence
-50-99: basic verified evidence
-100-199: established evidence
-200-399: high-trust evidence
-400+: sovereign/high-assurance evidence
-```
-
-These ranges are migration guidance only until a dedicated formula document lands.
-
----
-
-## 7. Validation
-
-Validation is the normalized level derived from identity, attestations, reputation, and issuer trust.
-
-Initial SATP validation levels:
-
-| Level | Name | Minimum semantic requirement |
-| --- | --- | --- |
-| `0` | Unverified | Identity exists or is known but has no trusted verification. |
-| `1` | Basic | Wallet/identity control is verified by self or platform evidence. |
-| `2` | Verified | At least one trusted external or platform attestation is active. |
-| `3` | Established | Multiple active attestations or durable reputation evidence exist. |
-| `4` | Trusted | High-quality issuer evidence and positive work/review history exist. |
-| `5` | Sovereign | Highest-assurance identity, authority, and reputation requirements are met. |
-
-Validation result semantics:
-
-```text
-subject_identity: identity being validated
-level: 0..5
-formula_version: validation formula identifier
-input_refs: attestation/reputation/review refs used
-computed_at: timestamp/slot
-expires_at: optional expiry
-status: active | expired | revoked | superseded
-```
-
-Rules:
-
-- Validation levels must be recomputable or explainable through input refs.
-- Consumers may choose stricter display rules but must not relabel protocol levels without documenting their app-specific policy.
-- Negative/security attestations can cap or revoke validation even when positive signals exist.
-
----
-
-## 8. Reviews
-
-A Review is a portable protocol primitive for feedback about an identity or work reference.
-
-Required semantics:
-
-```text
-review_id: PDA/account or deterministic id
-reviewer_identity: reviewer identity or wallet
-subject_identity: reviewed identity
-rating: integer or categorical value
-review_type: work | capability | platform | security | custom
-linked_ref: optional job/escrow/external reference
-metadata_uri: optional review content URI
-metadata_hash: optional content hash
-created_at: timestamp/slot
-status: active | hidden | disputed | revoked
-```
-
-Rules:
-
-- SATP stores portable review primitives, not AgentFolio moderation policy.
-- Consumer apps own display, copy, moderation queues, and abuse workflows.
-- Reviews used in validation/reputation must be included as input refs.
-
----
-
-## 9. Escrow
-
-SATP escrow is a generic primitive for agent work settlement.
-
-Required semantics:
-
-```text
-escrow_id: PDA/account
-payer: funding wallet
-agent_identity: agent identity expected to perform work
-amount: token amount
-mint: token mint
-state: created | funded | submitted | released | refunded | disputed | closed
-work_ref: optional job/work metadata ref
-created_at: timestamp/slot
-updated_at: timestamp/slot
-```
-
-Rules:
-
-- SATP escrow should be generic and app-agnostic.
-- AgentFolio job records, copy, marketplace fees, and UX stay in AgentFolio.
-- Escrow events may produce attestations and reputation inputs.
-
----
-
-## 10. PDA and IDL rules
-
-SATP PDA helpers must live in `@brainai/satp-solana` and expose stable functions for:
-
-```text
-identity PDA derivation
-attestation PDA derivation
-review PDA derivation
-reputation/validation record PDA derivation
-escrow PDA derivation
-```
-
-IDL rules:
-
-- Current IDLs move into `idls/` and are versioned.
-- Generated clients live under `packages/satp-solana` or `packages/satp-client`.
-- Program IDs live in a documented registry file and `docs/program-ids.md`.
-- Devnet/mainnet IDs must be separated and never inferred from local keypair paths.
-
----
-
-## 11. SDK boundaries
-
-### 11.1 `@brainai/satp-core`
-
-Owns app-agnostic types and pure helpers:
-
-```text
-claim schemas
-validation levels
-issuer trust classes
-reputation formula types
-normalization helpers
-conformance assertions
-```
-
-Must not import Solana Web3, Express, AgentFolio DB, or browser-only code.
-
-### 11.2 `@brainai/satp-solana`
-
-Owns Solana-specific protocol interfaces:
-
-```text
-program IDs
-IDL exports
-PDA derivation
-account decoders
-transaction builders
-RPC read helpers
-```
-
-Must not import AgentFolio routes, AgentFolio DB, or AgentFolio profile-store code.
-
-### 11.3 `@brainai/satp-client`
-
-Owns high-level SDK methods for apps:
-
-```text
-resolveIdentity
-getAttestations
-verifyAttestation
-getReputation
-getValidationLevel
-getReviews
-buildEscrowTransactions
-```
-
-May depend on `satp-core` and `satp-solana`. Must not depend on AgentFolio application modules.
-
-### 11.4 `@brainai/satp`
-
-Umbrella package that re-exports stable public APIs from core/solana/client.
-
----
-
-## 12. AgentFolio consumer-only boundary
-
-AgentFolio keeps only consumer/adaptor code:
-
-```text
-route handlers that call SATP package APIs
-profile/database enrichment code that caches SATP outputs
-UI formatting and marketplace-specific labels
-job/review/escrow UX and moderation
-AgentFolio-specific analytics/search
-temporary compatibility shims during migration
-```
-
-AgentFolio must stop being source of truth for:
-
-```text
-canonical SATP IDLs
-canonical PDA derivation helpers
-canonical validation level definitions
-canonical reputation formulas
-canonical attestation claim schemas
-canonical protocol docs
-```
-
-During migration, AgentFolio may keep adapter files that import from local relative paths until the SATP package/Git dependency is wired. Those files must be marked as temporary and consumer-only.
-
----
-
-## 13. Extraction sequence
-
-The extraction sequence is controlled by HQ and must remain reviewable:
-
-1. Security guardrails/keypair decision.
-2. Architecture docs.
-3. AgentFolio SATP adapter boundary.
-4. Move SATP IDLs/client/spec docs into SATP repo.
-5. Independent SATP build/test.
-6. AgentFolio consumes SATP package/Git dependency.
-7. Remove embedded SATP source-of-truth files from AgentFolio.
-
-This SPEC.md supports steps 3 and 4. It does not execute deploy, keypair, package publish, or AgentFolio product changes.
-
----
-
-## 14. Validation requirements for extraction PRs
-
-Docs/spec extraction PRs must include:
-
-```text
-git diff summary
-list of changed files
-no-deploy confirmation
-no-keypair confirmation
-no-npm-publish confirmation
-brainForge adapter compatibility consultation
-brainKID review request
-```
-
-Code extraction PRs later must include:
-
-```text
-unit tests for pure schema/PDA helpers
-IDL parse validation
-SDK build/typecheck
-conformance test plan
-AgentFolio adapter compatibility proof
-```
-
----
-
-## 15. Non-actions in this phase
-
-This phase explicitly does not perform:
-
-```text
-Solana devnet deploys
-Solana mainnet deploys
-production keypair movement
-production keypair rotation
-secret printing
-npm publishing
-AgentFolio product feature changes
-Masthead work
-client work
-public launch work
-```
+Creation funds an escrow in `Active`. `submit_work` is agent-authorized, must
+run no later than the deadline, records a work hash, and moves `Active` to
+`WorkSubmitted`.
+
+The client can release all remaining funds from `Active` or `WorkSubmitted`.
+Partial release leaves the current status unchanged until the full amount is
+released, then marks the account `Released`.
+
+After the deadline, the client can cancel only an `Active` escrow with no
+submitted work; unreleased funds return to the client and the state becomes
+`Cancelled`. Either client or agent may raise a dispute only from
+`WorkSubmitted`, producing `Disputed`. The configured arbiter resolves a dispute
+by splitting all remaining funds between client and agent, producing `Resolved`.
+Only settled `Released`, `Cancelled`, or `Resolved` accounts can be closed.
+
+### 4.2 Fee routing and stablecoin behavior
+
+The verified deployed SOL `release` and `partial_release` interfaces require the
+`escrow`, `client`, `agent`, and writable `treasury` accounts and route the
+configured platform fee. The current `release_usdc` and
+`partial_release_usdc` interfaces transfer SPL funds from the escrow vault to
+the agent account; they do not expose the SOL treasury-account fee-routing
+surface. A consumer must therefore choose the builder matching the escrow
+currency and current committed IDL rather than assuming SOL and stablecoin
+account lists are interchangeable.
+
+`docs/escrow-v3-deployed-truth.json` records a 14-instruction canonical
+Program Metadata IDL, byte-for-byte parity with `idls/v3/escrow_v3.json`, and
+`conclusion.fee_routing_is_deployed=true`. The older nine-instruction legacy
+Anchor IDL account is stale and is not the canonical read path.
+
+### 4.3 Deliberate non-features
+
+Escrow V3 does **not** automatically release funds when work is submitted or a
+deadline passes. It does **not** automatically resolve a dispute after a timeout.
+Release requires the client-authorized instruction; dispute resolution requires
+the arbiter-authorized instruction. Deadlines gate work submission, cancellation,
+and client-controlled extension, not automatic settlement.
+
+An on-chain deployed interface does not itself enable AgentFolio consumer
+writes. Consumer enablement, caps, product workflow, and any value-bearing
+operation remain separate decisions and gates.
+
+## 5. PDA and compatibility rules
+
+PDA seeds, account constraints, instruction arguments, and account order are
+defined by the committed V3 IDLs and program source. Client code must validate
+all of them against the selected cluster and pinned program IDs.
+
+Breaking public changes require:
+
+1. a specification update;
+2. a changelog entry;
+3. IDL and conformance updates;
+4. consumer compatibility review; and
+5. fresh deployment/readback evidence before any live-state claim.
+
+## 6. SDK boundaries
+
+- `@brainai/satp-core` owns app-agnostic schemas and pure helpers.
+- `@brainai/satp-solana` owns Solana-specific IDs, IDLs, PDA helpers, decoders,
+  transaction builders, and read helpers.
+- `@brainai/satp-client` owns higher-level consumer methods and policy helpers.
+- `@brainai/satp` is the umbrella package boundary; its publication state is a
+  separate release fact.
+
+No SATP package may depend on AgentFolio routes, storage, profile code, or
+marketplace policy.
+
+## 7. x402 scope
+
+The repository implements x402 discovery-metadata parsing, runtime-policy
+helpers, specifications, and offline/mock examples. It does not operate a paid
+SATP lookup, payment gateway, payment verifier, live price, recipient, or
+production discovery endpoint. In particular,
+`examples/mcp-x402-readonly/src/x402Gate.js` is a mock with live payment disabled.
+
+The endpoint shapes in `docs/x402-reputation-evidence-lookup-api.md` and
+`docs/x402-payment-info-contract.md` are provider-facing proposed contracts, not
+claims that SATP hosts those routes. Any future paid read is separate work with
+an explicit spend/payment authority boundary. Payment for lookup access never
+authorizes an agent action, Solana transaction, escrow movement, or production
+mutation.
+
+## 8. Evidence and deployment truth
+
+A green local test, generated IDL, committed path, or program ID is not a live
+claim. A live claim must bind source, built artifact, deployed ProgramData,
+canonical IDL read path, cluster, and observation time. The escrow proof packet
+currently supplies that binding for its recorded mainnet observation. Equivalent
+proof is still required before making the same claim for each other V3 program.
+
+## 9. Restricted actions
+
+This specification does not authorize Solana writes, deployment, IDL
+publication, keypair access or movement, npm publication, AgentFolio production
+changes, escrow activation, money movement, branch-protection changes, merge, or
+public launch. Those actions require their own task authority and canonical
+post-state readback.
