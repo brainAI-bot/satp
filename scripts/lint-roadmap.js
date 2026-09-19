@@ -10,6 +10,9 @@ const ITEM_RE = new RegExp(
   '^.+\\s\\[(' + VALID_ROADMAP_TAGS.join('|') + ')\\](\\s·\\sowner-gated)?\\s*$'
 );
 const ANY_TAG_RE = /\[[^\]]+\](\s·\sowner-gated)?\s*$/;
+const REPO_PATH_PREFIXES = new Set([
+  '.github', 'config', 'docs', 'examples', 'idls', 'packages', 'programs', 'scripts', 'tests',
+]);
 
 function cleanSection(value) {
   return String(value || '')
@@ -32,7 +35,8 @@ function collectRoadmapItems(lines) {
     current = null;
   }
 
-  for (const line of lines) {
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
     const heading = line.match(/^##\s+(.+?)\s*$/);
     if (heading) {
       flushCurrent();
@@ -49,7 +53,7 @@ function collectRoadmapItems(lines) {
     const bullet = line.match(/^\s*-\s+(.+?)\s*$/);
     if (bullet) {
       flushCurrent();
-      current = { section, scope, line, text: bullet[1].trim() };
+      current = { section, scope, line, lineNumber: index + 1, text: bullet[1].trim() };
       continue;
     }
 
@@ -65,7 +69,72 @@ function collectRoadmapItems(lines) {
   return items;
 }
 
-function lintRoadmap(file) {
+function stripPathDecoration(value) {
+  return value
+    .trim()
+    .replace(/^\.\//, '')
+    .split('#', 1)[0]
+    .replace(/:[0-9]+(?:-[0-9]+)?$/, '');
+}
+
+function looksLikeRepoPath(value) {
+  if (!value || /^(?:https?:|mailto:|#|@)/i.test(value) || value.includes('<') || /\s/.test(value)) {
+    return false;
+  }
+  const candidate = stripPathDecoration(value);
+  if (!candidate.includes('/')) return false;
+  const first = candidate.replace(/^\.\.\//, '').split('/')[0];
+  return REPO_PATH_PREFIXES.has(first);
+}
+
+function extractRepoPathCitations(markdown) {
+  const citations = [];
+  const patterns = [/`([^`\n]+)`/g, /\]\(([^)]+)\)/g];
+  for (const pattern of patterns) {
+    for (const match of markdown.matchAll(pattern)) {
+      if (looksLikeRepoPath(match[1])) citations.push(match[1]);
+    }
+  }
+  return [...new Set(citations)];
+}
+
+function readTruthValue(repoRoot, artifactPath, keyPath) {
+  const absolute = path.resolve(repoRoot, artifactPath);
+  const parsed = JSON.parse(fs.readFileSync(absolute, 'utf8'));
+  let value = parsed;
+  for (const key of keyPath.split('.')) {
+    if (!value || !Object.prototype.hasOwnProperty.call(value, key)) {
+      throw new Error('missing truth field ' + keyPath);
+    }
+    value = value[key];
+  }
+  if (typeof value !== 'boolean') throw new Error('truth field ' + keyPath + ' is not boolean');
+  return value;
+}
+
+function checkTruthReferences(item, repoRoot, errors) {
+  const truthReference = /([A-Za-z0-9_.\/-]+\.json)#(conclusion\.[A-Za-z0-9_]+)=(true|false)/g;
+  for (const match of item.text.matchAll(truthReference)) {
+    const [, artifactPath, keyPath, expectedText] = match;
+    const expected = expectedText === 'true';
+    try {
+      const actual = readTruthValue(repoRoot, artifactPath, keyPath);
+      if (actual !== expected) {
+        const status = item.text.match(/\[([^\]]+)\](?:\s·\sowner-gated)?\s*$/)?.[1] || 'unknown';
+        const prefix = status === 'blocked' ? 'blocked roadmap item contradicts deployed truth' : 'roadmap item contradicts deployed truth';
+        errors.push(
+          'line ' + item.lineNumber + ': ' + prefix + ': ' +
+          artifactPath + '#' + keyPath + ' is ' + actual + ', cited as ' + expected
+        );
+      }
+    } catch (error) {
+      errors.push('line ' + item.lineNumber + ': invalid deployed-truth reference: ' + error.message);
+    }
+  }
+}
+
+function lintRoadmap(file, options = {}) {
+  const repoRoot = path.resolve(options.repoRoot || process.cwd());
   const markdown = fs.readFileSync(file, 'utf8');
   const errors = [];
   const lines = markdown.split(/\r?\n/);
@@ -91,6 +160,13 @@ function lintRoadmap(file) {
     }
   }
 
+  for (const citation of extractRepoPathCitations(markdown)) {
+    const citedPath = stripPathDecoration(citation);
+    if (!fs.existsSync(path.resolve(repoRoot, citedPath))) {
+      errors.push('cited repository path does not exist: ' + citedPath);
+    }
+  }
+
   const items = collectRoadmapItems(lines);
   for (const item of items) {
     if (!ANY_TAG_RE.test(item.text)) {
@@ -99,7 +175,9 @@ function lintRoadmap(file) {
     }
     if (!ITEM_RE.test(item.text)) {
       errors.push(item.line + ': invalid roadmap tag; valid tags are ' + VALID_ROADMAP_TAGS.join(', '));
+      continue;
     }
+    checkTruthReferences(item, repoRoot, errors);
   }
 
   if (COMPLETE_BANNER_RE.test(markdown)) {
@@ -116,21 +194,32 @@ function lintRoadmap(file) {
   return errors;
 }
 
-const files = process.argv.slice(2);
-const defaultTargets = ['ROADMAP.md', 'docs/planning/ROADMAP.md'].filter((file) => fs.existsSync(file));
-const targets = files.length ? files : defaultTargets;
-let failed = false;
+function runCli(files = process.argv.slice(2)) {
+  const defaultTargets = ['ROADMAP.md', 'docs/planning/ROADMAP.md'].filter((file) => fs.existsSync(file));
+  const targets = files.length ? files : defaultTargets;
+  let failed = false;
 
-for (const file of targets) {
-  const errors = lintRoadmap(file);
-  if (!errors.length) {
-    console.log('roadmap lint passed: ' + path.relative(process.cwd(), file));
-    continue;
+  for (const file of targets) {
+    const errors = lintRoadmap(file);
+    if (!errors.length) {
+      console.log('roadmap lint passed: ' + path.relative(process.cwd(), file));
+      continue;
+    }
+
+    failed = true;
+    console.error('roadmap lint failed: ' + path.relative(process.cwd(), file));
+    for (const error of errors) console.error('- ' + error);
   }
 
-  failed = true;
-  console.error('roadmap lint failed: ' + path.relative(process.cwd(), file));
-  for (const error of errors) console.error('- ' + error);
+  return failed ? 1 : 0;
 }
 
-if (failed) process.exit(1);
+if (require.main === module) process.exit(runCli());
+
+module.exports = {
+  collectRoadmapItems,
+  extractRepoPathCitations,
+  lintRoadmap,
+  readTruthValue,
+  runCli,
+};
