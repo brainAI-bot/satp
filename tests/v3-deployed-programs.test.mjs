@@ -9,6 +9,7 @@ import {
   proofMatches,
   programs,
   rpcCall,
+  verifyPrograms,
 } from '../scripts/verify-v3-deployed-programs.mjs';
 
 const workflow = readFileSync(
@@ -61,6 +62,29 @@ test('proof success requires every binary and IDL comparison to match', () => {
   assert.equal(proofMatches(matches.map((result, index) => index === 4
     ? { ...result, idl_verdict: 'DIFFER' }
     : result)), false);
+});
+
+test('one program error does not prevent all six programs from being reported', async () => {
+  const proof = await verifyPrograms({
+    verifyProgramImpl: async (program) => {
+      throw new Error(`${program.name} fixture proof error`);
+    },
+  });
+
+  assert.equal(proof.ok, false);
+  assert.equal(proof.comparison_completed, false);
+  assert.equal(proof.results.length, 6);
+  assert.equal(proof.summary.comparison_errors, 6);
+  assert.equal(proof.summary.binary_not_compared, 6);
+  assert.equal(proof.summary.idl_not_compared, 6);
+  for (const [index, result] of proof.results.entries()) {
+    assert.equal(result.program, programs[index].name);
+    assert.equal(result.program_id, programs[index].programId);
+    assert.equal(result.binary_verdict, 'NOT_COMPARED');
+    assert.equal(result.idl_verdict, 'NOT_COMPARED');
+    assert.equal(result.comparison_completed, false);
+    assert.equal(result.error, `${programs[index].name} fixture proof error`);
+  }
 });
 
 test('Program Metadata addresses use the canonical program/empty-authority/idl seeds', () => {
@@ -155,6 +179,9 @@ test('bounded retry returns a successful read after transient 429 responses', as
 
 test('workflow has one six-program proof job and one all-program-crates cargo-test job', () => {
   assert.match(workflow, /deployed-source-proof:[\s\S]*build-verify-v3-deployed-programs\.sh/u);
+  assert.match(workflow, /fetch-depth: 0/u);
+  assert.match(workflow, /build-verify-escrow-v3-deployed-source\.sh/u);
+  assert.match(workflow, /docs\/escrow-v3-deployed-truth\.json/u);
   assert.match(workflow, /program-crate-tests:[\s\S]*for manifest in programs\/\*\/Cargo\.toml/u);
   assert.match(workflow, /cargo \+1\.89\.0 test --locked --manifest-path "\$manifest" --all-targets/u);
   assert.match(workflow, /permissions:\n  contents: read/u);

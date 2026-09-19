@@ -302,10 +302,22 @@ export async function verifyPrograms({
   rpcUrl = process.env.SATP_V3_RPC_URL_MAINNET || 'https://api.mainnet-beta.solana.com',
   outDir = resolve(root, 'target/v3-deployed-proof'),
   rpcOptions,
+  verifyProgramImpl = verifyProgram,
 } = {}) {
   const results = [];
   for (const program of programs) {
-    results.push(await verifyProgram(program, rpcUrl, outDir, rpcOptions));
+    try {
+      results.push(await verifyProgramImpl(program, rpcUrl, outDir, rpcOptions));
+    } catch (error) {
+      results.push({
+        program: program.name,
+        program_id: program.programId,
+        binary_verdict: 'NOT_COMPARED',
+        idl_verdict: 'NOT_COMPARED',
+        comparison_completed: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
   const comparisonCompleted = results.length === programs.length
     && results.every((result) => result.comparison_completed);
@@ -318,8 +330,11 @@ export async function verifyPrograms({
       compared_programs: results.length,
       binary_matches: results.filter((result) => result.binary_verdict === 'MATCH').length,
       binary_differences: results.filter((result) => result.binary_verdict === 'DIFFER').length,
+      binary_not_compared: results.filter((result) => result.binary_verdict === 'NOT_COMPARED').length,
       idl_matches: results.filter((result) => result.idl_verdict === 'MATCH').length,
       idl_differences: results.filter((result) => result.idl_verdict === 'DIFFER').length,
+      idl_not_compared: results.filter((result) => result.idl_verdict === 'NOT_COMPARED').length,
+      comparison_errors: results.filter((result) => !result.comparison_completed).length,
       all_binary_match: results.every((result) => result.binary_verdict === 'MATCH'),
       all_idl_match: results.every((result) => result.idl_verdict === 'MATCH'),
     },
