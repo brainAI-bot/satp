@@ -1,4 +1,4 @@
-name: Escrow V3 Deployed Truth
+name: SATP V3 Deployed Truth
 
 on:
   workflow_dispatch:
@@ -7,39 +7,77 @@ on:
   pull_request:
     paths:
       - ".github/workflows/escrow-v3-deployed-truth.yml"
+      - "Anchor.toml"
       - "Cargo.lock"
-      - "programs/escrow_v3/**"
+      - "Cargo.toml"
+      - "package-lock.json"
+      - "package.json"
+      - "programs/**"
+      - "rust-toolchain.toml"
       - "docs/escrow-v3-deployed-truth.json"
-      - "docs/escrow-v3-mainnet-rider-packet.md"
-      - "idls/v3/escrow_v3.json"
       - "scripts/build-verify-escrow-v3-deployed-source.sh"
-      - "scripts/verify-escrow-v3-deployed-truth.mjs"
+      - "idls/v3/**"
+      - "scripts/build-verify-v3-deployed-programs.sh"
+      - "scripts/build-v3-litesvm-programs.sh"
+      - "scripts/verify-v3-deployed-programs.mjs"
+      - "tests/litesvm-v3-programs/**"
       - "tests/escrow-v3-deployed-truth.test.mjs"
+      - "tests/v3-deployed-programs.test.mjs"
   push:
     branches:
       - main
     paths:
       - ".github/workflows/escrow-v3-deployed-truth.yml"
+      - "Anchor.toml"
       - "Cargo.lock"
-      - "programs/escrow_v3/**"
+      - "Cargo.toml"
+      - "package-lock.json"
+      - "package.json"
+      - "programs/**"
+      - "rust-toolchain.toml"
       - "docs/escrow-v3-deployed-truth.json"
-      - "docs/escrow-v3-mainnet-rider-packet.md"
-      - "idls/v3/escrow_v3.json"
       - "scripts/build-verify-escrow-v3-deployed-source.sh"
-      - "scripts/verify-escrow-v3-deployed-truth.mjs"
+      - "idls/v3/**"
+      - "scripts/build-verify-v3-deployed-programs.sh"
+      - "scripts/build-v3-litesvm-programs.sh"
+      - "scripts/verify-v3-deployed-programs.mjs"
+      - "tests/litesvm-v3-programs/**"
       - "tests/escrow-v3-deployed-truth.test.mjs"
+      - "tests/v3-deployed-programs.test.mjs"
 
 permissions:
   contents: read
 
 jobs:
-  deployed-source-proof:
-    name: Rebuild and compare deployed escrow source
-    runs-on: macos-26
-    timeout-minutes: 45
+  proof-contract-tests:
+    name: Read-only proof contract tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-      - name: Check out full source history
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test six-program proof and bounded public-RPC retries
+        run: node --test tests/v3-deployed-programs.test.mjs
+
+  deployed-source-proof:
+    name: Rebuild and compare all six V3 programs and IDLs
+    if: github.event_name != 'pull_request'
+    runs-on: macos-26
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -64,21 +102,80 @@ jobs:
           sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.21/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
 
-      - name: Rebuild recorded source and compare live ProgramData
+      - name: Rebuild recorded deployed escrow source
+        env:
+          SATP_V3_RPC_URL_MAINNET: https://api.mainnet-beta.solana.com
+        run: bash scripts/build-verify-escrow-v3-deployed-source.sh
+
+      - name: Rebuild and compare stored deployed programs and IDLs
+        env:
+          SATP_V3_RPC_URL_MAINNET: https://api.mainnet-beta.solana.com
         run: |
           set -euo pipefail
-          mkdir -p target/deployed-truth
-          scripts/build-verify-escrow-v3-deployed-source.sh \
-            | tee target/deployed-truth/proof.json
+          mkdir -p target/v3-deployed-proof
+          bash scripts/build-verify-v3-deployed-programs.sh \
+            | tee target/v3-deployed-proof/proof.json
 
-      - name: Upload comparison artifact
+      - name: Upload six-program read-only proof
         uses: actions/upload-artifact@v4
         with:
-          name: escrow-v3-deployed-truth-${{ github.sha }}
+          name: v3-deployed-truth-${{ github.sha }}
           path: |
-            target/deployed-truth/escrow_v3.so
-            target/deployed-truth/proof.json
-            docs/escrow-v3-deployed-truth.json
-            idls/v3/escrow_v3.json
+            target/v3-deployed-proof/proof.json
+            target/v3-deployed-proof/rebuilt/*.so
+            target/v3-deployed-proof/stored/*.so
+            target/v3-deployed-proof/stored-idls/*.json
+            idls/v3/*.json
           if-no-files-found: error
           retention-days: 90
+
+  program-crate-tests:
+    name: Cargo test every programs crate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install Rust 1.89.0
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: "1.89.0"
+          cache: true
+
+      - name: Test every crate under programs
+        shell: bash
+        run: |
+          set -euo pipefail
+          count=0
+          for manifest in programs/*/Cargo.toml; do
+            cargo +1.89.0 test --locked --manifest-path "$manifest" --all-targets
+            count=$((count + 1))
+          done
+          test "$count" -eq 7
+
+  v3-litesvm:
+    name: LiteSVM happy and authorization-failure paths
+    runs-on: macos-26
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchains
+        run: |
+          rustup toolchain install 1.86.0 --profile minimal
+          rustup toolchain install 1.97.1 --profile minimal
+
+      - name: Install Solana CLI 2.1.21
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.21/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+
+      - name: Build all six V3 SBF programs
+        run: bash scripts/build-v3-litesvm-programs.sh
+
+      - name: Exercise all six programs in LiteSVM
+        run: cargo +1.97.1 test --locked --manifest-path tests/litesvm-v3-programs/Cargo.toml -- --nocapture
