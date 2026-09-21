@@ -1,6 +1,6 @@
 {
   "name": "@brainai/satp-client",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "description": "SATP client SDK for reviewed Solana Agent Trust Protocol integrations.",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -33,6 +33,7 @@
     "src/",
     "idls/",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "scripts": {

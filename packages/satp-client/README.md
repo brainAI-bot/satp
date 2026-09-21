@@ -5,6 +5,9 @@ building reviewed SATP V3 program interactions.
 
 Current stable npm package: **@brainai/satp-client@2.0.8** | rc dist-tag: **@brainai/satp-client@2.0.2** | Programs: **6**
 
+This source tree is the unpublished source candidate: **@brainai/satp-client@2.0.9**.
+Preparation evidence does not publish the package or change an npm dist-tag.
+
 ## Installation
 
 Choose stable, rc, or Git based on what the consumer needs to prove:

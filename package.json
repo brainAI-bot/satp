@@ -25,6 +25,7 @@
     "test:package-entrypoints": "node tests/package-entrypoints.test.js",
     "smoke:consumer-install": "node scripts/smoke-clean-consumer-install.js",
     "smoke:satp-client-packed-consumer": "node scripts/smoke-satp-client-packed-consumer.js",
+    "verify:satp-client-release-prep": "node scripts/verify-satp-client-release-prep.js",
     "check:satp-client-uuid-advisory": "node scripts/check-satp-client-uuid-advisory.js",
     "check:examples": "npm --prefix examples/mcp-x402-readonly run check && npm --prefix examples/agentfolio-consumer-readonly run check && npm --prefix examples/third-party-runtime-conformance run check",
     "test:attestation-request": "node packages/satp-client/test-attestation-request.js",

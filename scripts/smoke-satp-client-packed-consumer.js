@@ -5,6 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const { createRequire } = require('module');
 
 const repoRoot = path.resolve(__dirname, '..');
 const clientRoot = path.join(repoRoot, 'packages/satp-client');
@@ -30,6 +31,59 @@ function isVersionBefore(version, boundary) {
     if (current.parts[i] !== limit.parts[i]) return current.parts[i] < limit.parts[i];
   }
   return current.prerelease && !limit.prerelease;
+}
+
+function runtimeExportTargets(value) {
+  if (typeof value === 'string') return [value];
+  if (!value || typeof value !== 'object') return [];
+  return Object.entries(value)
+    .filter(([condition]) => condition !== 'types')
+    .flatMap(([, target]) => runtimeExportTargets(target));
+}
+
+function listFiles(root, relative = '') {
+  return fs.readdirSync(path.join(root, relative), { withFileTypes: true })
+    .flatMap((entry) => {
+      const next = path.posix.join(relative, entry.name);
+      return entry.isDirectory() ? listFiles(root, next) : [next];
+    });
+}
+
+function requireEveryExport(packageJson, packageRoot, consumerRoot) {
+  const consumerRequire = createRequire(path.join(consumerRoot, 'consumer.cjs'));
+  const installedFiles = listFiles(packageRoot);
+  const requiredSpecifiers = [];
+
+  for (const [exportKey, exportValue] of Object.entries(packageJson.exports || {})) {
+    for (const target of [...new Set(runtimeExportTargets(exportValue))]) {
+      const normalized = target.replace(/^\.\//, '');
+      if (normalized.includes('*')) {
+        const escaped = normalized.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+        const matcher = new RegExp(`^${escaped.replace('*', '(.+)')}$`);
+        const matches = installedFiles
+          .filter((file) => !file.endsWith('.d.ts'))
+          .map((file) => ({ file, match: file.match(matcher) }))
+          .filter(({ match }) => match);
+        if (matches.length === 0) {
+          throw new Error(`packed export ${exportKey} -> ${target} has no installed target`);
+        }
+        for (const { match } of matches) {
+          requiredSpecifiers.push(`@brainai/satp-client${exportKey.slice(1).replace('*', match[1])}`);
+        }
+      } else {
+        requiredSpecifiers.push(exportKey === '.'
+          ? '@brainai/satp-client'
+          : `@brainai/satp-client${exportKey.slice(1)}`);
+      }
+    }
+  }
+
+  for (const specifier of [...new Set(requiredSpecifiers)]) {
+    if (consumerRequire(specifier) === undefined) {
+      throw new Error(`packed export returned undefined: ${specifier}`);
+    }
+  }
+  console.log(`packed consumer required every exported path: ${[...new Set(requiredSpecifiers)].length} resolved specifiers`);
 }
 
 try {
@@ -81,6 +135,7 @@ try {
     path.join(installedPackageRoot, 'README.md'),
     'utf8',
   );
+  requireEveryExport(installedPackage, installedPackageRoot, tempRoot);
 
   if (installedPackage.bundleDependencies !== undefined) {
     throw new Error('packed client must not declare bundleDependencies');
@@ -143,6 +198,9 @@ try {
     "const required = ['BorshReader', 'DISCRIMINATORS', 'getAccountDiscriminator', 'isAccountType'];",
     "const missing = required.filter((key) => !(key in satp));",
     "if (missing.length) throw new Error('missing Borsh/discriminator exports: ' + missing.join(', '));",
+    "for (const builder of ['buildEscrowRelease', 'buildPartialRelease']) {",
+    "  if (typeof satp.SATPV3SDK.prototype[builder] !== 'function') throw new Error('missing packed v3-sdk fee-routing builder: ' + builder);",
+    "}",
     "const v3Mainnet = satp.getV3ProgramIds('mainnet');",
     "if (!satp.V3_MAINNET_PROGRAM_IDS) throw new Error('V3_MAINNET_PROGRAM_IDS export is null or missing');",
     "if (v3Mainnet !== satp.V3_MAINNET_PROGRAM_IDS) throw new Error('getV3ProgramIds(mainnet) did not return V3_MAINNET_PROGRAM_IDS');",

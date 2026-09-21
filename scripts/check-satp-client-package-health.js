@@ -144,6 +144,7 @@ function readPackSurface() {
   for (const required of [
     'package.json',
     'README.md',
+    'CHANGELOG.md',
     'LICENSE',
     'idls/v3/attestations_v3.json',
     'idls/v3/escrow_v3.json',
@@ -186,13 +187,14 @@ function readPackSurface() {
   const unexpectedPaths = filePaths.filter((file) => (
     file !== 'package.json'
     && file !== 'README.md'
+    && file !== 'CHANGELOG.md'
     && file !== 'LICENSE'
     && !file.startsWith('src/')
     && !file.startsWith('idls/v3/')
   ));
   assert(
     unexpectedPaths.length === 0,
-    `pack surface contains files outside package.json, README.md, LICENSE, src/, and idls/v3/: ${unexpectedPaths.join(', ')}`,
+    `pack surface contains files outside package.json, README.md, CHANGELOG.md, LICENSE, src/, and idls/v3/: ${unexpectedPaths.join(', ')}`,
   );
   assert(filePaths.length <= 30, `pack surface unexpectedly contains ${filePaths.length} files`);
   console.log(`pack surface OK: ${filePaths.length} package files; no bundled node_modules`);
