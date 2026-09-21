@@ -75,6 +75,7 @@ function readPackageMetadata() {
   assert(metadata.exports['./attestation-evidence'], 'attestation-evidence subpath export must be declared');
   assert(metadata.exports['./x402-discovery'], 'x402-discovery subpath export must be declared');
   assert(metadata.exports['./idls/*'], 'idls subpath export must be declared');
+  assert(metadata.exports['./idls/v3/mainnet/*'], 'mainnet IDL subpath export must be declared');
   assert(Array.isArray(metadata.files) && metadata.files.includes('src/'), 'files must include src/');
   assert(Array.isArray(metadata.files) && metadata.files.includes('idls/'), 'files must include idls/');
   assert(Array.isArray(metadata.files) && metadata.files.includes('README.md'), 'files must include README.md');
@@ -131,7 +132,10 @@ function readPackSurface() {
       '-e',
       `const assert = require('node:assert/strict');\n` +
         `const idl = require('@brainai/satp-client/idls/v3/escrow_v3.json');\n` +
+        `const mainnetAttestations = require('@brainai/satp-client/idls/v3/mainnet/attestations_v3.json');\n` +
         `assert.equal(idl.address, 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C');\n` +
+        `assert.equal(mainnetAttestations.address, '6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD');\n` +
+        `assert.equal(mainnetAttestations.instructions.some(({ name }) => name === 'create_verified_attestation'), false);\n` +
         `console.log('packed IDL consumer require OK');`,
     ], { cwd: consumerDir });
 
@@ -160,7 +164,7 @@ function readPackSurface() {
     assert(filePaths.includes(required), `pack surface missing ${required}`);
   }
 
-  const expectedIdlPaths = [
+  const sourceIdlPaths = [
     'idls/v3/attestations_v3.json',
     'idls/v3/escrow_v3.json',
     'idls/v3/identity_v3.json',
@@ -168,6 +172,10 @@ function readPackSurface() {
     'idls/v3/reviews_v3.json',
     'idls/v3/validation_v3.json',
   ];
+  const expectedIdlPaths = [
+    ...sourceIdlPaths,
+    ...sourceIdlPaths.map((file) => file.replace('idls/v3/', 'idls/v3/mainnet/')),
+  ].sort();
   const packedIdlPaths = filePaths.filter((file) => file.startsWith('idls/'));
   assert(
     JSON.stringify(packedIdlPaths) === JSON.stringify(expectedIdlPaths),
@@ -194,7 +202,7 @@ function readPackSurface() {
     unexpectedPaths.length === 0,
     `pack surface contains files outside package.json, README.md, LICENSE, src/, and idls/v3/: ${unexpectedPaths.join(', ')}`,
   );
-  assert(filePaths.length <= 30, `pack surface unexpectedly contains ${filePaths.length} files`);
+  assert(filePaths.length <= 40, `pack surface unexpectedly contains ${filePaths.length} files`);
   console.log(`pack surface OK: ${filePaths.length} package files; no bundled node_modules`);
   return filePaths;
 }

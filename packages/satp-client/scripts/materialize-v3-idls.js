@@ -18,13 +18,16 @@ const expectedIdls = [
 ];
 
 fs.rmSync(destinationDir, { recursive: true, force: true });
-fs.mkdirSync(destinationDir, { recursive: true });
-
-for (const filename of expectedIdls) {
-  const source = path.join(sourceDir, filename);
-  if (!fs.statSync(source, { throwIfNoEntry: false })?.isFile()) {
-    throw new Error(`Missing canonical V3 IDL: ${path.relative(repoRoot, source)}`);
+for (const relativeDir of ['', 'mainnet']) {
+  const sourceRoot = path.join(sourceDir, relativeDir);
+  const destinationRoot = path.join(destinationDir, relativeDir);
+  fs.mkdirSync(destinationRoot, { recursive: true });
+  for (const filename of expectedIdls) {
+    const source = path.join(sourceRoot, filename);
+    if (!fs.statSync(source, { throwIfNoEntry: false })?.isFile()) {
+      throw new Error(`Missing V3 ${relativeDir || 'source'} IDL: ${path.relative(repoRoot, source)}`);
+    }
+    JSON.parse(fs.readFileSync(source, 'utf8'));
+    fs.copyFileSync(source, path.join(destinationRoot, filename));
   }
-  JSON.parse(fs.readFileSync(source, 'utf8'));
-  fs.copyFileSync(source, path.join(destinationDir, filename));
 }

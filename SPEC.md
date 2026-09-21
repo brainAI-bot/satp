@@ -6,7 +6,7 @@
 **Consumer review:** brainForge / AgentFolio
 **Security review:** brainShield
 **Approver:** brainKID
-**Last updated:** 2026-09-19
+**Last updated:** 2026-09-21
 
 > SATP is the Solana Agent Trust Protocol. It is an app-agnostic protocol and
 > SDK surface. AgentFolio consumes SATP; SATP does not depend on AgentFolio.
@@ -15,9 +15,11 @@ This document describes the six V3 Anchor interfaces committed in `idls/v3/`
 and the package boundary around them. A committed IDL address identifies that
 IDL interface; it is not, by itself, proof that the same bytes are deployed on
 every cluster. Deployment claims require a separate source/binary/IDL readback.
-The escrow claim is currently backed by
-`docs/escrow-v3-deployed-truth.json`; the other five program/network pairs remain
-evidence-only until equivalent proof exists.
+`docs/v3-deployed-truth.json` pins immutable deployed binary and IDL observations
+for all six mainnet programs. Only escrow has a known source commit that
+reproduces deployed bytes, so source reproducibility is **1/6**. The other five
+records deliberately use the literal source commit `unknown`; their recorded
+deployed values are truth evidence, not source-to-binary claims.
 
 ## 1. Scope and dependency direction
 
@@ -38,8 +40,12 @@ require AgentFolio infrastructure.
 
 ## 2. Canonical V3 interface set
 
-The committed source of interface truth is the JSON under `idls/v3/`. Names and
-addresses below are copied from those files.
+The committed source-generated interface set is the JSON directly under
+`idls/v3/`. Full production Program Metadata readbacks are under
+`idls/v3/mainnet/`; comparisons normalize the top-level IDL `address` before
+semantic comparison. Names and addresses below describe the source-generated
+interfaces and their configured cluster deployments, not blanket production
+feature claims.
 
 | Program | Committed IDL | IDL address | Instructions |
 | --- | --- | --- | --- |
@@ -74,6 +80,11 @@ attestations, and score recomputation. Revocation changes effective status; it
 does not erase historical existence. Consumers must apply an explicit issuer
 trust policy rather than silently treating unknown issuers as protocol or
 security authorities.
+
+The current mainnet Program Metadata IDL exposes five instructions and omits
+`create_verified_attestation`. Production-cluster consumers must use
+`idls/v3/mainnet/attestations_v3.json` and must not infer that source-only
+instruction from the source-generated IDL.
 
 ### 3.3 Reputation and validation
 
@@ -192,10 +203,12 @@ mutation.
 ## 8. Evidence and deployment truth
 
 A green local test, generated IDL, committed path, or program ID is not a live
-claim. A live claim must bind source, built artifact, deployed ProgramData,
-canonical IDL read path, cluster, and observation time. The escrow proof packet
-currently supplies that binding for its recorded mainnet observation. Equivalent
-proof is still required before making the same claim for each other V3 program.
+claim. `docs/v3-deployed-truth.json` binds each mainnet program to its
+last-written slot/date, stored binary SHA-256 and size, stored IDL SHA-256, and
+source commit or literal `unknown`. Nightly readback fails on incomplete reads or
+drift from those six immutable records. Escrow alone additionally binds a source
+commit and reproducible build to deployed bytes; the five-program source gap is
+recorded evidence and is not itself nightly drift.
 
 ## 9. Restricted actions
 

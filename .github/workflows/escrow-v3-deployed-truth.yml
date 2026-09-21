@@ -15,6 +15,7 @@ on:
       - "programs/**"
       - "rust-toolchain.toml"
       - "docs/escrow-v3-deployed-truth.json"
+      - "docs/v3-deployed-truth.json"
       - "scripts/build-verify-escrow-v3-deployed-source.sh"
       - "idls/v3/**"
       - "scripts/build-verify-v3-deployed-programs.sh"
@@ -36,6 +37,7 @@ on:
       - "programs/**"
       - "rust-toolchain.toml"
       - "docs/escrow-v3-deployed-truth.json"
+      - "docs/v3-deployed-truth.json"
       - "scripts/build-verify-escrow-v3-deployed-source.sh"
       - "idls/v3/**"
       - "scripts/build-verify-v3-deployed-programs.sh"
@@ -103,20 +105,25 @@ jobs:
           echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
 
       - name: Rebuild recorded deployed escrow source
+        id: rebuild-escrow
+        continue-on-error: true
         env:
           SATP_V3_RPC_URL_MAINNET: https://api.mainnet-beta.solana.com
         run: bash scripts/build-verify-escrow-v3-deployed-source.sh
 
-      - name: Rebuild and compare stored deployed programs and IDLs
+      - name: Compare live programs with immutable deployed truth
+        id: compare
+        if: always()
+        continue-on-error: true
         env:
           SATP_V3_RPC_URL_MAINNET: https://api.mainnet-beta.solana.com
         run: |
           set -euo pipefail
           mkdir -p target/v3-deployed-proof
-          bash scripts/build-verify-v3-deployed-programs.sh \
-            | tee target/v3-deployed-proof/proof.json
+          bash scripts/build-verify-v3-deployed-programs.sh
 
       - name: Upload six-program read-only proof
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: v3-deployed-truth-${{ github.sha }}
@@ -126,8 +133,19 @@ jobs:
             target/v3-deployed-proof/stored/*.so
             target/v3-deployed-proof/stored-idls/*.json
             idls/v3/*.json
+            idls/v3/mainnet/*.json
+            docs/v3-deployed-truth.json
           if-no-files-found: error
           retention-days: 90
+
+      - name: Enforce completed drift-free proof
+        if: always()
+        env:
+          REBUILD_OUTCOME: ${{ steps.rebuild-escrow.outcome }}
+          COMPARE_OUTCOME: ${{ steps.compare.outcome }}
+        run: |
+          test "$REBUILD_OUTCOME" = success
+          test "$COMPARE_OUTCOME" = success
 
   program-crate-tests:
     name: Cargo test every programs crate

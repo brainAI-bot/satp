@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 import { createHash } from 'node:crypto';
+import { isDeepStrictEqual } from 'node:util';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { basename, relative, resolve } from 'node:path';
+import { relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { inflateSync } from 'node:zlib';
 import { PublicKey } from '@solana/web3.js';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const truthPath = resolve(root, 'docs/v3-deployed-truth.json');
 const loaderId = 'BPFLoaderUpgradeab1e11111111111111111111111';
 const metadataProgramId = new PublicKey('ProgM6JCCvbYkfKqJYHePx4xxSUSqJp7rh8Lyv7nk7S');
 const programStateTag = 2;
@@ -22,18 +24,14 @@ const defaultRetry = Object.freeze({
   timeoutMs: 20_000,
 });
 
-export const programs = Object.freeze([
-  ['attestations_v3', '6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD'],
-  ['escrow_v3', 'HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C'],
-  ['identity_v3', 'GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG'],
-  ['reputation_v3', '2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ'],
-  ['reviews_v3', 'r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4'],
-  ['validation_v3', '6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV'],
-].map(([name, programId]) => Object.freeze({
-  name,
-  programId,
-  artifactPath: `target/v3-deployed-proof/rebuilt/${name}.so`,
-  idlPath: `idls/v3/${name}.json`,
+const truth = JSON.parse(readFileSync(truthPath, 'utf8'));
+export const programs = Object.freeze(truth.programs.map((record) => Object.freeze({
+  name: record.program,
+  programId: record.program_id,
+  idlPath: record.canonical_source_idl.path,
+  productionIdlPath: record.production_idl_path,
+  artifactPath: record.source_reproducible ? 'target/deployed-truth/escrow_v3.so' : null,
+  record,
 })));
 
 function invariant(condition, message) {
@@ -119,10 +117,7 @@ function retryDelay(attempt, response, { baseDelayMs, maxDelayMs }) {
   return Math.min(maxDelayMs, baseDelayMs * (2 ** (attempt - 1)));
 }
 
-/**
- * A deliberately narrow JSON-RPC client. The allowlist prevents this proof from
- * ever being extended into transaction submission by configuration alone.
- */
+/** A deliberately narrow client: configuration cannot enable transaction submission. */
 export async function rpcCall(url, method, params, options = {}) {
   invariant(allowedRpcMethods.has(method), `RPC method ${method} is not read-only allowlisted`);
   const config = { ...defaultRetry, ...options };
@@ -139,7 +134,6 @@ export async function rpcCall(url, method, params, options = {}) {
       body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
       signal: AbortSignal.timeout(config.timeoutMs),
     });
-
     if (response.status === 429) {
       last429 = `HTTP 429 on attempt ${attempt}/${config.maxAttempts}`;
       if (attempt < config.maxAttempts) {
@@ -148,7 +142,6 @@ export async function rpcCall(url, method, params, options = {}) {
       }
       break;
     }
-
     invariant(response.ok, `RPC HTTP ${response.status} ${response.statusText || ''}`.trim());
     const payload = await response.json();
     if (payload.error?.code === 429) {
@@ -162,7 +155,6 @@ export async function rpcCall(url, method, params, options = {}) {
     invariant(!payload.error, `RPC ${method} failed: ${JSON.stringify(payload.error)}`);
     return payload.result;
   }
-
   throw new Error(`${last429}; bounded retry limit reached`);
 }
 
@@ -170,10 +162,7 @@ function decodeRpcAccount(result, address) {
   invariant(result?.value, `account ${address} was not found`);
   const [encoded, encoding] = result.value.data;
   invariant(encoding === 'base64', `account ${address} returned ${encoding}, expected base64`);
-  return {
-    ...result.value,
-    data: Buffer.from(encoded, 'base64'),
-  };
+  return { contextSlot: result.context?.slot, ...result.value, data: Buffer.from(encoded, 'base64') };
 }
 
 async function getAccount(rpcUrl, address, options) {
@@ -215,24 +204,61 @@ export function decodeProgramMetadata(data, programId) {
   return inflateSync(data.subarray(metadataHeaderBytes, end));
 }
 
-function assertCanonicalIdl(idlBytes, program) {
-  const idl = JSON.parse(idlBytes.toString('utf8'));
-  invariant(idl.metadata?.name === program.name,
-    `${program.name} canonical IDL metadata.name drifted`);
-  invariant(idl.metadata?.deployments?.mainnet === program.programId,
-    `${program.name} canonical IDL mainnet deployment drifted`);
+export function normalizeIdlAddress(idlBytes) {
+  const normalized = JSON.parse(Buffer.isBuffer(idlBytes) ? idlBytes.toString('utf8') : idlBytes);
+  normalized.address = '<normalized-program-address>';
+  return normalized;
+}
+
+export function semanticIdlMatch(left, right) {
+  return isDeepStrictEqual(normalizeIdlAddress(left), normalizeIdlAddress(right));
+}
+
+export function validateTruthRecord(manifest = truth) {
+  invariant(manifest.schema_version === 1, 'deployed truth schema_version must be 1');
+  invariant(manifest.cluster === 'mainnet-beta', 'deployed truth cluster must be mainnet-beta');
+  invariant(manifest.source_reproducibility?.reproducible_programs === 1,
+    'deployed truth must record exactly one reproducible program');
+  invariant(manifest.source_reproducibility?.total_programs === 6,
+    'deployed truth must record six programs');
+  invariant(manifest.source_reproducibility?.known_source_gap_programs === 5,
+    'deployed truth must record the five-program source gap');
+  invariant(manifest.programs?.length === 6, 'deployed truth must contain six program records');
+  invariant(new Set(manifest.programs.map(({ program }) => program)).size === 6,
+    'deployed truth program names must be unique');
+  for (const record of manifest.programs) {
+    invariant(Number.isSafeInteger(record.last_written_slot) && record.last_written_slot > 0,
+      `${record.program} last-written slot must be recorded`);
+    invariant(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.000Z$/u.test(record.last_written_at_utc),
+      `${record.program} last-written date must be ISO UTC`);
+    for (const [label, stored] of [['binary', record.stored_binary], ['IDL', record.stored_idl]]) {
+      invariant(Number.isSafeInteger(stored?.bytes) && stored.bytes > 0,
+        `${record.program} stored ${label} size must be recorded`);
+      invariant(/^[0-9a-f]{64}$/u.test(stored?.sha256),
+        `${record.program} stored ${label} SHA-256 must be recorded`);
+    }
+    invariant(record.source_commit === 'unknown' || /^[0-9a-f]{40}$/u.test(record.source_commit),
+      `${record.program} source_commit must be a full commit or literal unknown`);
+    invariant(record.source_reproducible === (record.source_commit !== 'unknown'),
+      `${record.program} source reproducibility and commit must agree`);
+    const sourceIdl = readFileSync(resolve(root, record.canonical_source_idl.path));
+    invariant(sourceIdl.length === record.canonical_source_idl.bytes,
+      `${record.program} canonical source IDL size drifted`);
+    invariant(sha256(sourceIdl) === record.canonical_source_idl.sha256,
+      `${record.program} canonical source IDL hash drifted`);
+    const productionIdl = readFileSync(resolve(root, record.production_idl_path));
+    invariant(productionIdl.length === record.stored_idl.bytes,
+      `${record.program} committed production IDL size drifted`);
+    invariant(sha256(productionIdl) === record.stored_idl.sha256,
+      `${record.program} committed production IDL hash drifted`);
+  }
+  return true;
 }
 
 async function verifyProgram(program, rpcUrl, outDir, rpcOptions) {
-  const artifactPath = resolve(root, program.artifactPath);
-  const idlPath = resolve(root, program.idlPath);
-  invariant(existsSync(artifactPath), `missing rebuilt artifact ${program.artifactPath}`);
-  invariant(existsSync(idlPath), `missing canonical IDL ${program.idlPath}`);
-
-  const artifact = readFileSync(artifactPath);
-  const canonicalIdl = readFileSync(idlPath);
-  assertCanonicalIdl(canonicalIdl, program);
-
+  const { record } = program;
+  const sourceIdl = readFileSync(resolve(root, program.idlPath));
+  const productionIdl = readFileSync(resolve(root, program.productionIdlPath));
   const programAccount = await getAccount(rpcUrl, program.programId, rpcOptions);
   invariant(programAccount.owner === loaderId, `${program.name} program owner drifted`);
   invariant(programAccount.executable === true, `${program.name} program is not executable`);
@@ -245,48 +271,73 @@ async function verifyProgram(program, rpcUrl, outDir, rpcOptions) {
   invariant(programDataAccount.data.length > programDataHeaderBytes
     && programDataAccount.data.readUInt32LE(0) === programDataStateTag,
   `${program.name} ProgramData layout drifted`);
-
+  const lastWrittenSlot = Number(programDataAccount.data.readBigUInt64LE(4));
   const allocated = programDataAccount.data.subarray(programDataHeaderBytes);
-  const deployedBinaryLength = parseElfLength(allocated);
-  const deployedBinary = allocated.subarray(0, deployedBinaryLength);
-  const allocationPadding = allocated.subarray(deployedBinaryLength);
-  invariant(allocationPadding.every((byte) => byte === 0),
+  const deployedBinary = allocated.subarray(0, parseElfLength(allocated));
+  invariant(allocated.subarray(deployedBinary.length).every((byte) => byte === 0),
     `${program.name} deployed allocation padding is non-zero`);
-  const binaryMatch = artifact.equals(deployedBinary);
 
   const idlAddress = metadataAddress(program.programId);
   const metadataAccount = await getAccount(rpcUrl, idlAddress.toBase58(), rpcOptions);
   invariant(metadataAccount.owner === metadataProgramId.toBase58(),
     `${program.name} Program Metadata owner drifted`);
   const deployedIdl = decodeProgramMetadata(metadataAccount.data, program.programId);
-  const idlMatch = canonicalIdl.equals(deployedIdl);
 
   const storedDir = resolve(outDir, 'stored');
   const storedIdlDir = resolve(outDir, 'stored-idls');
   mkdirSync(storedDir, { recursive: true });
   mkdirSync(storedIdlDir, { recursive: true });
-  writeFileSync(resolve(storedDir, `${program.name}.so`), deployedBinary);
-  writeFileSync(resolve(storedIdlDir, `${program.name}.json`), deployedIdl);
+  const storedBinaryPath = resolve(storedDir, `${program.name}.so`);
+  const storedIdlPath = resolve(storedIdlDir, `${program.name}.json`);
+  writeFileSync(storedBinaryPath, deployedBinary);
+  writeFileSync(storedIdlPath, deployedIdl);
+
+  const binaryHash = sha256(deployedBinary);
+  const idlHash = sha256(deployedIdl);
+  const recordMatch = programDataAddress === record.program_data
+    && lastWrittenSlot === record.last_written_slot
+    && deployedBinary.length === record.stored_binary.bytes
+    && binaryHash === record.stored_binary.sha256
+    && deployedIdl.length === record.stored_idl.bytes
+    && idlHash === record.stored_idl.sha256;
+  const productionIdlMatch = semanticIdlMatch(productionIdl, deployedIdl);
+  const sourceIdlMatch = semanticIdlMatch(sourceIdl, deployedIdl);
+  const expectedSourceVerdict = record.canonical_source_idl.semantic_verdict_after_address_normalization;
+  const sourceVerdict = sourceIdlMatch ? 'MATCH' : 'DIFFER_KNOWN_SOURCE_GAP';
+  invariant(sourceVerdict === expectedSourceVerdict,
+    `${program.name} source-IDL gap changed from ${expectedSourceVerdict} to ${sourceVerdict}`);
+
+  let sourceBinaryVerdict = 'NOT_REPRODUCIBLE_KNOWN_SOURCE_GAP';
+  if (record.source_reproducible) {
+    invariant(program.artifactPath && existsSync(resolve(root, program.artifactPath)),
+      `missing rebuilt reproducible artifact ${program.artifactPath}`);
+    const artifact = readFileSync(resolve(root, program.artifactPath));
+    sourceBinaryVerdict = artifact.equals(deployedBinary) ? 'MATCH' : 'DIFFER';
+  }
 
   return {
     program: program.name,
     program_id: program.programId,
     program_data: programDataAddress,
-    idl_account: idlAddress.toBase58(),
-    rebuilt_binary: relative(root, artifactPath),
-    stored_deployed_binary: relative(root, resolve(storedDir, `${program.name}.so`)),
-    rebuilt_binary_bytes: artifact.length,
-    rebuilt_binary_sha256: sha256(artifact),
+    last_written_slot: lastWrittenSlot,
+    last_written_at_utc: record.last_written_at_utc,
+    observed_at_finalized_slot: Math.max(
+      programAccount.contextSlot || 0,
+      programDataAccount.contextSlot || 0,
+      metadataAccount.contextSlot || 0,
+    ),
+    stored_deployed_binary: relative(root, storedBinaryPath),
     stored_deployed_binary_bytes: deployedBinary.length,
-    stored_deployed_binary_sha256: sha256(deployedBinary),
-    canonical_idl: program.idlPath,
-    stored_deployed_idl: relative(root, resolve(storedIdlDir, `${program.name}.json`)),
-    canonical_idl_bytes: canonicalIdl.length,
-    canonical_idl_sha256: sha256(canonicalIdl),
+    stored_deployed_binary_sha256: binaryHash,
+    stored_deployed_idl: relative(root, storedIdlPath),
     stored_deployed_idl_bytes: deployedIdl.length,
-    stored_deployed_idl_sha256: sha256(deployedIdl),
-    binary_verdict: binaryMatch ? 'MATCH' : 'DIFFER',
-    idl_verdict: idlMatch ? 'MATCH' : 'DIFFER',
+    stored_deployed_idl_sha256: idlHash,
+    idl_account: idlAddress.toBase58(),
+    source_commit: record.source_commit,
+    source_binary_verdict: sourceBinaryVerdict,
+    source_idl_verdict: sourceVerdict,
+    production_idl_verdict: productionIdlMatch ? 'MATCH' : 'DIFFER',
+    record_verdict: recordMatch ? 'MATCH' : 'DIFFER',
     comparison_completed: true,
   };
 }
@@ -294,8 +345,10 @@ async function verifyProgram(program, rpcUrl, outDir, rpcOptions) {
 export function proofMatches(results) {
   return results.length === programs.length
     && results.every((result) => result.comparison_completed)
-    && results.every((result) =>
-      result.binary_verdict === 'MATCH' && result.idl_verdict === 'MATCH');
+    && results.every((result) => result.record_verdict === 'MATCH')
+    && results.every((result) => result.production_idl_verdict === 'MATCH')
+    && results.every((result) => result.source_binary_verdict === 'MATCH'
+      || result.source_binary_verdict === 'NOT_REPRODUCIBLE_KNOWN_SOURCE_GAP');
 }
 
 export async function verifyPrograms({
@@ -304,6 +357,7 @@ export async function verifyPrograms({
   rpcOptions,
   verifyProgramImpl = verifyProgram,
 } = {}) {
+  validateTruthRecord();
   const results = [];
   for (const program of programs) {
     try {
@@ -312,31 +366,33 @@ export async function verifyPrograms({
       results.push({
         program: program.name,
         program_id: program.programId,
-        binary_verdict: 'NOT_COMPARED',
-        idl_verdict: 'NOT_COMPARED',
+        source_commit: program.record.source_commit,
+        record_verdict: 'NOT_COMPARED',
+        production_idl_verdict: 'NOT_COMPARED',
+        source_binary_verdict: program.record.source_reproducible ? 'NOT_COMPARED' : 'NOT_REPRODUCIBLE_KNOWN_SOURCE_GAP',
+        source_idl_verdict: 'NOT_COMPARED',
         comparison_completed: false,
         error: error instanceof Error ? error.message : String(error),
       });
     }
   }
-  const comparisonCompleted = results.length === programs.length
-    && results.every((result) => result.comparison_completed);
-  const allMatch = proofMatches(results);
+  const comparisonCompleted = results.every((result) => result.comparison_completed);
+  const ok = proofMatches(results);
   return {
-    ok: allMatch,
+    ok,
     comparison_completed: comparisonCompleted,
-    cluster: 'mainnet-beta',
+    cluster: truth.cluster,
+    truth_record: relative(root, truthPath),
+    source_reproducibility: truth.source_reproducibility,
     summary: {
       compared_programs: results.length,
-      binary_matches: results.filter((result) => result.binary_verdict === 'MATCH').length,
-      binary_differences: results.filter((result) => result.binary_verdict === 'DIFFER').length,
-      binary_not_compared: results.filter((result) => result.binary_verdict === 'NOT_COMPARED').length,
-      idl_matches: results.filter((result) => result.idl_verdict === 'MATCH').length,
-      idl_differences: results.filter((result) => result.idl_verdict === 'DIFFER').length,
-      idl_not_compared: results.filter((result) => result.idl_verdict === 'NOT_COMPARED').length,
-      comparison_errors: results.filter((result) => !result.comparison_completed).length,
-      all_binary_match: results.every((result) => result.binary_verdict === 'MATCH'),
-      all_idl_match: results.every((result) => result.idl_verdict === 'MATCH'),
+      record_matches: results.filter((result) => result.record_verdict === 'MATCH').length,
+      record_differences: results.filter((result) => result.record_verdict === 'DIFFER').length,
+      not_compared: results.filter((result) => !result.comparison_completed).length,
+      production_idl_matches: results.filter((result) => result.production_idl_verdict === 'MATCH').length,
+      source_binary_matches: results.filter((result) => result.source_binary_verdict === 'MATCH').length,
+      known_source_binary_gaps: results.filter((result) =>
+        result.source_binary_verdict === 'NOT_REPRODUCIBLE_KNOWN_SOURCE_GAP').length,
     },
     safety: {
       allowed_rpc_methods: [...allowedRpcMethods],
@@ -356,17 +412,32 @@ export async function verifyPrograms({
 }
 
 async function main() {
-  const proof = await verifyPrograms();
+  const outDir = resolve(root, 'target/v3-deployed-proof');
+  mkdirSync(outDir, { recursive: true });
+  let proof;
+  try {
+    proof = await verifyPrograms({ outDir });
+  } catch (error) {
+    proof = {
+      ok: false,
+      comparison_completed: false,
+      cluster: truth.cluster || 'mainnet-beta',
+      truth_record: relative(root, truthPath),
+      fatal_error: error instanceof Error ? error.message : String(error),
+      results: [],
+    };
+  }
+  writeFileSync(resolve(outDir, 'proof.json'), `${JSON.stringify(proof, null, 2)}\n`);
   console.log(JSON.stringify(proof, null, 2));
-  invariant(proof.comparison_completed, 'six-program deployed proof did not complete');
-  invariant(proof.ok, 'six-program deployed proof found binary or IDL drift');
+  invariant(proof.comparison_completed, 'six-program deployed truth readback did not complete');
+  invariant(proof.ok, 'six-program deployed truth drifted from the immutable record');
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
     await main();
   } catch (error) {
-    console.error(`V3 deployed proof failed: ${error.message}`);
+    console.error(`V3 deployed truth failed: ${error.message}`);
     process.exitCode = 1;
   }
 }

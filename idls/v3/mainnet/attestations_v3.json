@@ -1,0 +1,615 @@
+{
+  "address": "6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD",
+  "metadata": {
+    "name": "attestations_v3",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "SATP Attestations V3 — agent_id-based attestations with CPI from Reviews"
+  },
+  "instructions": [
+    {
+      "name": "create_attestation",
+      "docs": [
+        "Create an attestation for an agent (identified by agent_id).",
+        "PDA: `[b\"attestation_v3\", SHA256(agent_id), issuer, attestation_type]`"
+      ],
+      "discriminator": [
+        49,
+        24,
+        67,
+        80,
+        12,
+        249,
+        96,
+        239
+      ],
+      "accounts": [
+        {
+          "name": "attestation",
+          "writable": true
+        },
+        {
+          "name": "issuer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "attestation_type",
+          "type": "string"
+        },
+        {
+          "name": "proof_data",
+          "type": "string"
+        },
+        {
+          "name": "expires_at",
+          "type": {
+            "option": "i64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create_review_attestation",
+      "docs": [
+        "CPI-only: Called by Reviews V3 to auto-create a review attestation.",
+        "Auto-verified (programmatic attestation)."
+      ],
+      "discriminator": [
+        10,
+        168,
+        98,
+        89,
+        138,
+        54,
+        148,
+        202
+      ],
+      "accounts": [
+        {
+          "name": "attestation",
+          "writable": true
+        },
+        {
+          "name": "reviews_authority",
+          "docs": [
+            "Reviews program PDA authority — must sign via CPI"
+          ],
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "reviewer",
+          "type": "pubkey"
+        },
+        {
+          "name": "rating",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "recompute_score",
+      "docs": [
+        "Recompute attestation-based score and verification level for an agent.",
+        "Reads all attestations for the agent (via remaining_accounts), computes:",
+        "- Score = sum of platform weights for verified, non-revoked, non-expired attestations",
+        "- Level = threshold-based on score (L1≥identity, L2≥50, L3≥100, L4≥150, L5≥200)",
+        "Then CPIs to identity_v3::update_score_and_level to persist on the genesis PDA.",
+        "Permissionless — anyone can trigger a recompute (read-only on attestations)."
+      ],
+      "discriminator": [
+        205,
+        1,
+        251,
+        248,
+        240,
+        27,
+        66,
+        214
+      ],
+      "accounts": [
+        {
+          "name": "genesis",
+          "docs": [
+            "The agent's genesis record — will be updated via CPI"
+          ],
+          "writable": true
+        },
+        {
+          "name": "attestations_authority",
+          "docs": [
+            "Attestations program PDA authority for CPI signing"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  116,
+                  116,
+                  101,
+                  115,
+                  116,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  115,
+                  95,
+                  118,
+                  51,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "identity_program",
+          "docs": [
+            "Identity program for CPI"
+          ],
+          "address": "GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG"
+        },
+        {
+          "name": "caller",
+          "docs": [
+            "Permissionless caller — anyone can trigger recompute"
+          ],
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "revoke_attestation",
+      "docs": [
+        "Revoke an attestation (issuer only)."
+      ],
+      "discriminator": [
+        12,
+        156,
+        103,
+        161,
+        194,
+        246,
+        211,
+        179
+      ],
+      "accounts": [
+        {
+          "name": "attestation",
+          "writable": true
+        },
+        {
+          "name": "issuer",
+          "signer": true,
+          "relations": [
+            "attestation"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "verify_attestation",
+      "docs": [
+        "Verify an attestation (issuer only)."
+      ],
+      "discriminator": [
+        144,
+        30,
+        116,
+        186,
+        33,
+        176,
+        35,
+        60
+      ],
+      "accounts": [
+        {
+          "name": "attestation",
+          "writable": true
+        },
+        {
+          "name": "issuer",
+          "signer": true,
+          "relations": [
+            "attestation"
+          ]
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Attestation",
+      "discriminator": [
+        152,
+        125,
+        183,
+        86,
+        36,
+        146,
+        121,
+        73
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AttestationCreated",
+      "discriminator": [
+        217,
+        170,
+        19,
+        203,
+        128,
+        51,
+        29,
+        163
+      ]
+    },
+    {
+      "name": "AttestationRevoked",
+      "discriminator": [
+        47,
+        106,
+        65,
+        238,
+        200,
+        127,
+        163,
+        50
+      ]
+    },
+    {
+      "name": "AttestationVerified",
+      "discriminator": [
+        98,
+        148,
+        167,
+        161,
+        88,
+        59,
+        107,
+        231
+      ]
+    },
+    {
+      "name": "ScoreRecomputed",
+      "discriminator": [
+        95,
+        86,
+        16,
+        84,
+        58,
+        173,
+        129,
+        54
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "TypeTooLong",
+      "msg": "Attestation type must be 64 characters or less"
+    },
+    {
+      "code": 6001,
+      "name": "ProofDataTooLong",
+      "msg": "Proof data must be 512 characters or less"
+    },
+    {
+      "code": 6002,
+      "name": "ExpiryInPast",
+      "msg": "Expiry must be in the future"
+    },
+    {
+      "code": 6003,
+      "name": "AlreadyRevoked",
+      "msg": "Attestation already revoked"
+    }
+  ],
+  "types": [
+    {
+      "name": "Attestation",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent_id",
+            "type": "string"
+          },
+          {
+            "name": "agent_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "attestation_type",
+            "type": "string"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "proof_data",
+            "type": "string"
+          },
+          {
+            "name": "verified",
+            "type": "bool"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "expires_at",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "is_revoked",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AttestationCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent_id",
+            "type": "string"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "attestation_type",
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AttestationRevoked",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent_id",
+            "type": "string"
+          },
+          {
+            "name": "attestation_type",
+            "type": "string"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AttestationVerified",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent_id",
+            "type": "string"
+          },
+          {
+            "name": "attestation_type",
+            "type": "string"
+          },
+          {
+            "name": "issuer",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GenesisRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "agent_name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "name": "capabilities",
+            "type": {
+              "vec": "string"
+            }
+          },
+          {
+            "name": "metadata_uri",
+            "type": "string"
+          },
+          {
+            "name": "face_image",
+            "type": "string"
+          },
+          {
+            "name": "face_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "face_burn_tx",
+            "type": "string"
+          },
+          {
+            "name": "genesis_record",
+            "type": "i64"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_authority",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "reputation_score",
+            "type": "u64"
+          },
+          {
+            "name": "verification_level",
+            "type": "u8"
+          },
+          {
+            "name": "reputation_updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "verification_updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoreRecomputed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent_id_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "raw_score",
+            "type": "u64"
+          },
+          {
+            "name": "scaled_score",
+            "type": "u64"
+          },
+          {
+            "name": "level",
+            "type": "u8"
+          },
+          {
+            "name": "attestation_count",
+            "type": "u32"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}

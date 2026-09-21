@@ -2,7 +2,7 @@
 
 Schema: HQ roadmap v1
 Status: ACTIVE - PLANNING
-Last updated: 2026-09-19
+Last updated: 2026-09-21
 
 SATP is the Solana Agent Trust Protocol: an app-agnostic protocol and SDK
 surface for portable AI-agent identity, attestations, reputation, validation,
@@ -91,9 +91,11 @@ conformance, security, release, and mainnet authority gates remain open.
   parties can inspect the open-core source independently (ARCHITECTURE section
   5 mandate; approved 2026-07-06). [#3faa5445] [shipped]
 - cfg-bound source-identity gates record reviewed source packages. Mainnet
-  escrow source commit `0bf088e5618f173dff7e0fba622bc2911212c52e` now has a
-  reproducible byte-for-byte match to deployed ProgramData; other program and
-  network source-to-chain claims remain evidence-only until separately proven.
+  escrow source commit `3f8188bec89db0d4a081931f35272e10185d1c0d` has a
+  reproducible byte-for-byte match to deployed ProgramData. Immutable deployed
+  binary/IDL truth is recorded for all six mainnet programs, while source
+  reproducibility remains **1/6** and the other five source commits are literal
+  `unknown` until separately proven.
   [#3faa5445] [#6c477338] [shipped]
 
 ## Phase 2 - SDK package and consumer boundary
@@ -236,9 +238,12 @@ conformance, security, release, and mainnet authority gates remain open.
 
 ## Phase 7 - On-chain program completion (open-core)
 
-- V3 IDLs are committed under `idls/v3/`; escrow is pinned there to the verified
-  deployed-source interface. CI validates that tree and the deployed-source
-  provenance packet. [#c5634a2c] [shipped]
+- Source-generated V3 IDLs are committed directly under `idls/v3/`; full
+  production Program Metadata readbacks are committed under `idls/v3/mainnet/`.
+  `docs/v3-deployed-truth.json` pins all six production IDL hashes and binary
+  hashes. CI normalizes the IDL address for semantic comparison and fails on
+  incomplete readback or immutable-record drift, not the known five-program
+  source gap. [#c5634a2c] [shipped]
 - USDC escrow support in the escrow program and dual-currency SDK builders (SPL
   vault PDA, ATAs, transfer_checked); SOL-first is fine to launch, USDC is v2.
   [#14fa5837] [shipped]

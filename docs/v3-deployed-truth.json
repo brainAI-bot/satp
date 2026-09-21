@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-09-21T14:17:47Z",
+  "cluster": "mainnet-beta",
+  "status": "immutable_six_program_deployed_truth_one_of_six_source_reproducible",
+  "observation": {
+    "method": "public finalized getAccountInfo readback; ProgramData slot converted with public getBlockTime",
+    "rpc_credentials_required": false,
+    "chain_mutation": false
+  },
+  "source_reproducibility": {
+    "reproducible_programs": 1,
+    "total_programs": 6,
+    "known_source_gap_programs": 5
+  },
+  "programs": [
+    {
+      "program": "attestations_v3",
+      "program_id": "6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD",
+      "program_data": "HAtBvBFtuz54PaVf4cX1KiZhy9qaJo355TAs1HJW5VU1",
+      "last_written_slot": 411206412,
+      "last_written_at_utc": "2026-04-05T14:06:25.000Z",
+      "observed_at_finalized_slot": 449079498,
+      "canonical_source_idl": {
+        "path": "idls/v3/attestations_v3.json",
+        "bytes": 9473,
+        "sha256": "34dbbadd103398ac989128a7fc7a45dfa00e9d1b372c2612c211bcdd2a9af42e",
+        "semantic_verdict_after_address_normalization": "DIFFER_KNOWN_SOURCE_GAP"
+      },
+      "production_idl_path": "idls/v3/mainnet/attestations_v3.json",
+      "source_commit": "unknown",
+      "source_reproducible": false,
+      "stored_binary": {
+        "bytes": 247440,
+        "sha256": "482a205104396ffabb20c8b086a025abd3b842dbde97f7716daa029e80e1fa6d"
+      },
+      "stored_idl": {
+        "account": "6WTXMPhLWHL3EBqdrRG2ctiHz9LrUhGR2ASXjyn3RgG3",
+        "bytes": 12516,
+        "sha256": "9ed5910e8d530fcd32848a3f35ca558c87b8b08073bbeea537feb6d0b6434b9e"
+      }
+    },
+    {
+      "program": "escrow_v3",
+      "program_id": "HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C",
+      "program_data": "Fg1DJyKX9CngiMihZxJY2zjaQ8T1PK5QuiVhNvJmeTqk",
+      "last_written_slot": 442907465,
+      "last_written_at_utc": "2026-08-30T14:57:41.000Z",
+      "observed_at_finalized_slot": 449079502,
+      "canonical_source_idl": {
+        "path": "idls/v3/escrow_v3.json",
+        "bytes": 20926,
+        "sha256": "ef9622a6d07bd818d3a74ba6c61f3b3f447f61167e82aadc65ecbce4fb307829",
+        "semantic_verdict_after_address_normalization": "MATCH"
+      },
+      "production_idl_path": "idls/v3/mainnet/escrow_v3.json",
+      "source_commit": "3f8188bec89db0d4a081931f35272e10185d1c0d",
+      "source_reproducible": true,
+      "stored_binary": {
+        "bytes": 350304,
+        "sha256": "27395415b6dc3d069d8a0a974613e647af1494590cbaff0a2658945a2bc4784a"
+      },
+      "stored_idl": {
+        "account": "4zNAR5DGuWuUnEbwGb7FzEVUUCx2xKca2bmHCeVpjQCJ",
+        "bytes": 20926,
+        "sha256": "ef9622a6d07bd818d3a74ba6c61f3b3f447f61167e82aadc65ecbce4fb307829"
+      }
+    },
+    {
+      "program": "identity_v3",
+      "program_id": "GTppU4E44BqXTQgbqMZ68ozFzhP1TLty3EGnzzjtNZfG",
+      "program_data": "DcWi5LYdfRQS5wJo5BWGANt2FcayQNecHmpL6P9p1jAL",
+      "last_written_slot": 411206476,
+      "last_written_at_utc": "2026-04-05T14:06:51.000Z",
+      "observed_at_finalized_slot": 449079504,
+      "canonical_source_idl": {
+        "path": "idls/v3/identity_v3.json",
+        "bytes": 28615,
+        "sha256": "0b11ae52a3e9bafa162cb1775ee2812c898d9285a25b4efa82bd31c5a89e7f55",
+        "semantic_verdict_after_address_normalization": "DIFFER_KNOWN_SOURCE_GAP"
+      },
+      "production_idl_path": "idls/v3/mainnet/identity_v3.json",
+      "source_commit": "unknown",
+      "source_reproducible": false,
+      "stored_binary": {
+        "bytes": 424464,
+        "sha256": "0fdbc1c227eb30420863958c9993a36fe9ce7bbe077d6a25d277e1a608cda05b"
+      },
+      "stored_idl": {
+        "account": "4pZm8ymtXvceYfMSu7UZ2STXEnrcHc8csDQ7qkunofvZ",
+        "bytes": 51908,
+        "sha256": "1ee8de04c54fb219df6bf90fd5ab391a85f776dbd452745f7d28335d5562f9c2"
+      }
+    },
+    {
+      "program": "reputation_v3",
+      "program_id": "2Lz7KzMvKdrGeAuS8WPHu7jK2yScrnKVgacpYVEuDjkJ",
+      "program_data": "DYxB3qZQKc2rcbnJCdBoEMFunJF4oonLtEbuhXhXJQ1x",
+      "last_written_slot": 410959867,
+      "last_written_at_utc": "2026-04-04T11:13:29.000Z",
+      "observed_at_finalized_slot": 449079507,
+      "canonical_source_idl": {
+        "path": "idls/v3/reputation_v3.json",
+        "bytes": 3130,
+        "sha256": "4dbbd6f66c34e72786306b5113d2d33d79897bf0a6c20089bef86aff8ad1f378",
+        "semantic_verdict_after_address_normalization": "DIFFER_KNOWN_SOURCE_GAP"
+      },
+      "production_idl_path": "idls/v3/mainnet/reputation_v3.json",
+      "source_commit": "unknown",
+      "source_reproducible": false,
+      "stored_binary": {
+        "bytes": 141496,
+        "sha256": "4114befcacd75405b480ad3a96ece1ecf48716a94e617ceec85616d336c67a83"
+      },
+      "stored_idl": {
+        "account": "9TBVwBghEizSFKtEUY7JdDVgLkAjTnTZf8R8zBJGt3HS",
+        "bytes": 4534,
+        "sha256": "a73f0a92d499ff99d13f4e8aae8e46baa1f4fc8e7b131cb98e522748077dccd9"
+      }
+    },
+    {
+      "program": "reviews_v3",
+      "program_id": "r9XX4frcqxxAZ6Au9V5PA3EAxs1zoNckqLLmoSRcNr4",
+      "program_data": "8NEkNwSTFzj5EyJh7NCGNUUY4n9Zfpi5vKb72YJGYmYR",
+      "last_written_slot": 410959777,
+      "last_written_at_utc": "2026-04-04T11:12:55.000Z",
+      "observed_at_finalized_slot": 449079509,
+      "canonical_source_idl": {
+        "path": "idls/v3/reviews_v3.json",
+        "bytes": 6018,
+        "sha256": "c296f5503bb670a959299bf770c28736c2bdd1d2ff939d73c1eb4fd4e7056c16",
+        "semantic_verdict_after_address_normalization": "DIFFER_KNOWN_SOURCE_GAP"
+      },
+      "production_idl_path": "idls/v3/mainnet/reviews_v3.json",
+      "source_commit": "unknown",
+      "source_reproducible": false,
+      "stored_binary": {
+        "bytes": 208000,
+        "sha256": "dd80167c1cbd80d203cde256bda490c78ea11154bd7fc5095f899e48990d7776"
+      },
+      "stored_idl": {
+        "account": "HSt6BAUKHKqLWSpXFEnAwQHZAxvD6Sp3RbJLW12WWEMi",
+        "bytes": 8677,
+        "sha256": "8d06840caa599d653cc92afae311e1043cc701d7ebd75105a59fb9a2b5e8ebdd"
+      }
+    },
+    {
+      "program": "validation_v3",
+      "program_id": "6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV",
+      "program_data": "4J7KCbKnS1EWJyWhdxodmtZcLgCNpSAYXVUMhmjw1TeT",
+      "last_written_slot": 410959899,
+      "last_written_at_utc": "2026-04-04T11:13:41.000Z",
+      "observed_at_finalized_slot": 449079512,
+      "canonical_source_idl": {
+        "path": "idls/v3/validation_v3.json",
+        "bytes": 3355,
+        "sha256": "a3dab368fc39a5eead732119f301b80f5d0831d1c84d21e6e870037133ce1036",
+        "semantic_verdict_after_address_normalization": "DIFFER_KNOWN_SOURCE_GAP"
+      },
+      "production_idl_path": "idls/v3/mainnet/validation_v3.json",
+      "source_commit": "unknown",
+      "source_reproducible": false,
+      "stored_binary": {
+        "bytes": 135192,
+        "sha256": "803b30069de346e74a1c2514d6cf9ab5bcf54b59259afa8053535560eb8db31e"
+      },
+      "stored_idl": {
+        "account": "GxY5zysmsffrGHiqwQMpANgnAVuyccDfoRFFcmNgm3sb",
+        "bytes": 4855,
+        "sha256": "0283531e713bd91eb8ad008c35c962b61063e63f471657de52aafdf8dcb5f46a"
+      }
+    }
+  ]
+}
