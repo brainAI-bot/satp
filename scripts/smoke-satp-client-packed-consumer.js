@@ -59,7 +59,7 @@ function requireEveryExport(packageJson, packageRoot, consumerRoot) {
       const normalized = target.replace(/^\.\//, '');
       if (normalized.includes('*')) {
         const escaped = normalized.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
-        const matcher = new RegExp(`^${escaped.replace('*', '(.+)')}$`);
+        const matcher = new RegExp(`^${escaped.replaceAll('*', '(.+)')}$`);
         const matches = installedFiles
           .filter((file) => !file.endsWith('.d.ts'))
           .map((file) => ({ file, match: file.match(matcher) }))
@@ -68,7 +68,7 @@ function requireEveryExport(packageJson, packageRoot, consumerRoot) {
           throw new Error(`packed export ${exportKey} -> ${target} has no installed target`);
         }
         for (const { match } of matches) {
-          requiredSpecifiers.push(`@brainai/satp-client${exportKey.slice(1).replace('*', match[1])}`);
+          requiredSpecifiers.push(`@brainai/satp-client${exportKey.slice(1).replaceAll('*', match[1])}`);
         }
       } else {
         requiredSpecifiers.push(exportKey === '.'
@@ -201,6 +201,7 @@ try {
     "for (const builder of ['buildEscrowRelease', 'buildPartialRelease']) {",
     "  if (typeof satp.SATPV3SDK.prototype[builder] !== 'function') throw new Error('missing packed v3-sdk fee-routing builder: ' + builder);",
     "}",
+    "if (!satp.V3_ESCROW_PLATFORM_TREASURY || String(satp.V3_ESCROW_PLATFORM_TREASURY).trim() === '') throw new Error('V3_ESCROW_PLATFORM_TREASURY export is empty or missing');",
     "const v3Mainnet = satp.getV3ProgramIds('mainnet');",
     "if (!satp.V3_MAINNET_PROGRAM_IDS) throw new Error('V3_MAINNET_PROGRAM_IDS export is null or missing');",
     "if (v3Mainnet !== satp.V3_MAINNET_PROGRAM_IDS) throw new Error('getV3ProgramIds(mainnet) did not return V3_MAINNET_PROGRAM_IDS');",
@@ -212,6 +213,7 @@ try {
     "  if (typeof walletControl[key] !== 'function') throw new Error('missing wallet-control subpath export: ' + key);",
     "}",
     "const attestationEvidence = require('@brainai/satp-client/attestation-evidence');",
+    "if (!attestationEvidence) throw new Error('attestation-evidence subpath returned an empty export');",
     "const attestationEvidenceResolved = require.resolve('@brainai/satp-client/attestation-evidence');",
     "if (!attestationEvidenceResolved.includes('node_modules')) throw new Error('attestation-evidence subpath did not resolve from clean consumer node_modules');",
     "for (const key of ['normalizeSatpAttestationEvidence', 'verifySatpAttestationEvidence']) {",

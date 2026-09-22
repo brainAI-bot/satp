@@ -89,6 +89,9 @@ function main() {
     fail('npm pack dry-run returned no file list');
   }
   verifyExportTargets(packageJson, pack.files);
+  if (!Object.prototype.hasOwnProperty.call(packageJson.exports || {}, './attestation-evidence')) {
+    fail('satp-client package exports are missing ./attestation-evidence');
+  }
 
   const v3SdkPath = pack.files.find((file) => file.path === 'src/v3-sdk.js');
   if (!v3SdkPath) fail('packed file list is missing src/v3-sdk.js');
@@ -96,6 +99,12 @@ function main() {
   for (const builder of ['buildEscrowRelease', 'buildPartialRelease']) {
     if (!new RegExp(`\\b${builder}\\s*\\(`).test(v3Sdk)) {
       fail(`packed v3-sdk is missing fee-routing builder ${builder}`);
+    }
+  }
+  const feeRoutingBindings = ['V3_ESCROW_PLATFORM_TREASURY', 'validateFixedTreasuryOption'];
+  for (const binding of feeRoutingBindings) {
+    if (!new RegExp(`\\b${binding}\\b`).test(v3Sdk)) {
+      fail(`packed v3-sdk is missing fee-routing binding ${binding}`);
     }
   }
 
@@ -109,6 +118,8 @@ function main() {
     fileCount: pack.files.length,
     exportsVerified: Object.keys(packageJson.exports || {}),
     feeRoutingBuilders: ['SATPV3SDK.buildEscrowRelease', 'SATPV3SDK.buildPartialRelease'],
+    feeRoutingBindings,
+    requiredSubpathExports: ['./attestation-evidence'],
   };
   fs.mkdirSync(path.dirname(path.resolve(values.output)), { recursive: true });
   fs.writeFileSync(path.resolve(values.output), `${JSON.stringify(packet, null, 2)}\n`);
