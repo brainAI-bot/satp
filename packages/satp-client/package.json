@@ -27,6 +27,7 @@
     },
     "./src/*": "./src/*",
     "./idls/*": "./idls/*",
+    "./idls/v3/mainnet/*": "./idls/v3/mainnet/*",
     "./package.json": "./package.json"
   },
   "files": [

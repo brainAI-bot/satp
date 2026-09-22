@@ -21,7 +21,16 @@ const walletControlChallengeSubpath = require('@brainai/satp-client/wallet-contr
 const runtimeAuthorizationEvidenceSubpath = require('@brainai/satp-client/runtime-authorization-evidence');
 const packageMetadata = require('./package.json');
 
+assert.equal(packageMetadata.version, '2.0.9');
 assert.equal(packageMetadata.exports['./idls/*'], './idls/*');
+assert.equal(packageMetadata.exports['./idls/v3/mainnet/*'], './idls/v3/mainnet/*');
+const mainnetAttestationsIdl = require('../../idls/v3/mainnet/attestations_v3.json');
+assert.equal(mainnetAttestationsIdl.address, '6Xd1dAQJPvQRJ4Ntr6LtPTjDjPUZ8nfnmYLZaZ2DtrdD');
+assert.equal(
+  mainnetAttestationsIdl.instructions.some(({ name }) => name === 'create_verified_attestation'),
+  false,
+  'mainnet attestation exports must not advertise an undeployed instruction',
+);
 
 const DEVNET_RPC = 'https://api.devnet.solana.com';
 const MAINNET_RPC = 'https://api.mainnet-beta.solana.com';

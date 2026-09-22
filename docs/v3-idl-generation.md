@@ -2,8 +2,10 @@
 
 Marker: [#c5634a2c]
 
-The deployed-canonical V3 IDLs live under `idls/v3/` and are generated from the
-checked-out Anchor source. Escrow is additionally pinned by the deployed-truth
+The source-generated V3 IDLs live directly under `idls/v3/`. Full immutable
+mainnet Program Metadata readbacks live under `idls/v3/mainnet/`; this explicit
+split prevents source-only instructions from being exported as production
+capabilities. Escrow is additionally pinned by the deployed-truth
 packet to source commit `3f8188bec89db0d4a081931f35272e10185d1c0d`, whose
 reproducible SBF artifact matches the current mainnet ProgramData prefix.
 
@@ -29,7 +31,8 @@ npm run validate:idls
 ```
 
 `node scripts/generate-v3-idls.mjs --check`. The check regenerates all six
-current V3 IDLs under `idls/v3/` and fails if any committed file differs.
+source IDLs directly under `idls/v3/` and fails if any committed file differs.
+It does not overwrite the production readbacks under `idls/v3/mainnet/`.
 `npm run check:v3-idl-program-metadata` verifies the committed Anchor 1.0 IDL
 program metadata against `Anchor.toml` and the SDK consumer program ID exports
 without contacting Solana or writing chain state. The separate deployed-truth
@@ -42,8 +45,9 @@ repository IDL construction surface.
 
 Marker: [#3faa5445] [#c5634a2c]
 
-After the V3 source and generated-IDL PRs landed, `idls/v3/` is the canonical
-V3 IDL tree. The root `idls/*.json`, `idls/agentfolio-current/*.json`, and
+After the V3 source and generated-IDL PRs landed, direct children of `idls/v3/`
+remain source-generated interfaces while `idls/v3/mainnet/` is the production
+readback tree. The root `idls/*.json`, `idls/agentfolio-current/*.json`, and
 `idls/devnet-backup/*.json` files remain compatibility and historical readback
 copies; they are parsed by `npm run validate:idls` but are not regenerated from
 the V3 Anchor source.

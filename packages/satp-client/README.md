@@ -148,6 +148,15 @@ const tx = await sdk.buildCreateIdentity(creatorPubkey, 'myAgent', {
 | `validation_v3` | `6rYRiCYidJYV7QvKrzKGgNu4oMh6BAvynked69R7xMbV` | Validation level computation (CPI → identity) |
 | `escrow_v3` | `HXCUWKR2NvRcZ7rNAJHwPcH6QAAWaLR4bRFbfyuDND6C` | SOL escrow for agent jobs |
 
+Version 2.0.9 prepares cluster-specific IDL exports. Files under
+`@brainai/satp-client/idls/v3/mainnet/*` are the full immutable production
+Program Metadata readbacks pinned by `docs/v3-deployed-truth.json`; the existing
+`idls/v3/*` paths remain source-generated interfaces. Consumers targeting
+mainnet must use the `mainnet` subpath. In particular, the deployed
+`attestations_v3` IDL has five instructions and does **not** contain
+`create_verified_attestation`; only the source-generated interface currently
+contains that instruction.
+
 ## API Reference
 
 ### Read-only Trust Packet Helpers

@@ -19,7 +19,7 @@ const deployedTruthWorkflow = readFileSync(
   'utf8'
 );
 const deployedSourceBuildScript = readFileSync(
-  new URL('../scripts/build-verify-v3-deployed-programs.sh', import.meta.url),
+  new URL('../scripts/build-verify-escrow-v3-deployed-source.sh', import.meta.url),
   'utf8'
 );
 
@@ -50,13 +50,14 @@ function programMetadataAccount(content, paddingBytes = 0) {
   return data;
 }
 
-test('scheduled six-program proof propagates a failed build through tee', () => {
+test('scheduled six-program proof propagates a failed direct comparison', () => {
   const proofStep = deployedTruthWorkflow.slice(
-    deployedTruthWorkflow.indexOf('- name: Rebuild and compare stored deployed programs and IDLs'),
+    deployedTruthWorkflow.indexOf('- name: Compare live programs with immutable deployed truth'),
     deployedTruthWorkflow.indexOf('- name: Upload six-program read-only proof')
   );
   assert.match(proofStep, /set -euo pipefail/u);
-  assert.match(proofStep, /build-verify-v3-deployed-programs\.sh[\s\\]*\| tee/u);
+  assert.match(proofStep, /bash scripts\/build-verify-v3-deployed-programs\.sh/u);
+  assert.doesNotMatch(proofStep, /\|\s*tee/u);
 });
 
 test('deployed-source build prepares the Solana platform-tools cache before build-sbf', () => {
