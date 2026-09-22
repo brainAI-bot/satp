@@ -29,25 +29,32 @@ jobs:
       - name: Check out requested release source
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.commit }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Require an immutable main-ancestor commit
         shell: bash
+        env:
+          RELEASE_COMMIT: ${{ inputs.commit }}
         run: |
           set -euo pipefail
-          if [[ ! "${{ inputs.commit }}" =~ ^[0-9a-f]{40}$ ]]; then
+          if [[ ! "$RELEASE_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
             echo "commit must be a full lowercase SHA" >&2
             exit 1
           fi
           git fetch --no-tags origin main
-          actual="$(git rev-parse HEAD)"
-          if [[ "$actual" != "${{ inputs.commit }}" ]]; then
-            echo "checked out $actual instead of requested commit ${{ inputs.commit }}" >&2
+          if ! git cat-file -e "$RELEASE_COMMIT^{commit}"; then
+            echo "requested commit $RELEASE_COMMIT is not available from origin" >&2
             exit 1
           fi
-          if ! git merge-base --is-ancestor "$actual" origin/main; then
-            echo "requested commit $actual is not an ancestor of origin/main" >&2
+          if ! git merge-base --is-ancestor "$RELEASE_COMMIT" origin/main; then
+            echo "requested commit $RELEASE_COMMIT is not an ancestor of origin/main" >&2
+            exit 1
+          fi
+          git checkout --detach "$RELEASE_COMMIT"
+          actual="$(git rev-parse HEAD)"
+          if [[ "$actual" != "$RELEASE_COMMIT" ]]; then
+            echo "checked out $actual instead of requested commit $RELEASE_COMMIT" >&2
             exit 1
           fi
 
@@ -60,7 +67,9 @@ jobs:
         run: npm ci
 
       - name: Require requested package version
-        run: test "$(node -p "require('./packages/satp-client/package.json').version")" = "${{ inputs.version }}"
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: test "$(node -p "require('./packages/satp-client/package.json').version")" = "$RELEASE_VERSION"
 
       - name: Record dry-run package file list
         shell: bash
@@ -70,11 +79,14 @@ jobs:
           npm pack ./packages/satp-client --dry-run --json > dist/satp-client-pack-dry-run.json
 
       - name: Verify exports, fee routing, and record gitHead
+        env:
+          RELEASE_COMMIT: ${{ inputs.commit }}
+          RELEASE_VERSION: ${{ inputs.version }}
         run: >-
           node scripts/verify-satp-client-release-prep.js
           --pack-json dist/satp-client-pack-dry-run.json
-          --version "${{ inputs.version }}"
-          --git-head "${{ inputs.commit }}"
+          --version "$RELEASE_VERSION"
+          --git-head "$RELEASE_COMMIT"
           --output dist/satp-client-release-prep.json
 
       - name: Install packed tarball in a clean consumer
