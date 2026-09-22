@@ -20,5 +20,6 @@
   "publishedAt": "2026-08-29T18:06:11.408Z",
   "publishTask": "TASK-09243114",
   "stableLatest": "2.0.8",
+  "nextReleaseCandidate": "2.0.9",
   "rcDistTag": "2.0.2"
 }
