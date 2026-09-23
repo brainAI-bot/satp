@@ -137,6 +137,17 @@ try {
   );
   requireEveryExport(installedPackage, installedPackageRoot, tempRoot);
 
+  const feeRoutingOutput = execFileSync(
+    process.execPath,
+    [path.join(repoRoot, 'scripts/verify-satp-client-packed-fee-routing.js'), installedPackageRoot],
+    {
+      cwd: tempRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    },
+  );
+  process.stdout.write(feeRoutingOutput);
+
   if (installedPackage.bundleDependencies !== undefined) {
     throw new Error('packed client must not declare bundleDependencies');
   }
