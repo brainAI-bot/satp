@@ -11,6 +11,11 @@ on:
         description: Full commit SHA to prepare; it must be an ancestor of main
         required: true
         type: string
+      publish:
+        description: Request the principal-gated npm publish after preparation succeeds
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -100,3 +105,113 @@ jobs:
             dist/satp-client-pack-dry-run.json
             dist/satp-client-release-prep.json
           if-no-files-found: error
+
+  publish:
+    name: Publish @brainai/satp-client@${{ inputs.version }}
+    if: ${{ inputs.publish }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: npm-release
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out requested release source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require the prepared immutable main-ancestor commit
+        shell: bash
+        env:
+          RELEASE_COMMIT: ${{ inputs.commit }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$RELEASE_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "commit must be a full lowercase SHA" >&2
+            exit 1
+          fi
+          git fetch --no-tags origin main
+          if ! git cat-file -e "$RELEASE_COMMIT^{commit}"; then
+            echo "requested commit $RELEASE_COMMIT is not available from origin" >&2
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$RELEASE_COMMIT" origin/main; then
+            echo "requested commit $RELEASE_COMMIT is not an ancestor of origin/main" >&2
+            exit 1
+          fi
+          git checkout --detach "$RELEASE_COMMIT"
+          actual="$(git rev-parse HEAD)"
+          if [[ "$actual" != "$RELEASE_COMMIT" ]]; then
+            echo "checked out $actual instead of requested commit $RELEASE_COMMIT" >&2
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install Trusted Publishing-capable npm
+        run: npm install --global npm@11.5.2
+
+      - name: Require requested package version
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: test "$(node -p "require('./packages/satp-client/package.json').version")" = "$RELEASE_VERSION"
+
+      - name: Refuse to overwrite an existing release
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          if npm view "@brainai/satp-client@$RELEASE_VERSION" version >/dev/null 2>&1; then
+            echo "@brainai/satp-client@$RELEASE_VERSION already exists; refusing to publish"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify the publish artifact
+        run: npm run check:satp-client-health
+
+      - name: List the tarball before publish
+        run: npm pack ./packages/satp-client --dry-run
+
+      - name: Verify npm dist-tags are still the approved baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          tags="$(npm view @brainai/satp-client dist-tags --json)"
+          node -e '
+            const tags = JSON.parse(process.argv[1]);
+            if (tags.latest !== "2.0.8" || tags.rc !== "2.0.2") {
+              throw new Error(
+                `refusing publish: expected latest=2.0.8 and rc=2.0.2, got latest=${String(tags.latest)} and rc=${String(tags.rc)}`,
+              );
+            }
+          ' "$tags"
+
+      - name: Publish with npm Trusted Publishing
+        run: npm publish ./packages/satp-client --access public --provenance
+
+      - name: Verify npm dist-tags after publish
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          tags="$(npm view @brainai/satp-client dist-tags --json)"
+          node -e '
+            const tags = JSON.parse(process.argv[1]);
+            const version = process.argv[2];
+            if (tags.latest !== version || tags.rc !== "2.0.2") {
+              throw new Error(
+                `unexpected post-publish dist-tags: expected latest=${version} and rc=2.0.2, got latest=${String(tags.latest)} and rc=${String(tags.rc)}`,
+              );
+            }
+          ' "$tags" "$RELEASE_VERSION"
