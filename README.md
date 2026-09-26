@@ -103,7 +103,7 @@ examples keep SATP package usage free/open and scope brainAI monetization to
 x402-gated reputation/evidence lookup endpoints only.
 
 The runtime/product next-slice plan for SDK ergonomics, local attestation
-request verification, MCP/x402 examples, and AgentFolio reference-consumer
+request verification, MCP/x402 examples, and app-agnostic consumer
 follow-through lives in
 [`docs/runtime-product-next-slice-v0.md`](./docs/runtime-product-next-slice-v0.md).
 
