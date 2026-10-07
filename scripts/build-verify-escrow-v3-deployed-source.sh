@@ -10,7 +10,7 @@ temp_parent="${RUNNER_TEMP:-${TMPDIR:-/tmp}}"
 build_root="$(mktemp -d "$temp_parent/satp-escrow-v3-deployed-source-${source_commit}.XXXXXX")"
 trap 'rm -rf "$build_root"' EXIT
 source_root="$build_root/source"
-artifact_out="${ESCROW_V3_DEPLOYED_ARTIFACT_OUT:-$root/target/deployed-truth/escrow_v3.so}"
+artifact_out="${ESCROW_V3_DEPLOYED_ARTIFACT_OUT:-$root/target/v3-deployed-proof/rebuilt/escrow_v3.so}"
 
 mkdir -p "$source_root" "$(dirname "$artifact_out")"
 git -C "$root" archive "$source_commit" | tar -x -C "$source_root"

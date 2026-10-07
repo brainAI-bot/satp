@@ -30,7 +30,9 @@ export const programs = Object.freeze(truth.programs.map((record) => Object.free
   programId: record.program_id,
   idlPath: record.canonical_source_idl.path,
   productionIdlPath: record.production_idl_path,
-  artifactPath: record.source_reproducible ? 'target/deployed-truth/escrow_v3.so' : null,
+  artifactPath: record.source_reproducible
+    ? 'target/v3-deployed-proof/rebuilt/escrow_v3.so'
+    : null,
   record,
 })));
 
