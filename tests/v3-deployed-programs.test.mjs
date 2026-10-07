@@ -23,6 +23,10 @@ const buildScript = readFileSync(
   new URL('../scripts/build-verify-v3-deployed-programs.sh', import.meta.url),
   'utf8',
 );
+const escrowBuildScript = readFileSync(
+  new URL('../scripts/build-verify-escrow-v3-deployed-source.sh', import.meta.url),
+  'utf8',
+);
 const truth = JSON.parse(readFileSync(new URL('../docs/v3-deployed-truth.json', import.meta.url)));
 
 function response({ status = 200, payload = { jsonrpc: '2.0', id: 1, result: {} }, retryAfter } = {}) {
@@ -234,6 +238,12 @@ test('bounded retry returns successful read after transient 429 responses', asyn
 });
 
 test('nightly preserves proof artifacts before enforcing comparison outcome', () => {
+  const escrow = programs.find(({ name }) => name === 'escrow_v3');
+  const rebuiltArtifact = 'target/v3-deployed-proof/rebuilt/escrow_v3.so';
+  assert.equal(escrow.artifactPath, rebuiltArtifact);
+  assert.match(escrowBuildScript, new RegExp(rebuiltArtifact.replaceAll('.', '\\.')));
+  assert.match(workflow, /target\/v3-deployed-proof\/rebuilt\/\*\.so/u);
+  assert.doesNotMatch(escrowBuildScript, /target\/deployed-truth\/escrow_v3\.so/u);
   assert.match(workflow, /id: compare[\s\S]*continue-on-error: true/u);
   assert.match(workflow, /Upload six-program read-only proof\n\s+if: always\(\)/u);
   assert.match(workflow, /docs\/v3-deployed-truth\.json/u);
